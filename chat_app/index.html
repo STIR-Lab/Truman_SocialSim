@@ -13,13 +13,26 @@
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages > li { padding: 0.5rem 1rem; }
       #messages > li:nth-child(odd) { background: #efefef; }
+      #content-wrap{
+        display: none;
+      }
     </style>
   </head>
   <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
+    <div id = "nickWrap">
+      <p>Enter a username: </p>
+      <p id = "nickError"></p>
+      <form id = "setNick">
+        <input size = "35" id = "nickname"></input>
+        <input type = "submit"></input>
+      </form>
+    </div>
+    <div id = "content-wrap">
+      <ul id="messages"></ul>
+      <form id="form" action="">
       <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
+      </form>
+    </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io();
