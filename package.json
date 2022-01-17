@@ -47,6 +47,7 @@
     "passport-local": "^1.0.0",
     "pug": "^2.0.4",
     "request": "^2.88.0",
+    "socket.io": "^4.4.1",
     "ua-parser-js": "^0.7.20",
     "useragent": "^2.3.0",
     "validator": "^11.0.0"
