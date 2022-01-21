@@ -7,10 +7,9 @@ const io = socketio(server);
 const chatBot = "chatBot";
 
 // format message object to send to the front end
-function formatMessage(username, text) {
+function formatMessage(username, msg) {
   return {
-    username,
-    text,
+    ...msg,
     time: moment().format("h:mm a"),
   };
 }
@@ -18,7 +17,7 @@ function formatMessage(username, text) {
 io.on("connection", (socket) => {
   console.log("Websocket connection...");
 
-  // Listen for FE event: joinRoom
+  // FE event: joinRoom
   // Parameter: username
   socket.on("joinRoom", (username) => {
     // Welcome current user
@@ -31,11 +30,20 @@ io.on("connection", (socket) => {
     );
   });
 
-  // Listen for FE event: chatMessage
+  // FE event: chatMessage
   // Parameter: username, msg
-  socket.on("chatMessage", (username, msg) => {
+  // expected msg object (similar to):
+  // {
+  //   username,
+  //   userId?, // not socket.id
+  //   type,
+  //   body,
+  //   mimeType?,
+  //   fileName?,
+  // }
+  socket.on("chatMessage", (msg) => {
     // Emit back to the client
-    io.emit("message", formatMessage(username, msg));
+    io.emit("message", formatMessage(msg));
   });
 
   // On user leave: emit to everyone left in the room
