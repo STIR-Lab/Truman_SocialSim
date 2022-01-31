@@ -1,4 +1,4 @@
-const { server } = require("../../app");
+const { server } = require("../app");
 const socketio = require("socket.io");
 const moment = require("moment");
 
