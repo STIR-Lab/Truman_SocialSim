@@ -65,6 +65,7 @@ const scriptController = require('./controllers/script');
 const homeController = require('./controllers/home');
 const userController = require('./controllers/user');
 const notificationController = require('./controllers/notification');
+const chatController = require("./controllers/chat");
 
 /**
  * API keys and Passport configuration.
@@ -286,6 +287,8 @@ app.get('/me', passportConfig.isAuthenticated, userController.getMe);
 app.get('/completed', passportConfig.isAuthenticated, userController.userTestResults);
 
 app.get('/notifications', passportConfig.isAuthenticated, notificationController.getNotifications);
+
+app.get("/chat", passportConfig.isAuthenticated, chatController.getChat);
 
 app.get('/test_comment', function (req, res) {
   res.render('test', {
