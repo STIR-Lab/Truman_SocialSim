@@ -1,4 +1,36 @@
 extends ui_layout
 
 block content
-    h4 Chat
+    .five.wide.column
+        .ui.segment(style='height:90vh;')
+            .ui.celled.list
+                .item
+                    img.ui.avatar.image(src='public/android-icon-36x36.png')
+                    .content
+                        .header Person 1
+                        |       ...
+                    button.ui.icon.right.floated.mini.button
+                        i.right.arrow.icon
+                .item
+                    img.ui.avatar.image(src='public/android-icon-36x36.png')
+                    .content
+                        .header Person 2
+                        |       ...
+                    button.ui.icon.right.floated.mini.button
+                        i.right.arrow.icon
+                .item
+                    img.ui.avatar.image(src='public/android-icon-36x36.png')
+                    .content
+                        .header Person 3
+                        |       ...
+                    button.ui.icon.right.floated.mini.button
+                        i.right.arrow.icon
+    .eleven.wide.column
+        .ui.segment(style='height:90vh;')
+            h2.ui.left.floated.header Person
+            .ui.clearing.divider
+            p
+
+            .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:500px;')
+                input(type='text' placeholder='Enter message')
+                i.paper.plane.icon

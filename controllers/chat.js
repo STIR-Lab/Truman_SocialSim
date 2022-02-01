@@ -53,5 +53,7 @@ io.on("connection", (socket) => {
 });
 
 exports.getChat = (req, res) => {
-  res.render("chat");
+  res.render("chat", {
+    title: "Chat",
+  });
 };
