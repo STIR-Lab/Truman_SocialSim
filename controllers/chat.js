@@ -1,6 +1,8 @@
 const { server } = require("../app");
 const socketio = require("socket.io");
 const moment = require("moment");
+const Chat = require('../models/Chat')
+
 
 const io = socketio(server);
 
@@ -43,7 +45,14 @@ io.on("connection", (socket) => {
   // }
   socket.on("chatMessage", (msg) => {
     // Emit back to the client
-    io.emit("message", formatMessage(msg));
+    Chat.find().then(result=>{
+      socket.emit('output-message', result)
+    })
+    
+    const message = new Chat({chat:msg});
+    message.save().then(()=>{ //Saves message to DB then emits
+      io.emit("message", formatMessage(msg));
+    })
   });
 
   // On user leave: emit to everyone left in the room

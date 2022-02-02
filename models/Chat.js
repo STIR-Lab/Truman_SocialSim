@@ -1,11 +1,11 @@
-import mongoose from 'mongoose';
-const {Schema} = mongoose;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-//Figuring out the ideal schema for this
-const chatSchema = new Schema({
-    message_body : String,
+const chatSchema = new mongoose.Schema({
+    chat:{
+        type: String,
+        required: true
     }
-);
-
+})
 const Chat = mongoose.model('Chat', chatSchema);
 module.exports = Chat;
