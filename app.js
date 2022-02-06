@@ -20,6 +20,7 @@ const passport = require("passport");
 const expressValidator = require("express-validator");
 const expressStatusMonitor = require("express-status-monitor");
 var schedule = require("node-schedule");
+const { chatSocket } = require("./controllers/chat");
 
 const multer = require("multer");
 //Math.random().toString(36)+'00000000000000000').slice(2, 10) + Date.now()
@@ -442,6 +443,12 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.render("error");
 });
+
+/**
+ * Socket.io Implementation
+ */
+
+chatSocket(server);
 
 /**
  * Start Express server.

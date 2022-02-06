@@ -1,68 +1,59 @@
-const { server } = require("../app");
-const socketio = require("socket.io");
+// const { server } = require("../app");
+const { Server } = require("socket.io");
 const moment = require("moment");
-const Chat = require('../models/Chat')
-
-
-const io = socketio(server);
+const Chat = require("../models/Chat");
 
 const chatBot = "chatBot";
 
 // format message object to send to the front end
 function formatMessage(username, msg) {
+  console.log("formatting msg...");
   return {
     ...msg,
     time: moment().format("h:mm a"),
   };
 }
 
-io.on("connection", (socket) => {
-  console.log("Websocket connection...");
+const chatSocket = (server) => {
+  const io = new Server(server);
 
-  // FE event: joinRoom
-  // Parameter: username
-  socket.on("joinRoom", (username) => {
-    // Welcome current user
-    socket.emit("message", formatMessage(chatBot, "Say Hi!"));
+  io.on("connection", (socket) => {
+    console.log("Websocket connection...");
 
-    // On user join: emit to everyone but the user just joined
-    socket.broadcast.emit(
-      "message",
-      formatMessage(chatBot, `${username} has joined the chat`)
-    );
-  });
+    // FE event: joinRoom
+    // Parameter: username
+    socket.on("joinRoom", (username) => {
+      // Welcome current user
+      socket.emit("message", formatMessage(chatBot, "Say Hi!"));
 
-  // FE event: chatMessage
-  // Parameter: username, msg
-  // expected msg object (similar to):
-  // {
-  //   username,
-  //   userId?, // not socket.id
-  //   type,
-  //   body,
-  //   mimeType?,
-  //   fileName?,
-  // }
-  socket.on("chatMessage", (msg) => {
-    // Emit back to the client
-    Chat.find().then(result=>{
-      socket.emit('output-message', result)
-    })
-    
-    const message = new Chat({chat:msg});
-    message.save().then(()=>{ //Saves message to DB then emits
+      // On user join: emit to everyone but the user just joined
+      socket.broadcast.emit(
+        "message",
+        formatMessage(chatBot, `${username} has joined the chat`)
+      );
+    });
+
+    // FE event: chatMessage
+    // Paramter: msg obj
+    // expected msg object (similar to):
+    // {
+    //   username,
+    //   userId?, // not socket.id
+    //   type, // "txt" | "img"
+    //   body,
+    //   mimeType?,
+    //   fileName?,
+    // }
+    socket.on("chatMessage", (msg) => {
+      // Emit back to the client
       io.emit("message", formatMessage(msg));
-    })
-  });
+    });
 
-  // On user leave: emit to everyone left in the room
-  socket.on("disconnect", () => {
-    io.emit("message", formatMessage(chatBot, "User has left the chat"));
-  });
-});
-
-exports.getChat = (req, res) => {
-  res.render("chat", {
-    title: "Chat",
+    // On user leave: emit to everyone left in the room
+    socket.on("disconnect", () => {
+      io.emit("message", formatMessage(chatBot, "User has left the chat"));
+    });
   });
 };
+
+module.exports = { chatSocket };
