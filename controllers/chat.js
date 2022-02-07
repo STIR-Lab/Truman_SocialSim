@@ -16,13 +16,10 @@ const chatBot = "chatBot";
 
 // format message object to send to the front end
 function formatMessage(msg) {
-  console.log("formatting msg...");
-  const formattedMsg = {
+  return {
     ...msg,
     time: moment().format("h:mm a"),
   };
-  // console.log("formatted msg: ", formattedMsg);
-  return formattedMsg;
 }
 
 const chatSocket = (server) => {
