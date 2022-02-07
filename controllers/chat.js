@@ -1,16 +1,28 @@
-// const { server } = require("../app");
 const { Server } = require("socket.io");
 const moment = require("moment");
+// TODO: import shcema here:
+// Rough idea on the schema structure
+//  schema: chat {
+// ??? [message]
+// }
+
+// schema: message {
+//   username:
+//   body:
+// }
+// chat.find(currentConvo).push(newMsgObj)
 
 const chatBot = "chatBot";
 
 // format message object to send to the front end
-function formatMessage(username, msg) {
+function formatMessage(msg) {
   console.log("formatting msg...");
-  return {
+  const formattedMsg = {
     ...msg,
     time: moment().format("h:mm a"),
   };
+  // console.log("formatted msg: ", formattedMsg);
+  return formattedMsg;
 }
 
 const chatSocket = (server) => {
@@ -20,15 +32,28 @@ const chatSocket = (server) => {
     console.log("Websocket connection...");
 
     // FE event: joinRoom
-    // Parameter: username
-    socket.on("joinRoom", (username) => {
+    // Parameter: msg obj
+    // expected msg object (similar to):
+    // {
+    //   username,
+    // }
+    socket.on("joinRoom", (msg) => {
       // Welcome current user
-      socket.emit("message", formatMessage(chatBot, "Say Hi!"));
+      socket.emit(
+        "message",
+        formatMessage({
+          username: chatBot,
+          body: "Say Hi!",
+        })
+      );
 
       // On user join: emit to everyone but the user just joined
       socket.broadcast.emit(
         "message",
-        formatMessage(chatBot, `${username} has joined the chat`)
+        formatMessage({
+          username: chatBot,
+          body: `${msg.username} has joined the chat`,
+        })
       );
     });
 
@@ -37,7 +62,7 @@ const chatSocket = (server) => {
     // expected msg object (similar to):
     // {
     //   username,
-    //   userId?, // not socket.id
+    //   userId, // not socket.id
     //   type, // "txt" | "img"
     //   body,
     //   mimeType?,
@@ -45,12 +70,21 @@ const chatSocket = (server) => {
     // }
     socket.on("chatMessage", (msg) => {
       // Emit back to the client
+      // TODO: Create new msg object first
+      // TODO: Store in the current convo
+      // TODO: Finally, emit msg obj back to the client
       io.emit("message", formatMessage(msg));
     });
 
     // On user leave: emit to everyone left in the room
     socket.on("disconnect", () => {
-      io.emit("message", formatMessage(chatBot, "User has left the chat"));
+      io.emit(
+        "message",
+        formatMessage({
+          username: chatBot,
+          body: "User has left the chat",
+        })
+      );
     });
   });
 };
