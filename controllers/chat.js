@@ -1,7 +1,7 @@
 const { Server } = require("socket.io");
 const moment = require("moment");
-const Chat = require('../models/Chat');
-const mongoose = require('mongoose');
+const Chat = require("../models/Chat");
+const mongoose = require("mongoose");
 // TODO: import shcema here:
 // Rough idea on the schema structure
 //  schema: chat {
@@ -29,7 +29,7 @@ const chatSocket = (server) => {
 
   io.on("connection", (socket) => {
     Chat.find().then((result) => {
-      socket.emit('output-messages', result)
+      socket.emit("output-messages", result);
     });
     console.log("Websocket connection...");
 
@@ -75,11 +75,14 @@ const chatSocket = (server) => {
       // TODO: Create new msg object first
       // TODO: Store in the current convo
       // TODO: Finally, emit msg obj back to the client
-      const message = new Chat({chat});
-      message.save().then(()=>{
-        io.emit("message", formatMessage(msg));
-      })
-      
+      let message = formatMessage(msg);
+      message = new Chat({
+        username: message.username,
+        userId: message.userId,
+      });
+      message.save().then(() => {
+        io.emit("message", message);
+      });
     });
 
     // On user leave: emit to everyone left in the room
@@ -94,7 +97,5 @@ const chatSocket = (server) => {
     });
   });
 };
-
-
 
 module.exports = { chatSocket };
