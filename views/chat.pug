@@ -6,21 +6,21 @@ block content
             .ui.segment(style='height:90vh;')
                 .ui.relaxed.divided.list
                     .item
-                        img.ui.avatar.image(src='public/android-icon-36x36.png')
+                        img.ui.avatar.image(src=user.gravatar(60))
                         .content
                             .header Person 1
                             |       ...
                         button.ui.icon.right.floated.mini.button
                             i.right.arrow.icon
                     .item
-                        img.ui.avatar.image(src='public/android-icon-36x36.png')
+                        img.ui.avatar.image(src=user.gravatar(60))
                         .content
                             .header Person 2
                             |       ...
                         button.ui.icon.right.floated.mini.button
                             i.right.arrow.icon
                     .item
-                        img.ui.avatar.image(src='public/android-icon-36x36.png')
+                        img.ui.avatar.image(src=user.gravatar(60))
                         .content
                             .header Person 3
                             |       ...
@@ -28,69 +28,79 @@ block content
                             i.right.arrow.icon
         .eleven.wide.column
             .ui.segment(style='height:90vh;')
-                img.ui.left.floated.avatar.image(src='public/android-icon-36x36.png')
+                img.ui.left.floated.avatar.image(src=user.gravatar(60))
                 h2.ui.left.floated.header Person
                 .ui.clearing.divider
                 p
 
-                .ui.grid
-                    .row
-                        .right.aligned.one.wide.column(style='padding:0!important')
-                            img.ui.avatar.image(src='public/android-icon-36x36.png')
-                        .seven.wide.column
-                            .ui.mini.compact.message
-                                p
-                                    | Hello
-                            p(style='font-size:10px; margin-top:-8px')
-                                | 2:18 PM
-                    .row
-                        .right.floated.right.aligned.seven.wide.column
-                            .ui.mini.blue.compact.message
-                                p
-                                    | Hi
-                            p(style='font-size:10px; margin-top:-8px')
-                                | 2:19 PM
-                    .row
-                        .right.aligned.one.wide.column(style='padding:0!important')
-                            img.ui.avatar.image(src='public/android-icon-36x36.png')
-                        .seven.wide.column
-                            .ui.mini.compact.message
-                                p
-                                    | long message long message long message long message long message long message
-                            p(style='font-size:10px; margin-top:-8px')
-                                | 2:19 PM
-                    .row
-                        .right.floated.right.aligned.seven.wide.column
-                            .ui.mini.blue.compact.message
-                                p
-                                    | long message long message long message long message long message long message
-                            p(style='font-size:10px; margin-top:-8px')
-                                | 2:20 PM
-                
-                .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
-                    input(type='text' placeholder='Enter message')
-                    i.paper.plane.icon
+                .messages.container(style="height: 70vh; overflow-x: hidden; overflow-y: auto;")
+                    #messages.ui.grid
+                        .row
+                            .right.aligned.one.wide.column(style='padding:0!important')
+                                img.ui.avatar.image(src=user.gravatar(60))
+                            .seven.wide.column
+                                .ui.mini.compact.message
+                                    p
+                                        | Hello
+                                p(style='font-size:10px; margin-top:-8px')
+                                    | 2:18 PM
+               
+                form#form(action='')
+                    .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
+                        input#input(autocomplete="off" type='text' placeholder='Enter message')
+                        button
+                            i.paper.plane.icon
+
+                script(src='/socket.io/socket.io.js')
+                script.
+                    var socket = io();
+                    var form = $('#form')[0]; 
+                    var input = $('#input')[0]; 
+
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        if (input.value) {
+                            socket.emit('chatMessage', input.value);
+                            input.value = '';
+                        }
+                    });
+
+                    socket.on('message', function(msg) {
+                        console.log(msg);
+                        var mes = ` <div class="row" style="padding-top:6px; padding-bottom:6px">
+                                        <div class="right floated right aligned seven wide column">
+                                        <div class="ui mini blue compact message">
+                                            <p>${msg.msg}</p>
+                                        </div>
+                                        <p style="font-size:10px; margin-top:-8px">${msg.time}</p>
+                                        </div>
+                                    </div>`
+                        $('#messages').append(mes);
+
+                        $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                        console.log($('#messages')[0].scrollHeight);
+                    });
 
     .mobile.only.row
         .column
             .ui.segment
                 .ui.relaxed.divided.list
                     .item
-                        img.ui.avatar.image(src='public/android-icon-36x36.png')
+                        img.ui.avatar.image(src=user.gravatar(60))
                         .content
                             .header Person 1
                             |       ...
                         button.ui.icon.right.floated.mini.button
                             i.right.arrow.icon
                     .item
-                        img.ui.avatar.image(src='public/android-icon-36x36.png')
+                        img.ui.avatar.image(src=user.gravatar(60))
                         .content
                             .header Person 2
                             |       ...
                         button.ui.icon.right.floated.mini.button
                             i.right.arrow.icon
                     .item
-                        img.ui.avatar.image(src='public/android-icon-36x36.png')
+                        img.ui.avatar.image(src=user.gravatar(60))
                         .content
                             .header Person 3
                             |       ...
@@ -99,7 +109,7 @@ block content
     .mobile.only.row
         .column
             .ui.segment(style='height:90vh;')
-                img.ui.left.floated.avatar.image(src='public/android-icon-36x36.png')
+                img.ui.left.floated.avatar.image(src=user.gravatar(60))
                 h2.ui.left.floated.header Person
                 .ui.clearing.divider
                 p

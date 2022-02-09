@@ -12,13 +12,12 @@ const moment = require("moment");
 // }
 // chat.find(currentConvo).push(newMsgObj)
 
-
 const chatBot = "chatBot";
 
 // format message object to send to the front end
 function formatMessage(msg) {
   return {
-    ...msg,
+    msg,
     time: moment().format("h:mm a"),
   };
 }
@@ -87,4 +86,8 @@ const chatSocket = (server) => {
   });
 };
 
-module.exports = { chatSocket };
+getChat = (req, res) => {
+  res.render("chat", {});
+};
+
+module.exports = { chatSocket, getChat };
