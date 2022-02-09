@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const moment = require("moment");
 const Chat = require("../models/Chat");
 const mongoose = require("mongoose");
+const { monthsShort } = require("moment");
 // TODO: import shcema here:
 // Rough idea on the schema structure
 //  schema: chat {
@@ -15,6 +16,7 @@ const mongoose = require("mongoose");
 // chat.find(currentConvo).push(newMsgObj)
 
 const chatBot = "chatBot";
+
 
 // format message object to send to the front end
 function formatMessage(msg) {
@@ -75,10 +77,16 @@ const chatSocket = (server) => {
       // TODO: Create new msg object first
       // TODO: Store in the current convo
       // TODO: Finally, emit msg obj back to the client
-      let message = formatMessage(msg);
+      //let message = formatMessage(msg);
       message = new Chat({
-        username: message.username,
-        userId: message.userId,
+        message:{
+          username: msg.username,
+          userId: msg.userId,
+          type: msg.type,// "txt" | "img"
+          body: msg.body,
+          mimeType: msg.mimeType,
+          fileName: msg.fileName,
+        }
       });
       message.save().then(() => {
         io.emit("message", message);
