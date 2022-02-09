@@ -98,13 +98,13 @@ const chatSocket = (server) => {
 
     // diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
-    socket.on("message", ({ msg, to }) => {
+    socket.on("send-message", ({ msg, to }) => {
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
       socket
         .to(to.socketId) // to recipient
         .to(socket.userId) // to sender room
         .emit(
-          "message",
+          "receive-message",
           formatMessage(
             msg,
             { username: socket.username, userId: socket.userId },
