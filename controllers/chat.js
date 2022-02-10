@@ -1,6 +1,6 @@
 const { Server } = require("socket.io");
 const moment = require("moment");
-const { InMemorySessionStore } = require("./sessionStore");
+const { InMemorySessionStore } = require("../sessionStore");
 const crypto = require("crypto");
 
 const sessionStore = new InMemorySessionStore();
@@ -29,7 +29,7 @@ function formatMessage(msg, from, to) {
 function getCurrentUsers() {
   const userList = [];
   sessionStore.findAllSessions().forEach((session) => {
-    users.push({
+    userList.push({
       userId: session.userId,
       username: session.username,
     });
@@ -52,16 +52,17 @@ const chatSocket = (server) => {
         socket.username = session.username;
         return next();
       }
+    } else {
+      const username = socket.handshake.auth.username;
+      const userId = socket.handshake.auth.userId;
+      if (!username || !userId) {
+        return next(new Error("Invalid username/userId"));
+      }
+      socket.sessionId = randomId();
+      socket.username = username;
+      socket.userId = userId;
+      next();
     }
-    const username = socket.handshake.auth.username;
-    const userId = socket.handshake.auth.userId;
-    if (!username || !userId) {
-      return next(new Error("Invalid username/userId"));
-    }
-    socket.sessionId = randomId();
-    socket.username = username;
-    socket.userId = userId;
-    next();
   });
 
   io.on("connection", (socket) => {
@@ -114,30 +115,30 @@ const chatSocket = (server) => {
     });
 
     socket.on("disconnect", async () => {
-      const matchingSockets = await io.in(socket.userId).allSockets();
-      const isDisconnected = matchingSockets.size === 0;
-      if (isDisconnected) {
-        // Remove current session from sessionStore
-        sessionStore.deleteSession(socket.sessionId);
-        /** 
-        socket.broadcast.emit(
-          "disconneted",
-          formatMessage(leaveNotification(socket.username), chatBot, "ALL")
-        );
-        */
-        // FIXME: Name of the event subject to change for FE's convenience
-        socket.rooms.forEach((roomId) => {
-          socket.broadcast
-            .to(roomId)
-            .emit(
-              "disconneted",
-              formatMessage(leaveNotification(socket.username), chatBot, "ALL")
-            );
-        });
-        // refresh current users
-        const userList = getCurrentUsers();
-        socket.emit("userList", userList);
-      }
+      // const matchingSockets = await io.in(socket.userId).allSockets();
+      // const isDisconnected = matchingSockets.size === 0;
+      // if (isDisconnected) {
+      //   // Remove current session from sessionStore
+      //   sessionStore.deleteSession(socket.sessionId);
+      //   /**
+      //   socket.broadcast.emit(
+      //     "disconneted",
+      //     formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+      //   );
+      //   */
+      //   // FIXME: Name of the event subject to change for FE's convenience
+      //   socket.rooms.forEach((roomId) => {
+      //     socket.broadcast
+      //       .to(roomId)
+      //       .emit(
+      //         "disconneted",
+      //         formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+      //       );
+      //   });
+      //   // refresh current users
+      //   const userList = getCurrentUsers();
+      //   socket.emit("userList", userList);
+      // }
     });
   });
 };

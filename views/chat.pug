@@ -4,28 +4,7 @@ block content
     .computer.only.tablet.only.row
         .five.wide.column
             .ui.segment(style='height:90vh;')
-                .ui.relaxed.divided.list
-                    .item
-                        img.ui.avatar.image(src=user.gravatar(60))
-                        .content
-                            .header Person 1
-                            |       ...
-                        button.ui.icon.right.floated.mini.button
-                            i.right.arrow.icon
-                    .item
-                        img.ui.avatar.image(src=user.gravatar(60))
-                        .content
-                            .header Person 2
-                            |       ...
-                        button.ui.icon.right.floated.mini.button
-                            i.right.arrow.icon
-                    .item
-                        img.ui.avatar.image(src=user.gravatar(60))
-                        .content
-                            .header Person 3
-                            |       ...
-                        button.ui.icon.right.floated.mini.button
-                            i.right.arrow.icon
+                #userList.ui.relaxed.divided.list
         .eleven.wide.column
             .ui.segment(style='height:90vh;')
                 img.ui.left.floated.avatar.image(src=user.gravatar(60))
@@ -41,7 +20,7 @@ block content
                             .seven.wide.column
                                 .ui.mini.compact.message
                                     p
-                                        | Hello
+                                        span=user.profile.name || user.username || user.id
                                 p(style='font-size:10px; margin-top:-8px')
                                     | 2:18 PM
                
@@ -53,9 +32,61 @@ block content
 
                 script(src='/socket.io/socket.io.js')
                 script.
-                    var socket = io();
                     var form = $('#form')[0]; 
                     var input = $('#input')[0]; 
+
+                    const URL = "http://localhost:3000";
+                    const socket = io(URL, { autoConnect: false });
+
+                    socket.onAny((event, ...args) => {
+                        console.log(event, args);
+                    });
+
+                    const sessionId = localStorage.getItem("sessionId");
+                    if (sessionId) {
+                        socket.auth = { sessionId, username:'test03', userId:'62054a5332b8e725ca40efd0'};
+                        socket.connect();
+                    }
+                    else {
+                        socket.auth = { username:'test03', userId:'62054a5332b8e725ca40efd0'};
+                        socket.connect();
+                    }
+
+                    socket.on("session", ({ sessionId, userId }) => {
+                        // attach the session ID to the next reconnection attempts
+                        socket.auth = { sessionId };
+                        // store it in the localStorage
+                        localStorage.setItem("sessionId", sessionId);
+                        // save the ID of the user
+                        socket.userId = userId;
+                    });
+
+                    socket.on("connect_error", (err) => {
+                        console.log(`connect_error due to ${err.message}`);
+                    });
+
+                    socket.on("userList", (userList) => {
+                        userList.forEach((user) => {
+                            user.self = user.userId === socket.id;
+                        });
+                        // put the current user first, and then sort by username
+                        this.userList = userList.sort((a, b) => {
+                            if (a.self) return -1;
+                            if (b.self) return 1;
+                            if (a.username < b.username) return -1;
+                            return a.username > b.username ? 1 : 0;
+                        });
+
+                        userList.forEach((user) => {
+                            var u = `   <div class="item"><img class="ui avatar image" src=""/>
+                                            <div class="content">
+                                                <div class="header">${user.username}</div>
+                                            </div>
+                                            <button class="ui icon right floated mini button"><i class="right arrow icon"></i></button>
+                                        </div>`
+                            $('#userList').append(u);
+                        });
+                    });
 
                     form.addEventListener('submit', function(e) {
                         e.preventDefault();
@@ -65,8 +96,8 @@ block content
                         }
                     });
 
-                    socket.on('message', function(msg) {
-                        console.log(msg);
+                    function addChatSentMessage(msg) {
+                        console.log("sent msg: " + msg.msg);
                         var mes = ` <div class="row" style="padding-top:6px; padding-bottom:6px">
                                         <div class="right floated right aligned seven wide column">
                                         <div class="ui mini blue compact message">
@@ -78,7 +109,26 @@ block content
                         $('#messages').append(mes);
 
                         $('#messages').scrollTop($('#messages')[0].scrollHeight);
-                        console.log($('#messages')[0].scrollHeight);
+                    }
+
+                    function addChatReceivedMessage(msg) {
+                        console.log("received msg: " + msg.msg);
+                        var mes = ` <div class="row" style="padding-top:6px; padding-bottom:6px">
+                                        <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image" id="avatarImage"/></div>
+                                        <div class="seven wide column">
+                                        <div class="ui mini compact message">
+                                            <p>${msg.msg}</p>
+                                        </div>
+                                        <p style="font-size:10px; margin-top:-8px">${msg.time}</p>
+                                        </div>
+                                    </div>`
+                        $('#messages').append(mes);
+                        //- $("#avatarImage").attr("src", user.gravatar(60));
+
+                        $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                    }   
+
+                    socket.on('message', function(msg) {
                     });
 
     .mobile.only.row
