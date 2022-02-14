@@ -30,10 +30,12 @@ function formatMessage(msg, from, to) {
 function getCurrentUsers() {
   const userList = [];
   sessionStore.findAllSessions().forEach((session) => {
-    users.push({
-      userId: session.userId,
-      username: session.username,
-    });
+    if (session.connected) {
+      users.push({
+        userId: session.userId,
+        username: session.username,
+      });
+    }
   });
 
   return userList;
@@ -72,6 +74,7 @@ const chatSocket = (server) => {
     sessionStore.saveSession(socket.sessionId, {
       userId: socket.userId,
       username: socket.username,
+      connected: true,
     });
     socket.emit("session", {
       sessionId: socket.sessionId,
@@ -118,8 +121,8 @@ const chatSocket = (server) => {
       const matchingSockets = await io.in(socket.userId).allSockets();
       const isDisconnected = matchingSockets.size === 0;
       if (isDisconnected) {
-        // Remove current session from sessionStore
-        sessionStore.deleteSession(socket.sessionId);
+        // Disconnect current session from sessionStore
+        sessionStore.disconnectSession(socket.sessionId);
         /** 
         socket.broadcast.emit(
           "disconneted",
@@ -143,4 +146,8 @@ const chatSocket = (server) => {
   });
 };
 
-module.exports = { chatSocket };
+getChat = (req, res) => {
+  res.render("chat", {});
+};
+
+module.exports = { chatSocket, getChat };
