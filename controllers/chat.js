@@ -30,10 +30,12 @@ function formatMessage(msg, from, to) {
 function getCurrentUsers() {
   const userList = [];
   sessionStore.findAllSessions().forEach((session) => {
-    userList.push({
-      userId: session.userId,
-      username: session.username,
-    });
+    if (session.connected) {
+      users.push({
+        userId: session.userId,
+        username: session.username,
+      });
+    }
   });
 
   return userList;
@@ -82,6 +84,7 @@ const chatSocket = (server) => {
     sessionStore.saveSession(socket.sessionId, {
       userId: socket.userId,
       username: socket.username,
+      connected: true,
     });
     socket.emit("session", {
       sessionId: socket.sessionId,
@@ -125,30 +128,30 @@ const chatSocket = (server) => {
     });
 
     socket.on("disconnect", async () => {
-      // const matchingSockets = await io.in(socket.userId).allSockets();
-      // const isDisconnected = matchingSockets.size === 0;
-      // if (isDisconnected) {
-      //   // Remove current session from sessionStore
-      //   sessionStore.deleteSession(socket.sessionId);
-      //   /**
-      //   socket.broadcast.emit(
-      //     "disconneted",
-      //     formatMessage(leaveNotification(socket.username), chatBot, "ALL")
-      //   );
-      //   */
-      //   // FIXME: Name of the event subject to change for FE's convenience
-      //   socket.rooms.forEach((roomId) => {
-      //     socket.broadcast
-      //       .to(roomId)
-      //       .emit(
-      //         "disconneted",
-      //         formatMessage(leaveNotification(socket.username), chatBot, "ALL")
-      //       );
-      //   });
-      //   // refresh current users
-      //   const userList = getCurrentUsers();
-      //   socket.emit("userList", userList);
-      // }
+      const matchingSockets = await io.in(socket.userId).allSockets();
+      const isDisconnected = matchingSockets.size === 0;
+      if (isDisconnected) {
+        // Disconnect current session from sessionStore
+        sessionStore.disconnectSession(socket.sessionId);
+        /** 
+        socket.broadcast.emit(
+          "disconneted",
+          formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+        );
+        */
+        // FIXME: Name of the event subject to change for FE's convenience
+        socket.rooms.forEach((roomId) => {
+          socket.broadcast
+            .to(roomId)
+            .emit(
+              "disconneted",
+              formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+            );
+        });
+        // refresh current users
+        const userList = getCurrentUsers();
+        socket.emit("userList", userList);
+      }
     });
   });
 };
