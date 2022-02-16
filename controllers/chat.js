@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const moment = require("moment");
 const { InMemorySessionStore } = require("../sessionStore");
 const crypto = require("crypto");
+const Chat = require("../models/Chat");
 
 const sessionStore = new InMemorySessionStore();
 const randomId = () => crypto.randomBytes(8).toString("hex");
@@ -63,6 +64,15 @@ const chatSocket = (server) => {
       socket.userId = userId;
       next();
     }
+    const username = socket.handshake.auth.username;
+    const userId = socket.handshake.auth.userId;
+    if (!username || !userId) {
+      return next(new Error("Invalid username/userId"));
+    }
+    socket.sessionId = randomId();
+    socket.username = username;
+    socket.userId = userId;
+    next();
   });
 
   io.on("connection", (socket) => {
