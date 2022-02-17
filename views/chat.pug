@@ -4,11 +4,13 @@ block content
     .computer.only.tablet.only.row
         .five.wide.column
             .ui.segment(style='height:90vh;')
-                #userList.ui.relaxed.divided.list
+                //- #userList.ui.relaxed.divided.list
         .eleven.wide.column
             .ui.segment(style='height:90vh;')
-                img.ui.left.floated.avatar.image(src=user.gravatar(60))
-                h2.ui.left.floated.header Please pick a user to chat
+                h2.ui.left.floated.header
+                button#newChatButton.positive.ui.button.right.floated(style="margin-bottom:10px") 
+                    i.pencil.alternate.icon
+                    |   New Chat
                 .ui.clearing.divider
                 p
 
@@ -24,6 +26,17 @@ block content
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
 
+    .ui.mini.modal
+        .header
+            .ui.center.aligned.container
+                | New Message
+        .content
+            #userList.ui.relaxed.divided.list
+        .actions
+            button.positive.ui.button.right.floated(style="margin-bottom:10px") 
+                | Next
+
+
                 script(src='/socket.io/socket.io.js')
                 script.
                     const userId = document.getElementById('userIdTag').getAttribute('userId');
@@ -31,6 +44,12 @@ block content
                     
                     // hide input until user picks chat partner
                     $('#messageInput').hide();
+
+                    document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
+
+                    function onClickNewChat() {
+                        $('.ui.modal').modal('show');
+                    }
                     
                     const URL = "http://localhost:3000";
                     const socket = io(URL, { autoConnect: false });
@@ -79,7 +98,7 @@ block content
                             // add onClick function to button
                             var element = document.getElementById("oldButton");
                             element.id = user.userId;
-                            document.getElementById(user.userId).onclick=function(){onClickUsername(user);};
+                            document.getElementById(user.userId).onclick=function(){onClickUsername(user)};
 
                             if (user.userId == userId) { // do not allow user to chat itself
                                 document.getElementById(user.userId).remove();
@@ -98,6 +117,7 @@ block content
                         $("h2").text(chatPartnerUsername);
                         $('#messages').empty();
                         $('#messageInput').show();
+                        $('.ui.modal').modal('hide');
                     }
 
                     $('#messageInput')[0].addEventListener('submit', function(e) {
@@ -123,7 +143,7 @@ block content
                         if (msg.from.userId == userId) {
                             addChatSentMessage(msg.msg.body, msg.msg.time);
                         }
-                        else if (msg.to.userId == userId) {
+                        else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
                             addChatReceivedMessage(msg.msg.body, msg.msg.time);
                         }
                     })
