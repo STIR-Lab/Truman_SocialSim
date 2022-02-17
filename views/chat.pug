@@ -8,56 +8,51 @@ block content
         .eleven.wide.column
             .ui.segment(style='height:90vh;')
                 img.ui.left.floated.avatar.image(src=user.gravatar(60))
-                h2.ui.left.floated.header Person
+                h2.ui.left.floated.header Please pick a user to chat
                 .ui.clearing.divider
                 p
 
                 .messages.container(style="height: 70vh; overflow-x: hidden; overflow-y: auto;")
-                    #messages.ui.grid
-                        .row
-                            .right.aligned.one.wide.column(style='padding:0!important')
-                                img.ui.avatar.image(src=user.gravatar(60))
-                            .seven.wide.column
-                                .ui.mini.compact.message
-                                    p
-                                        span=user.profile.name || user.username || user.id
-                                p(style='font-size:10px; margin-top:-8px')
-                                    | 2:18 PM
+                    #messages.ui.grid(style="padding-top:10px")
                
-                form#form(action='')
+                form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
                         input#input(autocomplete="off" type='text' placeholder='Enter message')
                         button
                             i.paper.plane.icon
 
+                #userIdTag(userId=user.id)
+                #usernameTag(username=user.username)
+
                 script(src='/socket.io/socket.io.js')
                 script.
-                    var form = $('#form')[0]; 
-                    var input = $('#input')[0]; 
-
+                    const userId = document.getElementById('userIdTag').getAttribute('userId');
+                    const username = document.getElementById('usernameTag').getAttribute('username');
+                    
+                    // hide input until user picks chat partner
+                    $('#messageInput').hide();
+                    
                     const URL = "http://localhost:3000";
                     const socket = io(URL, { autoConnect: false });
-
+                    
                     socket.onAny((event, ...args) => {
                         console.log(event, args);
                     });
 
                     const sessionId = localStorage.getItem("sessionId");
                     if (sessionId) {
-                        socket.auth = { sessionId, username:'test03', userId:'62054a5332b8e725ca40efd0'};
+                        socket.auth = { sessionId, username, userId};
                         socket.connect();
                     }
                     else {
-                        socket.auth = { username:'test03', userId:'62054a5332b8e725ca40efd0'};
+                        socket.auth = { username, userId};
                         socket.connect();
                     }
 
                     socket.on("session", ({ sessionId, userId }) => {
                         // attach the session ID to the next reconnection attempts
                         socket.auth = { sessionId };
-                        // store it in the localStorage
                         localStorage.setItem("sessionId", sessionId);
-                        // save the ID of the user
                         socket.userId = userId;
                     });
 
@@ -67,70 +62,100 @@ block content
 
                     socket.on("userList", (userList) => {
                         userList.forEach((user) => {
-                            user.self = user.userId === socket.id;
-                        });
-                        // put the current user first, and then sort by username
-                        this.userList = userList.sort((a, b) => {
-                            if (a.self) return -1;
-                            if (b.self) return 1;
-                            if (a.username < b.username) return -1;
-                            return a.username > b.username ? 1 : 0;
-                        });
-
-                        userList.forEach((user) => {
                             var u = `   <div class="item"><img class="ui avatar image" src=""/>
                                             <div class="content">
                                                 <div class="header">${user.username}</div>
                                             </div>
-                                            <button class="ui icon right floated mini button"><i class="right arrow icon"></i></button>
+                                            <button id="oldButton" class="ui icon right floated mini button""><i class="right arrow icon"></i></button>
                                         </div>`
-                            $('#userList').append(u);
+
+                            if (user.userId == userId) { // add user to top of user list
+                                $('#userList').prepend(u);
+                            }
+                            else {
+                                $('#userList').append(u);
+                            }
+
+                            // add onClick function to button
+                            var element = document.getElementById("oldButton");
+                            element.id = user.userId;
+                            document.getElementById(user.userId).onclick=function(){onClickUsername(user);};
+
+                            if (user.userId == userId) { // do not allow user to chat itself
+                                document.getElementById(user.userId).remove();
+                            }
                         });
                     });
 
-                    form.addEventListener('submit', function(e) {
+                    let chatPartnerSocketId = null;
+                    let chatPartnerUsername = null;
+                    let chatPartnerUserId = null;
+
+                    function onClickUsername(user) {
+                        chatPartnerSocketId = user.socketId;
+                        chatPartnerUsername = user.username;
+                        chatPartnerUserId = user.userId;
+                        $("h2").text(chatPartnerUsername);
+                        $('#messages').empty();
+                        $('#messageInput').show();
+                    }
+
+                    $('#messageInput')[0].addEventListener('submit', function(e) {
                         e.preventDefault();
+                        var input = $('#input')[0]; 
                         if (input.value) {
-                            socket.emit('chatMessage', input.value);
+                            socket.emit('send-message', { 
+                                msg: {
+                                    type: "txt",
+                                    body: input.value
+                                },
+                                to: {
+                                    username: chatPartnerUsername,
+                                    userId: chatPartnerUserId,
+                                    socketId: chatPartnerSocketId
+                                } 
+                            });
                             input.value = '';
                         }
                     });
 
-                    function addChatSentMessage(msg) {
-                        console.log("sent msg: " + msg.msg);
+                    socket.on("receive-message", (msg) => {
+                        if (msg.from.userId == userId) {
+                            addChatSentMessage(msg.msg.body, msg.msg.time);
+                        }
+                        else if (msg.to.userId == userId) {
+                            addChatReceivedMessage(msg.msg.body, msg.msg.time);
+                        }
+                    })
+
+                    function addChatSentMessage(msg, time) {
                         var mes = ` <div class="row" style="padding-top:6px; padding-bottom:6px">
                                         <div class="right floated right aligned seven wide column">
                                         <div class="ui mini blue compact message">
-                                            <p>${msg.msg}</p>
+                                            <p>${msg}</p>
                                         </div>
-                                        <p style="font-size:10px; margin-top:-8px">${msg.time}</p>
+                                        <p style="font-size:10px; margin-top:-8px">${time}</p>
                                         </div>
                                     </div>`
                         $('#messages').append(mes);
-
                         $('#messages').scrollTop($('#messages')[0].scrollHeight);
                     }
 
-                    function addChatReceivedMessage(msg) {
-                        console.log("received msg: " + msg.msg);
+                    function addChatReceivedMessage(msg, time) {
                         var mes = ` <div class="row" style="padding-top:6px; padding-bottom:6px">
                                         <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image" id="avatarImage"/></div>
                                         <div class="seven wide column">
                                         <div class="ui mini compact message">
-                                            <p>${msg.msg}</p>
+                                            <p>${msg}</p>
                                         </div>
-                                        <p style="font-size:10px; margin-top:-8px">${msg.time}</p>
+                                        <p style="font-size:10px; margin-top:-8px">${time}</p>
                                         </div>
                                     </div>`
                         $('#messages').append(mes);
-                        //- $("#avatarImage").attr("src", user.gravatar(60));
-
                         $('#messages').scrollTop($('#messages')[0].scrollHeight);
                     }   
-
-                    socket.on('message', function(msg) {
-                    });
-
+                    
+//- TODO: update code for mobile view 
     .mobile.only.row
         .column
             .ui.segment

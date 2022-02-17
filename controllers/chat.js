@@ -31,7 +31,7 @@ function getCurrentUsers() {
   const userList = [];
   sessionStore.findAllSessions().forEach((session) => {
     if (session.connected) {
-      users.push({
+      userList.push({
         userId: session.userId,
         username: session.username,
       });
@@ -84,6 +84,7 @@ const chatSocket = (server) => {
     sessionStore.saveSession(socket.sessionId, {
       userId: socket.userId,
       username: socket.username,
+      socketId: socket.id,
       connected: true,
     });
     socket.emit("session", {
@@ -114,8 +115,7 @@ const chatSocket = (server) => {
     socket.join(socket.userId);
     socket.on("send-message", ({ msg, to }) => {
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
-      socket
-        .to(to.socketId) // to recipient
+      io.to(to.userId) // to recipient
         .to(socket.userId) // to sender room
         .emit(
           "receive-message",
