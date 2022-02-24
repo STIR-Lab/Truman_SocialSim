@@ -3,6 +3,8 @@ const moment = require("moment");
 const { InMemorySessionStore } = require("../sessionStore");
 const crypto = require("crypto");
 const Chat = require("../models/Chat");
+const mongoose = require("mongoose");
+const Conversation = require("../models/Chat");
 
 const sessionStore = new InMemorySessionStore();
 const randomId = () => crypto.randomBytes(8).toString("hex");
@@ -113,8 +115,27 @@ const chatSocket = (server) => {
 
     // diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
-    socket.on("send-message", ({ msg, to }) => {
+    socket.on("send-message", async ({ msg, to }) => {
+     
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
+   
+
+      const formattedMsg = formatMessage(
+        msg,
+        { username: socket.username, userId: socket.userId },
+        to
+      )
+
+      // TODO: Check if the conversation exists in db
+      // If YES: Fetch the object, push formatted message to content array
+      // If NO: Create new convo, save accordingly
+      // A: socket.username, socket.userId
+      // B: to.username, to.userId
+      
+      let newConvo = new Conversation({username: socket.username, userId: socket.userId, content: [formattedMsg]      })
+
+      await newConvo.save();
+      
       io.to(to.userId) // to recipient
         .to(socket.userId) // to sender room
         .emit(
@@ -124,7 +145,9 @@ const chatSocket = (server) => {
             { username: socket.username, userId: socket.userId },
             to
           )
+
         );
+      
     });
 
     socket.on("disconnect", async () => {
