@@ -46,6 +46,7 @@ function getCurrentUsers() {
 const chatSocket = (server) => {
   const io = new Server(server);
 
+  // TODO: Receive pfp from the frontend
   // middleware: check username & userId, allows connection
   io.use((socket, next) => {
     const sessionId = socket.handshake.auth.sessionId;
@@ -116,26 +117,74 @@ const chatSocket = (server) => {
     // diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
     socket.on("send-message", async ({ msg, to }) => {
-     
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
-   
 
       const formattedMsg = formatMessage(
         msg,
         { username: socket.username, userId: socket.userId },
         to
-      )
+      );
 
       // TODO: Check if the conversation exists in db
       // If YES: Fetch the object, push formatted message to content array
       // If NO: Create new convo, save accordingly
       // A: socket.username, socket.userId
       // B: to.username, to.userId
-      
-      let newConvo = new Conversation({username: socket.username, userId: socket.userId, content: [formattedMsg]      })
 
-      await newConvo.save();
-      
+      let curConvo = await Conversation.findOne({
+        usernameA: socket.username,
+        userIdA: socket.userId,
+        usernameB: to.username,
+        userIdB: to.userId,
+      });
+
+      if (curConvo) {
+        console.log("found existing convo", curConvo);
+        curConvo.content.push(formattedMsg);
+        Conversation.updateOne(
+          {
+            usernameA: socket.username,
+            userIdA: socket.userId,
+            usernameB: to.username,
+            userIdB: to.userId,
+          },
+          curConvo
+        );
+        // Set back to null
+        curConvo = null;
+      } else {
+        curConvo = await Conversation.findOne({
+          usernameA: to.username,
+          userIdA: to.userId,
+          usernameB: socket.username,
+          userIdB: socket.userId,
+        });
+      }
+
+      if (curConvo) {
+        console.log("found existing convo", curConvo);
+        curConvo.content.push(formattedMsg);
+        Conversation.updateOne(
+          {
+            usernameA: to.username,
+            userIdA: to.userId,
+            usernameB: socket.username,
+            userIdB: socket.userId,
+          },
+          curConvo
+        );
+      } else {
+        console.log("no ongoing convo found, creating a new one.");
+        let newConvo = new Conversation({
+          usernameA: to.username,
+          userIdA: to.userId,
+          usernameB: socket.username,
+          userIdB: socket.userId,
+          content: [formattedMsg],
+        });
+        await newConvo.save();
+      }
+
       io.to(to.userId) // to recipient
         .to(socket.userId) // to sender room
         .emit(
@@ -145,9 +194,7 @@ const chatSocket = (server) => {
             { username: socket.username, userId: socket.userId },
             to
           )
-
         );
-      
     });
 
     socket.on("disconnect", async () => {

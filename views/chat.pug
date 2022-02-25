@@ -52,7 +52,7 @@ block content
                     }
                     
                     const URL = "http://localhost:3000";
-                    const socket = io(URL, { autoConnect: false });
+                    const socket = io(URL, { autoConnect: false, transports: ['websocket'], upgrade: false });
                     
                     socket.onAny((event, ...args) => {
                         console.log(event, args);
