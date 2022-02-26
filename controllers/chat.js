@@ -130,7 +130,7 @@ const chatSocket = (server) => {
       // If NO: Create new convo, save accordingly
       // A: socket.username, socket.userId
       // B: to.username, to.userId
-      let foundTheFirstTime = false;
+
       let curConvo = await Conversation.findOne({
         usernameA: socket.username,
         userIdA: socket.userId,
@@ -138,8 +138,8 @@ const chatSocket = (server) => {
         userIdB: to.userId,
       });
 
+      // 1st try
       if (curConvo) {
-        foundTheFirstTime = true;
         console.log("found existing convo", curConvo);
         curConvo.content.push(formattedMsg);
         Conversation.updateOne(
@@ -151,37 +151,40 @@ const chatSocket = (server) => {
           },
           curConvo
         );
-      } else {
+      }
+      // 2nd try
+      else {
         curConvo = await Conversation.findOne({
           usernameA: to.username,
           userIdA: to.userId,
           usernameB: socket.username,
           userIdB: socket.userId,
         });
-      }
-
-      if (!foundTheFirstTime && curConvo) {
-        console.log("found existing convo", curConvo);
-        curConvo.content.push(formattedMsg);
-        Conversation.updateOne(
-          {
+        if (curConvo) {
+          console.log("found existing convo", curConvo);
+          curConvo.content.push(formattedMsg);
+          Conversation.updateOne(
+            {
+              usernameA: to.username,
+              userIdA: to.userId,
+              usernameB: socket.username,
+              userIdB: socket.userId,
+            },
+            curConvo
+          );
+        }
+        // ok new convo
+        else {
+          console.log("no ongoing convo found, creating a new one.");
+          let newConvo = new Conversation({
             usernameA: to.username,
             userIdA: to.userId,
             usernameB: socket.username,
             userIdB: socket.userId,
-          },
-          curConvo
-        );
-      } else {
-        console.log("no ongoing convo found, creating a new one.");
-        let newConvo = new Conversation({
-          usernameA: to.username,
-          userIdA: to.userId,
-          usernameB: socket.username,
-          userIdB: socket.userId,
-          content: [formattedMsg],
-        });
-        await newConvo.save();
+            content: [formattedMsg],
+          });
+          await newConvo.save();
+        }
       }
 
       io.to(to.userId) // to recipient
