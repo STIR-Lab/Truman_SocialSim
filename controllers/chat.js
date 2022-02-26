@@ -130,7 +130,7 @@ const chatSocket = (server) => {
       // If NO: Create new convo, save accordingly
       // A: socket.username, socket.userId
       // B: to.username, to.userId
-
+      let foundTheFirstTime = false;
       let curConvo = await Conversation.findOne({
         usernameA: socket.username,
         userIdA: socket.userId,
@@ -139,6 +139,7 @@ const chatSocket = (server) => {
       });
 
       if (curConvo) {
+        foundTheFirstTime = true;
         console.log("found existing convo", curConvo);
         curConvo.content.push(formattedMsg);
         Conversation.updateOne(
@@ -150,8 +151,6 @@ const chatSocket = (server) => {
           },
           curConvo
         );
-        // Set back to null
-        curConvo = null;
       } else {
         curConvo = await Conversation.findOne({
           usernameA: to.username,
@@ -161,7 +160,7 @@ const chatSocket = (server) => {
         });
       }
 
-      if (curConvo) {
+      if (!foundTheFirstTime && curConvo) {
         console.log("found existing convo", curConvo);
         curConvo.content.push(formattedMsg);
         Conversation.updateOne(
