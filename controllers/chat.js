@@ -6,80 +6,6 @@ const mongoose = require("mongoose");
 const Conversation = require("../models/Chat");
 
 const sessionStore = new InMemorySessionStore();
-const randomId = () => crypto.randomBytes(8).toString("hex");
-
-const chatBot = "chatBot";
-
-function leaveNotification(from) {
-  return {
-    type: "txt",
-    body: `${from} has left the chat`,
-  };
-}
-
-function formatMessage(msg, from, to) {
-  return {
-    msg: {
-      ...msg,
-      time: moment().format("h:mm a"),
-    },
-    from: from, // NOTE: string | object
-    to: to, // NOTE: string | object
-  };
-}
-
-function getCurrentUsers() {
-  const userList = [];
-  sessionStore.findAllSessions().forEach((session) => {
-    if (session.connected) {
-      userList.push({
-        userId: session.userId,
-        username: session.username,
-      });
-    }
-  });
-
-  return userList;
-}
-
-async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
-  let curConvo = await Conversation.findOne({
-    usernameA,
-    userIdA,
-    usernameB,
-    userIdB,
-  });
-
-  if (curConvo) {
-    console.log("found existing convo", curConvo);
-    return {
-      curConvo,
-      usernameA,
-      userIdA,
-      usernameB,
-      userIdB,
-    };
-  } else {
-    curConvo = await Conversation.findOne({
-      usernameB,
-      userIdB,
-      usernameA,
-      userIdA,
-    });
-    if (curConvo) {
-      console.log("found existing convo", curConvo);
-      return {
-        curConvo,
-        usernameA: usernameB,
-        userIdA: userIdB,
-        usernameB: usernameA,
-        userIdB: userIdA,
-      };
-    }
-  }
-
-  return null;
-}
 
 const chatSocket = (server) => {
   const io = new Server(server);
@@ -325,6 +251,91 @@ const chatSocket = (server) => {
     });
   });
 };
+
+/**
+ * Utils
+ *
+ */
+
+const randomId = () => crypto.randomBytes(8).toString("hex");
+
+const chatBot = "chatBot";
+
+function leaveNotification(from) {
+  return {
+    type: "txt",
+    body: `${from} has left the chat`,
+  };
+}
+
+function formatMessage(msg, from, to) {
+  return {
+    msg: {
+      ...msg,
+      time: moment().format("h:mm:ss a"),
+    },
+    from: from, // NOTE: string | object
+    to: to, // NOTE: string | object
+  };
+}
+
+function getCurrentUsers() {
+  const userList = [];
+  sessionStore.findAllSessions().forEach((session) => {
+    if (session.connected) {
+      userList.push({
+        userId: session.userId,
+        username: session.username,
+      });
+    }
+  });
+
+  return userList;
+}
+
+async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
+  let curConvo = await Conversation.findOne({
+    usernameA,
+    userIdA,
+    usernameB,
+    userIdB,
+  });
+
+  if (curConvo) {
+    console.log("found existing convo", curConvo);
+    return {
+      curConvo,
+      usernameA,
+      userIdA,
+      usernameB,
+      userIdB,
+    };
+  } else {
+    curConvo = await Conversation.findOne({
+      usernameB,
+      userIdB,
+      usernameA,
+      userIdA,
+    });
+    if (curConvo) {
+      console.log("found existing convo", curConvo);
+      return {
+        curConvo,
+        usernameA: usernameB,
+        userIdA: userIdB,
+        usernameB: usernameA,
+        userIdB: userIdA,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Routes, Exports
+ *
+ */
 
 getChat = (req, res) => {
   res.render("chat", {});
