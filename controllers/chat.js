@@ -2,7 +2,6 @@ const { Server } = require("socket.io");
 const moment = require("moment");
 const { InMemorySessionStore } = require("../sessionStore");
 const crypto = require("crypto");
-const Chat = require("../models/Chat");
 const mongoose = require("mongoose");
 const Conversation = require("../models/Chat");
 
@@ -83,6 +82,7 @@ const chatSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("Websocket connection...");
 
+
     // Save session info and emit to the client
     sessionStore.saveSession(socket.sessionId, {
       userId: socket.userId,
@@ -116,6 +116,34 @@ const chatSocket = (server) => {
 
     // diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
+
+    // Finds conversation in db and sends back to the front end
+    socket.on("get-messages", async ({ to }) => {
+      let curConvo = await Conversation.findOne({
+        usernameA: socket.username,
+        userIdA: socket.userId,
+        usernameB: to.username,
+        userIdB: to.userId,
+      });
+
+      if(curConvo) {
+
+      }
+      else {
+         curConvo = await Conversation.findOne({
+          usernameA: to.username,
+          userIdA: to.userId,
+          usernameB: socket.username,
+          userIdB: socket.userId,
+        });
+
+      }
+
+      //Sending back the conversation content to user
+      io.to(socket.userId).emit("message-list", curConvo.content);
+
+    })
+
     socket.on("send-message", async ({ msg, to }) => {
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
 
@@ -142,15 +170,24 @@ const chatSocket = (server) => {
       if (curConvo) {
         console.log("found existing convo", curConvo);
         curConvo.content.push(formattedMsg);
-        Conversation.updateOne(
-          {
-            usernameA: socket.username,
-            userIdA: socket.userId,
-            usernameB: to.username,
-            userIdB: to.userId,
-          },
-          curConvo
-        );
+        console.log(curConvo.content);
+        try {
+          await Conversation.updateOne(
+            {
+              "usernameA": socket.username,
+              "userIdA": socket.userId,
+              "usernameB": to.username,
+              "userIdB": to.userId,
+            }, {
+            $push: { "content": formattedMsg }
+          }
+
+          );
+        }
+
+        catch (err) {
+          console.log(err)
+        }
       }
       // 2nd try
       else {
@@ -161,16 +198,19 @@ const chatSocket = (server) => {
           userIdB: socket.userId,
         });
         if (curConvo) {
-          console.log("found existing convo", curConvo);
+          console.log("second if statement", curConvo);
           curConvo.content.push(formattedMsg);
-          Conversation.updateOne(
+          console.log(curConvo.content)
+          await Conversation.updateOne(
             {
-              usernameA: to.username,
-              userIdA: to.userId,
-              usernameB: socket.username,
-              userIdB: socket.userId,
+              "usernameA": to.username,
+              "userIdA": to.userId,
+              "usernameB": socket.username,
+              "userIdB": socket.userId,
             },
-            curConvo
+            {
+              $push: { "content": formattedMsg }
+            }
           );
         }
         // ok new convo
@@ -186,6 +226,8 @@ const chatSocket = (server) => {
           await newConvo.save();
         }
       }
+
+
 
       io.to(to.userId) // to recipient
         .to(socket.userId) // to sender room

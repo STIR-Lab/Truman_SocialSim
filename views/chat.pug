@@ -68,6 +68,10 @@ block content
                         socket.connect();
                     }
 
+                    /*socket.on("chatHistory", (history) => {
+                        console.log(history)
+                    })*/
+
                     socket.on("session", ({ sessionId, userId }) => {
                         // attach the session ID to the next reconnection attempts
                         socket.auth = { sessionId };
@@ -118,6 +122,15 @@ block content
                         $('#messages').empty();
                         $('#messageInput').show();
                         $('.ui.modal').modal('hide');
+
+                        // after we get the chat partner info we want to get all messages
+                         socket.emit('get-messages', {
+                         to: {
+                                    username: chatPartnerUsername,
+                                    userId: chatPartnerUserId,
+                                    socketId: chatPartnerSocketId
+                                } 
+                    })
                     }
 
                     $('#messageInput')[0].addEventListener('submit', function(e) {
@@ -138,6 +151,23 @@ block content
                             input.value = '';
                         }
                     });
+
+                   
+                    // get all messages
+                    socket.on("message-list", (messageList) => {
+                        for(let i = 0; i < messageList.length; i++) {
+                             if (messageList[i].from.userId == userId) {
+                            addChatSentMessage(messageList[i].msg.body, messageList[i].msg.time);
+                        }
+                        else if (messageList[i].to.userId == userId && messageList[i].from.userId == chatPartnerUserId) {
+                            addChatReceivedMessage(messageList[i].msg.body, messageList[i].msg.time);
+                        }
+
+                        }
+                       
+                    })
+
+
 
                     socket.on("receive-message", (msg) => {
                         if (msg.from.userId == userId) {
