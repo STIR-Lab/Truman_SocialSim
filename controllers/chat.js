@@ -42,6 +42,45 @@ function getCurrentUsers() {
   return userList;
 }
 
+async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
+  let curConvo = await Conversation.findOne({
+    usernameA,
+    userIdA,
+    usernameB,
+    userIdB,
+  });
+
+  if (curConvo) {
+    console.log("found existing convo", curConvo);
+    return {
+      curConvo,
+      usernameA,
+      userIdA,
+      usernameB,
+      userIdB,
+    };
+  } else {
+    curConvo = await Conversation.findOne({
+      usernameB,
+      userIdB,
+      usernameA,
+      userIdA,
+    });
+    if (curConvo) {
+      console.log("found existing convo", curConvo);
+      return {
+        curConvo,
+        usernameA: usernameB,
+        userIdA: userIdB,
+        usernameB: usernameA,
+        userIdB: userIdA,
+      };
+    }
+  }
+
+  return null;
+}
+
 const chatSocket = (server) => {
   const io = new Server(server);
 
@@ -82,7 +121,6 @@ const chatSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("Websocket connection...");
 
-
     // Save session info and emit to the client
     sessionStore.saveSession(socket.sessionId, {
       userId: socket.userId,
@@ -98,51 +136,42 @@ const chatSocket = (server) => {
     const userList = getCurrentUsers();
     socket.emit("userList", userList);
 
-    /*
-    {
-      msg: {
-        type: "txt" | "img"
-        body: string | blob, actual content of the message
-        mimeType?: "png" | "jpg", etc
-        fileName?: string
-      },
-      to: {
-        username: string
-        userId: string,
-        socketId: string
-      }
-    }
-    */
-
     // diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
 
     // Finds conversation in db and sends back to the front end
     socket.on("get-messages", async ({ to }) => {
-      let curConvo = await Conversation.findOne({
-        usernameA: socket.username,
-        userIdA: socket.userId,
-        usernameB: to.username,
-        userIdB: to.userId,
-      });
-
-      if(curConvo) {
-
-      }
-      else {
-         curConvo = await Conversation.findOne({
-          usernameA: to.username,
-          userIdA: to.userId,
-          usernameB: socket.username,
-          userIdB: socket.userId,
-        });
-
-      }
+      let convoInfo = searchConvo(
+        socket.username,
+        socket.userId,
+        to.username,
+        to.userId
+      );
 
       //Sending back the conversation content to user
-      io.to(socket.userId).emit("message-list", curConvo.content);
+      io.to(socket.userId).emit(
+        "message-list",
+        convoInfo ? convoInfo.curConvo.content : []
+      );
+    });
 
-    })
+    /**
+     * Message
+     *
+     * {
+     *  msg: {
+     *     type: "txt" | "img"
+     *     body: string | blob, actual content of the message
+     *     mimeType?: "png" | "jpg", etc
+     *     fileName?: string
+     *   },
+     *  to: {
+     *     username: string
+     *     userId: string,
+     *     socketId: string
+     *   }
+     * }
+     */
 
     socket.on("send-message", async ({ msg, to }) => {
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
@@ -153,81 +182,42 @@ const chatSocket = (server) => {
         to
       );
 
-      // TODO: Check if the conversation exists in db
-      // If YES: Fetch the object, push formatted message to content array
-      // If NO: Create new convo, save accordingly
-      // A: socket.username, socket.userId
-      // B: to.username, to.userId
+      let convoInfo = await searchConvo(
+        socket.username,
+        socket.userId,
+        to.username,
+        to.userId
+      );
 
-      let curConvo = await Conversation.findOne({
-        usernameA: socket.username,
-        userIdA: socket.userId,
-        usernameB: to.username,
-        userIdB: to.userId,
-      });
-
-      // 1st try
-      if (curConvo) {
-        console.log("found existing convo", curConvo);
-        curConvo.content.push(formattedMsg);
-        console.log(curConvo.content);
+      if (convoInfo) {
         try {
           await Conversation.updateOne(
             {
-              "usernameA": socket.username,
-              "userIdA": socket.userId,
-              "usernameB": to.username,
-              "userIdB": to.userId,
-            }, {
-            $push: { "content": formattedMsg }
-          }
-
+              usernameA: convoInfo.usernameA,
+              userIdA: convoInfo.userIdA,
+              usernameB: convoInfo.usernameB,
+              userIdB: convoInfo.userIdB,
+            },
+            {
+              $push: { content: formattedMsg },
+            }
           );
-        }
-
-        catch (err) {
-          console.log(err)
+        } catch (err) {
+          console.log(err);
         }
       }
-      // 2nd try
+      // ok new convo
       else {
-        curConvo = await Conversation.findOne({
+        console.log("no ongoing convo found, creating a new one.");
+        let newConvo = new Conversation({
           usernameA: to.username,
           userIdA: to.userId,
           usernameB: socket.username,
           userIdB: socket.userId,
+          content: [formattedMsg],
         });
-        if (curConvo) {
-          console.log("second if statement", curConvo);
-          curConvo.content.push(formattedMsg);
-          console.log(curConvo.content)
-          await Conversation.updateOne(
-            {
-              "usernameA": to.username,
-              "userIdA": to.userId,
-              "usernameB": socket.username,
-              "userIdB": socket.userId,
-            },
-            {
-              $push: { "content": formattedMsg }
-            }
-          );
-        }
-        // ok new convo
-        else {
-          console.log("no ongoing convo found, creating a new one.");
-          let newConvo = new Conversation({
-            usernameA: to.username,
-            userIdA: to.userId,
-            usernameB: socket.username,
-            userIdB: socket.userId,
-            content: [formattedMsg],
-          });
-          await newConvo.save();
-        }
+        await newConvo.save();
       }
-
-
 
       io.to(to.userId) // to recipient
         .to(socket.userId) // to sender room
@@ -239,6 +229,72 @@ const chatSocket = (server) => {
             to
           )
         );
+    });
+
+    /**
+     * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
+     *
+     * {
+     *  msg: {
+     *    type: "txt" | "img"
+     *    body: string | blob, actual content of the message
+     *    mimeType?: "png" | "jpg", etc
+     *    fileName?: string
+     *    time: string
+     *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
+     *  }
+     *  to: {
+     *     username: string
+     *     userId: string,
+     *     socketId: string
+     *   }
+     * }
+     *
+     */
+
+    socket.on("send-reaction", async ({ msg, to }) => {
+      let convoInfo = await searchConvo(
+        socket.username,
+        socket.userId,
+        to.username,
+        to.userId
+      );
+
+      if (!convoInfo) {
+        console.log("Did not find corresponding conversation.");
+        return;
+      }
+
+      // search for the message according to body & time
+      for (let i = 0; i < convoInfo.curConvo.content.length; i++) {
+        let curMsg = convoInfo.curConvo.content[i];
+        if (curMsg.body === msg.body && curMsg.time === msg.time) {
+          // loop through and update each reaction in reaction array
+          for (let r of msg.reaction) {
+            // remove reaction
+            if (curMsg[r].reacted) {
+              convoInfo.curConvo.content[i][r].userReacted =
+                convoInfo.curConvo.content[i][r].userReacted.filter(
+                  (val) =>
+                    val.username != socket.userId &&
+                    val.userId != socket.username
+                );
+            }
+            // add reaction
+            else {
+              convoInfo.curConvo.content[i][r].userReacted.push({
+                username: socket.username,
+                userId: socket.userId,
+              });
+            }
+            // flip reaction status
+            convoInfo.curConvo.content[i][r].reacted =
+              !convoInfo.curConvo.content[i][r].reacted;
+          }
+
+          break;
+        }
+      }
     });
 
     socket.on("disconnect", async () => {
