@@ -9,20 +9,44 @@ const messageSchema = new Schema({
     fileName: String,
     time: String,
     thumbsUp: {
-      reacted: Boolean,
-      userReacted: Array,
+      self: {
+        type: Boolean,
+        default: false,
+      },
+      other: {
+        type: Boolean,
+        default: false,
+      },
     },
     thumbsDown: {
-      reacted: Boolean,
-      userReacted: Array,
+      self: {
+        type: Boolean,
+        default: false,
+      },
+      other: {
+        type: Boolean,
+        default: false,
+      },
     },
     like: {
-      reacted: Boolean,
-      userReacted: Array,
+      self: {
+        type: Boolean,
+        default: false,
+      },
+      other: {
+        type: Boolean,
+        default: false,
+      },
     },
     laugh: {
-      reacted: Boolean,
-      userReacted: Array,
+      self: {
+        type: Boolean,
+        default: false,
+      },
+      other: {
+        type: Boolean,
+        default: false,
+      },
     },
   },
   from: {
@@ -40,8 +64,9 @@ const conversationSchema = new Schema({
   userIdA: String,
   usernameB: String,
   userIdB: String,
-  content: [messageSchema],
+  content: [{ type: Schema.Types.ObjectId, ref: messageSchema }],
 });
 
+const Message = mongoose.model("Message", messageSchema);
 const Conversation = mongoose.model("Conversation", conversationSchema);
-module.exports = Conversation;
+module.exports = { Conversation, Message };

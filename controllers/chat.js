@@ -3,7 +3,9 @@ const moment = require("moment");
 const { InMemorySessionStore } = require("../sessionStore");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
-const Conversation = require("../models/Chat");
+const { Conversation, Message } = require("../models/Chat");
+const { format } = require("path");
+const { ObjectId } = require("mongoose");
 
 const sessionStore = new InMemorySessionStore();
 
@@ -125,7 +127,7 @@ const chatSocket = (server) => {
               userIdB: convoInfo.userIdB,
             },
             {
-              $push: { content: formattedMsg },
+              $push: { content: new Message({ ...formattedMsg }) },
             }
           );
         } catch (err) {
@@ -135,12 +137,15 @@ const chatSocket = (server) => {
       // ok new convo
       else {
         console.log("no ongoing convo found, creating a new one.");
+        let newMsg = new Message({
+          ...formattedMsg,
+        });
         let newConvo = new Conversation({
           usernameA: to.username,
           userIdA: to.userId,
           usernameB: socket.username,
           userIdB: socket.userId,
-          content: [formattedMsg],
+          content: [newMsg],
         });
         await newConvo.save();
       }
@@ -197,25 +202,35 @@ const chatSocket = (server) => {
         if (curMsg.body === msg.body && curMsg.time === msg.time) {
           // loop through and update each reaction in reaction array
           for (let r of msg.reaction) {
-            // remove reaction
-            if (curMsg[r].reacted) {
-              convoInfo.curConvo.content[i][r].userReacted =
-                convoInfo.curConvo.content[i][r].userReacted.filter(
-                  (val) =>
-                    val.username != socket.userId &&
-                    val.userId != socket.username
-                );
+            if (curMsg.from.userId === socket.userId) {
+              // flip self
+              let keyString = "content." + i + "." + r + ".self";
+              await Conversation.updateOne(
+                {
+                  usernameA: convoInfo.usernameA,
+                  userIdA: convoInfo.userIdA,
+                  usernameB: convoInfo.usernameB,
+                  userIdB: convoInfo.userIdB,
+                },
+                {
+                  $set: { keyString: !curMsg.r.self },
+                }
+              );
+            } else {
+              // flip other
+              let keyString = "content." + i + "." + r + ".other";
+              await Conversation.updateOne(
+                {
+                  usernameA: convoInfo.usernameA,
+                  userIdA: convoInfo.userIdA,
+                  usernameB: convoInfo.usernameB,
+                  userIdB: convoInfo.userIdB,
+                },
+                {
+                  $set: { keyString: !curMsg.r.other },
+                }
+              );
             }
-            // add reaction
-            else {
-              convoInfo.curConvo.content[i][r].userReacted.push({
-                username: socket.username,
-                userId: socket.userId,
-              });
-            }
-            // flip reaction status
-            convoInfo.curConvo.content[i][r].reacted =
-              !convoInfo.curConvo.content[i][r].reacted;
           }
 
           break;
@@ -273,6 +288,22 @@ function formatMessage(msg, from, to) {
     msg: {
       ...msg,
       time: moment().format("h:mm:ss a"),
+    },
+    thumbsUp: {
+      self: false,
+      other: false,
+    },
+    thumbsDown: {
+      self: false,
+      other: false,
+    },
+    like: {
+      self: false,
+      other: false,
+    },
+    laugh: {
+      self: false,
+      other: false,
     },
     from: from, // NOTE: string | object
     to: to, // NOTE: string | object
