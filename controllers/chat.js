@@ -69,7 +69,7 @@ const chatSocket = (server) => {
 
     // Finds conversation in db and sends back to the front end
     socket.on("get-messages", async ({ to }) => {
-      let convoInfo = searchConvo(
+      let convoInfo = await searchConvo(
         socket.username,
         socket.userId,
         to.username,
@@ -121,13 +121,13 @@ const chatSocket = (server) => {
         try {
           await Conversation.updateOne(
             {
-              usernameA: convoInfo.usernameA,
-              userIdA: convoInfo.userIdA,
-              usernameB: convoInfo.usernameB,
-              userIdB: convoInfo.userIdB,
+              "usernameA": convoInfo.usernameA,
+              "userIdA": convoInfo.userIdA,
+              "usernameB": convoInfo.usernameB,
+              "userIdB": convoInfo.userIdB,
             },
             {
-              $push: { content: formattedMsg },
+              $push: { "content": formattedMsg },
             }
           );
         } catch (err) {
@@ -200,18 +200,20 @@ const chatSocket = (server) => {
         if (curMsg.body === msg.body && curMsg.time === msg.time) {
           // loop through and update each reaction in reaction array
           for (let r of msg.reaction) {
+            // FIXME: Update a specific field in a specific message object in the content array
             if (curMsg.from.userId === socket.userId) {
               // flip self
               let keyString = "content." + i + ".msg." + r + ".self";
+             
               await Conversation.updateOne(
                 {
-                  usernameA: convoInfo.usernameA,
-                  userIdA: convoInfo.userIdA,
-                  usernameB: convoInfo.usernameB,
-                  userIdB: convoInfo.userIdB,
+                  "usernameA": convoInfo.usernameA,
+                  "userIdA": convoInfo.userIdA,
+                  "usernameB": convoInfo.usernameB,
+                  "userIdB": convoInfo.userIdB,
                 },
                 {
-                  $set: { keyString: !curMsg.r.self },
+                  $set: { keyString: !curMsg.msg.r.self },
                 }
               );
             } else {
@@ -219,13 +221,13 @@ const chatSocket = (server) => {
               let keyString = "content." + i + ".msg." + r + ".other";
               await Conversation.updateOne(
                 {
-                  usernameA: convoInfo.usernameA,
-                  userIdA: convoInfo.userIdA,
-                  usernameB: convoInfo.usernameB,
-                  userIdB: convoInfo.userIdB,
+                  "usernameA": convoInfo.usernameA,
+                  "userIdA": convoInfo.userIdA,
+                  "usernameB": convoInfo.usernameB,
+                  'userIdB': convoInfo.userIdB,
                 },
                 {
-                  $set: { keyString: !curMsg.r.other },
+                  $set: { keyString: !curMsg.msg.r.other },
                 }
               );
             }
@@ -324,32 +326,32 @@ function getCurrentUsers() {
 
 async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
   let curConvo = await Conversation.findOne({
-    usernameA,
-    userIdA,
-    usernameB,
-    userIdB,
+    usernameA: usernameA,
+    userIdA: userIdA,
+    usernameB: usernameB,
+    userIdB: userIdB,
   });
 
   if (curConvo) {
     console.log("found existing convo", curConvo);
     return {
-      curConvo,
-      usernameA,
-      userIdA,
-      usernameB,
-      userIdB,
+      curConvo: curConvo,
+      usernameA: usernameA,
+      userIdA: userIdA,
+      usernameB: usernameB,
+      userIdB: userIdB,
     };
   } else {
     curConvo = await Conversation.findOne({
-      usernameB,
-      userIdB,
-      usernameA,
-      userIdA,
+      usernameA: usernameB,
+      userIdA: userIdB,
+      usernameB: usernameA,
+      userIdB: userIdA,
     });
     if (curConvo) {
       console.log("found existing convo", curConvo);
       return {
-        curConvo,
+        curConvo: curConvo,
         usernameA: usernameB,
         userIdA: userIdB,
         usernameB: usernameA,
