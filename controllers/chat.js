@@ -202,7 +202,7 @@ const chatSocket = (server) => {
           for (let r of msg.reaction) {
             if (curMsg.from.userId === socket.userId) {
               // flip self
-              let keyString = "content." + i + ".msg" + r + ".self";
+              let keyString = "content." + i + ".msg." + r + ".self";
               await Conversation.updateOne(
                 {
                   usernameA: convoInfo.usernameA,
@@ -216,7 +216,7 @@ const chatSocket = (server) => {
               );
             } else {
               // flip other
-              let keyString = "content." + i + ".msg" + r + ".other";
+              let keyString = "content." + i + ".msg." + r + ".other";
               await Conversation.updateOne(
                 {
                   usernameA: convoInfo.usernameA,
