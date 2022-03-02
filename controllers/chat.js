@@ -3,7 +3,7 @@ const moment = require("moment");
 const { InMemorySessionStore } = require("../sessionStore");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
-const Conversation = require("../models/Chat");
+const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const { ObjectId } = require("mongoose");
 
@@ -79,7 +79,7 @@ const chatSocket = (server) => {
       //Sending back the conversation content to user
       io.to(socket.userId).emit(
         "message-list",
-        convoInfo ? convoInfo.curConvo.content : []
+        convoInfo.content
       );
     });
 
@@ -104,10 +104,10 @@ const chatSocket = (server) => {
     socket.on("send-message", async ({ msg, to }) => {
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
 
-      const formattedMsg = formatMessage(
+      let formattedMsg = formatMessage(
         msg,
         { username: socket.username, userId: socket.userId },
-        to
+        to,
       );
 
       let convoInfo = await searchConvo(
@@ -117,22 +117,12 @@ const chatSocket = (server) => {
         to.userId
       );
 
+
+
+
       if (convoInfo) {
-        try {
-          await Conversation.updateOne(
-            {
-              "usernameA": convoInfo.usernameA,
-              "userIdA": convoInfo.userIdA,
-              "usernameB": convoInfo.usernameB,
-              "userIdB": convoInfo.userIdB,
-            },
-            {
-              $push: { "content": formattedMsg },
-            }
-          );
-        } catch (err) {
-          console.log(err);
-        }
+       
+        storeMessage(formattedMsg, convoInfo)
       }
       // ok new convo
       else {
@@ -143,233 +133,254 @@ const chatSocket = (server) => {
           userIdA: to.userId,
           usernameB: socket.username,
           userIdB: socket.userId,
-          content: [formattedMsg],
         });
         await newConvo.save();
+
+        storeMessage(formattedMsg, newConvo)
+        
       }
 
-      io.to(to.userId) // to recipient
-        .to(socket.userId) // to sender room
-        .emit(
-          "receive-message",
-          formatMessage(
-            msg,
-            { username: socket.username, userId: socket.userId },
-            to
-          )
+        io.to(to.userId) // to recipient
+          //.to(socket.userId) // to sender room
+          .emit(
+            "receive-message",
+
+            formatMessage(
+              msg,
+              { username: socket.username, userId: socket.userId },
+              to,
+
+            )
+          );
+      
+
+      /**
+       * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
+       *
+       * {
+       *  msg: {
+       *    type: "txt" | "img"
+       *    body: string | blob, actual content of the message
+       *    mimeType?: "png" | "jpg", etc
+       *    fileName?: string
+       *    time: string
+       *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
+       *  }
+       *  to: {
+       *     username: string
+       *     userId: string,
+       *     socketId: string
+       *   }
+       * }
+       *
+       */
+
+      socket.on("send-reaction", async ({ msg, to }) => {
+        let convoInfo = await searchConvo(
+          socket.username,
+          socket.userId,
+          to.username,
+          to.userId
         );
-    });
 
-    /**
-     * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
-     *
-     * {
-     *  msg: {
-     *    type: "txt" | "img"
-     *    body: string | blob, actual content of the message
-     *    mimeType?: "png" | "jpg", etc
-     *    fileName?: string
-     *    time: string
-     *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
-     *  }
-     *  to: {
-     *     username: string
-     *     userId: string,
-     *     socketId: string
-     *   }
-     * }
-     *
-     */
-
-    socket.on("send-reaction", async ({ msg, to }) => {
-      let convoInfo = await searchConvo(
-        socket.username,
-        socket.userId,
-        to.username,
-        to.userId
-      );
-
-      if (!convoInfo) {
-        console.log("Did not find corresponding conversation.");
-        return;
-      }
-
-      // search for the message according to body & time
-      for (let i = 0; i < convoInfo.curConvo.content.length; i++) {
-        let curMsg = convoInfo.curConvo.content[i];
-        if (curMsg.body === msg.body && curMsg.time === msg.time) {
-          // loop through and update each reaction in reaction array
-          for (let r of msg.reaction) {
-            // FIXME: Update a specific field in a specific message object in the content array
-            if (curMsg.from.userId === socket.userId) {
-              // flip self
-              let keyString = "content." + i + ".msg." + r + ".self";
-             
-              await Conversation.updateOne(
-                {
-                  "usernameA": convoInfo.usernameA,
-                  "userIdA": convoInfo.userIdA,
-                  "usernameB": convoInfo.usernameB,
-                  "userIdB": convoInfo.userIdB,
-                },
-                {
-                  $set: { keyString: !curMsg.msg.r.self },
-                }
-              );
-            } else {
-              // flip other
-              let keyString = "content." + i + ".msg." + r + ".other";
-              await Conversation.updateOne(
-                {
-                  "usernameA": convoInfo.usernameA,
-                  "userIdA": convoInfo.userIdA,
-                  "usernameB": convoInfo.usernameB,
-                  'userIdB': convoInfo.userIdB,
-                },
-                {
-                  $set: { keyString: !curMsg.msg.r.other },
-                }
-              );
-            }
-          }
-
-          break;
+        if (!convoInfo) {
+          console.log("Did not find corresponding conversation.");
+          return;
         }
-      }
-    });
 
-    socket.on("disconnect", async () => {
-      const matchingSockets = await io.in(socket.userId).allSockets();
-      const isDisconnected = matchingSockets.size === 0;
-      if (isDisconnected) {
-        // Disconnect current session from sessionStore
-        sessionStore.disconnectSession(socket.sessionId);
-        /** 
-        socket.broadcast.emit(
-          "disconneted",
-          formatMessage(leaveNotification(socket.username), chatBot, "ALL")
-        );
-        */
-        // FIXME: Name of the event subject to change for FE's convenience
-        socket.rooms.forEach((roomId) => {
-          socket.broadcast
-            .to(roomId)
-            .emit(
-              "disconneted",
-              formatMessage(leaveNotification(socket.username), chatBot, "ALL")
-            );
-        });
-        // refresh current users
-        const userList = getCurrentUsers();
-        socket.emit("userList", userList);
-      }
-    });
-  });
-};
+        // search for the message according to body & time
+        for (let i = 0; i < convoInfo.curConvo.content.length; i++) {
+          let curMsg = convoInfo.curConvo.content[i];
+          if (curMsg.body === msg.body && curMsg.time === msg.time) {
+            // loop through and update each reaction in reaction array
+            for (let r of msg.reaction) {
+              // FIXME: Update a specific field in a specific message object in the content array
+              if (curMsg.from.userId === socket.userId) {
+                // flip self
+                let keyString = "content." + i + ".msg." + r + ".self";
 
-/**
- * Utils
- *
- */
+                await Conversation.updateOne(
+                  {
+                    "usernameA": convoInfo.usernameA,
+                    "userIdA": convoInfo.userIdA,
+                    "usernameB": convoInfo.usernameB,
+                    "userIdB": convoInfo.userIdB,
+                  },
+                  {
+                    $set: { keyString: !curMsg.msg.r.self },
+                  }
+                );
+              } else {
+                // flip other
+                let keyString = "content." + i + ".msg." + r + ".other";
+                await Conversation.updateOne(
+                  {
+                    "usernameA": convoInfo.usernameA,
+                    "userIdA": convoInfo.userIdA,
+                    "usernameB": convoInfo.usernameB,
+                    'userIdB': convoInfo.userIdB,
+                  },
+                  {
+                    $set: { keyString: !curMsg.msg.r.other },
+                  }
+                );
+              }
+            }
 
-const randomId = () => crypto.randomBytes(8).toString("hex");
-
-const chatBot = "chatBot";
-
-function leaveNotification(from) {
-  return {
-    type: "txt",
-    body: `${from} has left the chat`,
-  };
-}
-
-function formatMessage(msg, from, to) {
-  return {
-    msg: {
-      ...msg,
-      time: moment().format("h:mm:ss a"),
-      thumbsUp: {
-        self: false,
-        other: false,
-      },
-      thumbsDown: {
-        self: false,
-        other: false,
-      },
-      like: {
-        self: false,
-        other: false,
-      },
-      laugh: {
-        self: false,
-        other: false,
-      },
-    },
-    from: from, // NOTE: string | object
-    to: to, // NOTE: string | object
-  };
-}
-
-function getCurrentUsers() {
-  const userList = [];
-  sessionStore.findAllSessions().forEach((session) => {
-    if (session.connected) {
-      userList.push({
-        userId: session.userId,
-        username: session.username,
+            break;
+          }
+        }
       });
-    }
+
+      socket.on("disconnect", async () => {
+        const matchingSockets = await io.in(socket.userId).allSockets();
+        const isDisconnected = matchingSockets.size === 0;
+        if (isDisconnected) {
+          // Disconnect current session from sessionStore
+          sessionStore.disconnectSession(socket.sessionId);
+          /** 
+          socket.broadcast.emit(
+            "disconneted",
+            formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+          );
+          */
+          // FIXME: Name of the event subject to change for FE's convenience
+          socket.rooms.forEach((roomId) => {
+            socket.broadcast
+              .to(roomId)
+              .emit(
+                "disconneted",
+                formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+              );
+          });
+          // refresh current users
+          const userList = getCurrentUsers();
+          socket.emit("userList", userList);
+        }
+      });
+    });
   });
 
-  return userList;
-}
+  /**
+   * Utils
+   *
+   */
 
-async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
-  let curConvo = await Conversation.findOne({
-    usernameA: usernameA,
-    userIdA: userIdA,
-    usernameB: usernameB,
-    userIdB: userIdB,
-  });
+  const randomId = () => crypto.randomBytes(8).toString("hex");
 
-  if (curConvo) {
-    console.log("found existing convo", curConvo);
+  const chatBot = "chatBot";
+
+  function leaveNotification(from) {
     return {
-      curConvo: curConvo,
+      type: "txt",
+      body: `${from} has left the chat`,
+    };
+  }
+
+  function formatMessage(msg, from, to) {
+   
+    return {
+
+      msg: {
+        ...msg,
+        time: moment().format("h:mm:ss a"),
+        thumbsUp: {
+          self: false,
+          other: false,
+        },
+        thumbsDown: {
+          self: false,
+          other: false,
+        },
+        like: {
+          self: false,
+          other: false,
+        },
+        laugh: {
+          self: false,
+          other: false,
+        },
+      },
+      from: from, // NOTE: string | object
+      to: to,
+    }
+  }
+
+  async function  storeMessage  (msg, convoInfo) {
+
+    let newMessage = new Message(msg)
+    convoInfo.content.push(newMessage);
+
+    await convoInfo.save();
+
+  }
+
+
+
+  function getCurrentUsers() {
+    const userList = [];
+    sessionStore.findAllSessions().forEach((session) => {
+      if (session.connected) {
+        userList.push({
+          userId: session.userId,
+          username: session.username,
+        });
+      }
+    });
+
+    return userList;
+  }
+
+  async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
+    let curConvo = await Conversation.findOne({
       usernameA: usernameA,
       userIdA: userIdA,
       usernameB: usernameB,
       userIdB: userIdB,
-    };
-  } else {
-    curConvo = await Conversation.findOne({
-      usernameA: usernameB,
-      userIdA: userIdB,
-      usernameB: usernameA,
-      userIdB: userIdA,
     });
+
     if (curConvo) {
       console.log("found existing convo", curConvo);
-      return {
-        curConvo: curConvo,
+      return curConvo
+      
+      // {
+      //   curConvo: curConvo,
+      //   usernameA: usernameA,
+      //   userIdA: userIdA,
+      //   usernameB: usernameB,
+      //   userIdB: userIdB,
+      // };
+    } else {
+      curConvo = await Conversation.findOne({
         usernameA: usernameB,
         userIdA: userIdB,
         usernameB: usernameA,
         userIdB: userIdA,
-      };
+      });
+      if (curConvo) {
+        console.log("found existing convo", curConvo);
+        return curConvo
+        
+        // {
+        //   curConvo: curConvo,
+        //   usernameA: usernameB,
+        //   userIdA: userIdB,
+        //   usernameB: usernameA,
+        //   userIdB: userIdA,
+        // };
+      }
     }
+
+    return null;
   }
 
-  return null;
+  /**
+   * Routes, Exports
+   *
+   */
 }
+  getChat = (req, res) => {
+    res.render("chat", {});
+  };
 
-/**
- * Routes, Exports
- *
- */
-
-getChat = (req, res) => {
-  res.render("chat", {});
-};
-
-module.exports = { chatSocket, getChat };
+  module.exports = { chatSocket, getChat };
