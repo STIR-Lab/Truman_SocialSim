@@ -1,16 +1,67 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 
 
-const conversationSchema = new Schema ({
-    usernameA: String,
-    userIdA: String,
-    usernameB: String,
-    userIdB: String,
-    content: Array
-})
+// const messageSchema = new Schema({
+  
+//   from: {
+//     username: String,
+//     userId: String,
+//   },
+//   to: {
+//     username: String,
+//     userId: String,
+//   },
+//   msg: {
+//     type: String,
+//     body: String,
+//     // mimeType: String,
+//     // fileName: String,
+//     time: String,
+//     thumbsUp: {
+//       self: Boolean,
+//       other: Boolean,
+//     },
+//     thumbsDown: {
+//       self: Boolean,
+//       other: Boolean,
+//     },
+//     like: {
+//       self: Boolean,
+//       other: Boolean,
+//     },
+//     laugh: {
+//       self: Boolean,
+//       other: Boolean,
+//     },
+//   },
+// });
 
 
-const Conversation = mongoose.model('Conversation', conversationSchema);
-module.exports = Conversation;
+const messageSchema = new Schema({
+  
+  from: {
+    username: String,
+    userId: String,
+  },
+  to: {
+    username: String,
+    userId: String,
+  },
+  msg: Object
+});
+
+
+const conversationSchema = new Schema({
+  usernameA: String,
+  userIdA: String,
+  usernameB: String,
+  userIdB: String,
+  content: [messageSchema],
+});
+
+
+const Message = mongoose.model("Message", messageSchema);
+const Conversation = mongoose.model("Conversation", conversationSchema);
+module.exports = {Conversation, Message};

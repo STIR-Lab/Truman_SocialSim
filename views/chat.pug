@@ -253,6 +253,8 @@ block content
                         e.preventDefault();
                         var input = $('#input')[0]; 
                         if (input.value) {
+                            let date = new Date()
+                            addChatSentMessage(input.value, date.toLocaleTimeString("en-US"))
                             socket.emit('send-message', { 
                                 msg: {
                                     type: "txt",
