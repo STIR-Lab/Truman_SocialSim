@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const { ObjectId } = require("mongoose");
+const User = require("../models/User");
 
 const sessionStore = new InMemorySessionStore();
 
@@ -71,9 +72,13 @@ const chatSocket = (server) => {
     io.to(socket.userId).emit("receive-chat-history", allConvo);
 
     // TODO: Fetch all users to FE for discorver
-    // socket.on("get-all-users", async()=>{
-    //   let allUsers = await
-    // })
+    socket.on("discover-users", async () => {
+      let allUsers = await User.find({
+        active: true,
+      });
+
+      return allUsers;
+    });
 
     /**
      * Message
