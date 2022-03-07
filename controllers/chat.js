@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const { ObjectId } = require("mongoose");
+const User = require("../models/User");
 
 const sessionStore = new InMemorySessionStore();
 
@@ -66,29 +67,25 @@ const chatSocket = (server) => {
     // Diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
 
+    // Finds all conversation history of a user
     let allConvo = await getChatHistory(socket.username, socket.userId);
     io.to(socket.userId).emit("receive-chat-history", allConvo);
 
-    // FIXME: DO WE STILL NEED THIS?
-    // Finds conversation in db and sends back to the front end
-    socket.on("get-messages", async ({ to }) => {
-      let convoInfo = await searchConvo(
-        socket.username,
-        socket.userId,
-        to.username,
-        to.userId
-      );
-
-      // Sending back the conversation content to user
-      io.to(socket.userId).emit("message-list", convoInfo.content);
-    });
-
-    // Finds all conversation history of a user
-
     // TODO: Fetch all users to FE for discorver
-    // socket.on("get-all-users", async()=>{
-    //   let allUsers = await
-    // })
+    socket.on("discover-users", async () => {
+      let allUsers = await User.find({
+        active: true,
+      });
+
+      const formattedAllUsers = allUsers.map((user) => {
+        return {
+          userId: user._id,
+          username: user.username,
+        };
+      });
+
+      return formattedAllUsers;
+    });
 
     /**
      * Message
@@ -390,7 +387,6 @@ const chatSocket = (server) => {
    * @param {string} userIdB
    *
    */
-  // FIXME: DO WE STILL NEED THIS?
   async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
     let curConvo = await Conversation.findOne({
       usernameA: usernameA,

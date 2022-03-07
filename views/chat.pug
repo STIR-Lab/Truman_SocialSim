@@ -283,7 +283,7 @@ block content
                             }
                         }
                     });
-
+                    
                     socket.on("receive-message", (msg) => {
                         if (msg.from.userId == userId) {
                             addChatSentMessage(msg.msg.body, msg.msg.time);
