@@ -61,12 +61,12 @@ const chatSocket = (server) => {
     });
 
     // Fetch existing users
-    const userList = getCurrentUsers();
-    socket.emit("userList", userList);
+    socket.emit("userList", getCurrentUsers());
 
-    // diff tabs opened by the same user, thus we need to make diff sockets join the same room
+    // Diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
 
+    // FIXME: DO WE STILL NEED THIS?
     // Finds conversation in db and sends back to the front end
     socket.on("get-messages", async ({ to }) => {
       let convoInfo = await searchConvo(
@@ -76,12 +76,21 @@ const chatSocket = (server) => {
         to.userId
       );
 
-      //Sending back the conversation content to user
-      io.to(socket.userId).emit(
-        "message-list",
-        convoInfo.content
-      );
+      // Sending back the conversation content to user
+      io.to(socket.userId).emit("message-list", convoInfo.content);
     });
+
+    // Finds all conversation history of a user
+    socket.on("get-chat-history", async () => {
+      let allConvo = await getChatHistory(socket.username, socket.userId);
+
+      io.to(socket.userId).emit("receive-chat-history", allConvo);
+    });
+
+    // TODO: Fetch all users to FE for discorver
+    // socket.on("get-all-users", async()=>{
+    //   let allUsers = await
+    // })
 
     /**
      * Message
@@ -107,7 +116,7 @@ const chatSocket = (server) => {
       let formattedMsg = formatMessage(
         msg,
         { username: socket.username, userId: socket.userId },
-        to,
+        to
       );
 
       let convoInfo = await searchConvo(
@@ -117,12 +126,8 @@ const chatSocket = (server) => {
         to.userId
       );
 
-
-
-
       if (convoInfo) {
-       
-        storeMessage(formattedMsg, convoInfo)
+        storeMessage(formattedMsg, convoInfo);
       }
       // ok new convo
       else {
@@ -136,23 +141,20 @@ const chatSocket = (server) => {
         });
         await newConvo.save();
 
-        storeMessage(formattedMsg, newConvo)
-        
+        storeMessage(formattedMsg, newConvo);
       }
 
-        io.to(to.userId) // to recipient
-          //.to(socket.userId) // to sender room
-          .emit(
-            "receive-message",
+      io.to(to.userId) // to recipient
+        //.to(socket.userId) // to sender room
+        .emit(
+          "receive-message",
 
-            formatMessage(
-              msg,
-              { username: socket.username, userId: socket.userId },
-              to,
-
-            )
-          );
-      
+          formatMessage(
+            msg,
+            { username: socket.username, userId: socket.userId },
+            to
+          )
+        );
 
       /**
        * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
@@ -201,10 +203,10 @@ const chatSocket = (server) => {
 
                 await Conversation.updateOne(
                   {
-                    "usernameA": convoInfo.usernameA,
-                    "userIdA": convoInfo.userIdA,
-                    "usernameB": convoInfo.usernameB,
-                    "userIdB": convoInfo.userIdB,
+                    usernameA: convoInfo.usernameA,
+                    userIdA: convoInfo.userIdA,
+                    usernameB: convoInfo.usernameB,
+                    userIdB: convoInfo.userIdB,
                   },
                   {
                     $set: { keyString: !curMsg.msg.r.self },
@@ -215,10 +217,10 @@ const chatSocket = (server) => {
                 let keyString = "content." + i + ".msg." + r + ".other";
                 await Conversation.updateOne(
                   {
-                    "usernameA": convoInfo.usernameA,
-                    "userIdA": convoInfo.userIdA,
-                    "usernameB": convoInfo.usernameB,
-                    'userIdB': convoInfo.userIdB,
+                    usernameA: convoInfo.usernameA,
+                    userIdA: convoInfo.userIdA,
+                    usernameB: convoInfo.usernameB,
+                    userIdB: convoInfo.userIdB,
                   },
                   {
                     $set: { keyString: !curMsg.msg.r.other },
@@ -250,7 +252,11 @@ const chatSocket = (server) => {
               .to(roomId)
               .emit(
                 "disconneted",
-                formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+                formatMessage(
+                  leaveNotification(socket.username),
+                  chatBot,
+                  "ALL"
+                )
               );
           });
           // refresh current users
@@ -266,10 +272,20 @@ const chatSocket = (server) => {
    *
    */
 
+  /**
+   * Generate a session id for a newly joined user
+   *
+   */
   const randomId = () => crypto.randomBytes(8).toString("hex");
 
   const chatBot = "chatBot";
 
+  /**
+   * Format leave notification which is different from user message object
+   *
+   * @param {object} from
+   *
+   */
   function leaveNotification(from) {
     return {
       type: "txt",
@@ -277,10 +293,16 @@ const chatSocket = (server) => {
     };
   }
 
+  /**
+   * Format message with reactions and a timestamp, etc.
+   *
+   * @param {object} msg
+   * @param {object} from
+   * @param {object} to
+   *
+   */
   function formatMessage(msg, from, to) {
-   
     return {
-
       msg: {
         ...msg,
         time: moment().format("h:mm:ss a"),
@@ -303,20 +325,26 @@ const chatSocket = (server) => {
       },
       from: from, // NOTE: string | object
       to: to,
-    }
+    };
   }
 
-  async function  storeMessage  (msg, convoInfo) {
-
-    let newMessage = new Message(msg)
+  /**
+   * Store new message obejct to the existing conversation and save to the DB
+   *
+   * @param {object} msg
+   * @param {object} convoInfo
+   */
+  async function storeMessage(msg, convoInfo) {
+    let newMessage = new Message(msg);
     convoInfo.content.push(newMessage);
 
     await convoInfo.save();
-
   }
 
-
-
+  /**
+   * Fetch a list of current active users
+   *
+   */
   function getCurrentUsers() {
     const userList = [];
     sessionStore.findAllSessions().forEach((session) => {
@@ -331,6 +359,40 @@ const chatSocket = (server) => {
     return userList;
   }
 
+  /**
+   * Find all conversation history of a user
+   *
+   * @param {string} username
+   * @param {string} userId
+   *
+   */
+  async function getChatHistory(username, userId) {
+    let allConvo = await Conversation.find({
+      $or: [
+        {
+          usernameA: username,
+          userIdA: userId,
+        },
+        {
+          usernameB: username,
+          userIdB: userId,
+        },
+      ],
+    });
+
+    return allConvo;
+  }
+
+  /**
+   * Find a specific conversation history between two users
+   *
+   * @param {string} usernameA
+   * @param {string} userIdA
+   * @param {string} usernameB
+   * @param {string} userIdB
+   *
+   */
+  // FIXME: DO WE STILL NEED THIS?
   async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
     let curConvo = await Conversation.findOne({
       usernameA: usernameA,
@@ -341,8 +403,8 @@ const chatSocket = (server) => {
 
     if (curConvo) {
       console.log("found existing convo", curConvo);
-      return curConvo
-      
+      return curConvo;
+
       // {
       //   curConvo: curConvo,
       //   usernameA: usernameA,
@@ -359,8 +421,8 @@ const chatSocket = (server) => {
       });
       if (curConvo) {
         console.log("found existing convo", curConvo);
-        return curConvo
-        
+        return curConvo;
+
         // {
         //   curConvo: curConvo,
         //   usernameA: usernameB,
@@ -378,9 +440,9 @@ const chatSocket = (server) => {
    * Routes, Exports
    *
    */
-}
-  getChat = (req, res) => {
-    res.render("chat", {});
-  };
+};
+getChat = (req, res) => {
+  res.render("chat", {});
+};
 
-  module.exports = { chatSocket, getChat };
+module.exports = { chatSocket, getChat };
