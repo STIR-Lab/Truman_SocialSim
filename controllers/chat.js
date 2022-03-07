@@ -81,7 +81,7 @@ const chatSocket = (server) => {
       );
 
       // Sending back the conversation content to user
-      io.to(socket.userId).emit("message-list", convoInfo.content);
+      
     });
 
     // TODO: Fetch all users to FE for discorver

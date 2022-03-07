@@ -155,22 +155,7 @@ block content
                     });
 
                    
-                    // get all messages
-                    socket.on("message-list", (messageList) => {
-                        for(let i = 0; i < messageList.length; i++) {
-                             if (messageList[i].from.userId == userId) {
-                            addChatSentMessage(messageList[i].msg.body, messageList[i].msg.time);
-                        }
-                        else if (messageList[i].to.userId == userId && messageList[i].from.userId == chatPartnerUserId) {
-                            addChatReceivedMessage(messageList[i].msg.body, messageList[i].msg.time);
-                        }
-
-                        }
-                       
-                    })
-
-
-
+                    
                     socket.on("receive-message", (msg) => {
                         if (msg.from.userId == userId) {
                             addChatSentMessage(msg.msg.body, msg.msg.time);
