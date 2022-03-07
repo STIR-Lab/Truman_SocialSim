@@ -77,7 +77,14 @@ const chatSocket = (server) => {
         active: true,
       });
 
-      return allUsers;
+      const formattedAllUsers = allUsers.map((user) => {
+        return {
+          userId: user._id,
+          username: user.username,
+        };
+      });
+
+      return formattedAllUsers;
     });
 
     /**
