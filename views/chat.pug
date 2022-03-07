@@ -16,27 +16,6 @@ block content
                 
                 #recentChatHistory(style="margin-top:4px") 
                     #chatHistory.ui.relaxed.divided.list
-                        .item
-                            img.ui.avatar.image(src='public/grey.jpg')
-                            .content
-                                a.header test
-                                .description message history
-                            button.ui.icon.right.floated.mini.button
-                                i.angle.right.icon
-                        .item
-                            img.ui.avatar.image(src='public/grey.jpg')
-                            .content
-                                a.header test
-                                .description message history
-                            button.ui.icon.right.floated.mini.button
-                                i.angle.right.icon
-                        .item
-                            img.ui.avatar.image(src='public/grey.jpg')
-                            .content
-                                a.header test
-                                .description message history
-                            button.ui.icon.right.floated.mini.button
-                                i.angle.right.icon
            
                 #discoverProfiles.ui.grid.stackable
                     .row
@@ -127,37 +106,9 @@ block content
 
                 script(src='/socket.io/socket.io.js')
                 script.
-                    let history = true;
-
-                    if (!history) {
-                        $('#recentButton').hide();
-                        $('#recentChatHistory').hide();
-                    }
-                    else {
-                        $('#discoverProfiles').hide();
-                    }
-
-                    document.getElementById('recentButton').onclick=function(){onClickRecentButton()};
-                    function onClickRecentButton() {
-                        $('#recentButton').addClass('active');
-                        $('#discoverButton').removeClass('active');
-                        $('#discoverProfiles').hide();
-                        $('#recentChatHistory').show();
-                    }
-
-                    document.getElementById('discoverButton').onclick=function(){onClickDiscoverButton()};
-                    function onClickDiscoverButton() {
-                         if (history) {
-                            $('#discoverButton').addClass('active');
-                            $('#recentButton').removeClass('active');
-                            $('#discoverProfiles').show();
-                            $('#recentChatHistory').hide();
-                        }
-                    }
-
                     const userId = document.getElementById('userIdTag').getAttribute('userId');
                     const username = document.getElementById('usernameTag').getAttribute('username');
-                    
+
                     // hide input until user picks chat partner
                     $('#messageInput').hide();
 
@@ -184,9 +135,52 @@ block content
                         socket.connect();
                     }
 
-                    /*socket.on("chatHistory", (history) => {
-                        console.log(history)
-                    })*/
+                    $('#discoverProfiles').hide();
+
+                    socket.on("receive-chat-history", (allConvo) => {
+                         if (allConvo.length == 0) {
+                            $('#recentButton').hide();
+                            $('#recentChatHistory').hide();
+                            $('#discoverProfiles').show();
+                        }
+                        
+                        allConvo.forEach((chatPartner) => {
+                            let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
+                            let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
+                            let lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+
+                            var listItem = `<div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
+                                                <div class="content"><a class="header">${chatPartnerUsername}</a>
+                                                    <div class="description">${lastMessage}</div>
+                                                </div>
+                                                <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
+                                            </div>`;
+
+                            $('#chatHistory').append(listItem);
+
+                            var element = document.getElementById("rightChevronButton");
+                            element.id = chatPartnerId + 'rightChevronButton';
+                            document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
+                        })
+                    });
+
+                    document.getElementById('recentButton').onclick=function(){onClickRecentButton()};
+                    function onClickRecentButton() {
+                        $('#recentButton').addClass('active');
+                        $('#discoverButton').removeClass('active');
+                        $('#discoverProfiles').hide();
+                        $('#recentChatHistory').show();
+                    }
+
+                    document.getElementById('discoverButton').onclick=function(){onClickDiscoverButton()};
+                    function onClickDiscoverButton() {
+                         if (history) {
+                            $('#discoverButton').addClass('active');
+                            $('#recentButton').removeClass('active');
+                            $('#discoverProfiles').show();
+                            $('#recentChatHistory').hide();
+                        }
+                    }
 
                     socket.on("session", ({ sessionId, userId }) => {
                         // attach the session ID to the next reconnection attempts
@@ -199,13 +193,16 @@ block content
                         console.log(`connect_error due to ${err.message}`);
                     });
 
+                    let copiedUserList = null;
+
                     socket.on("userList", (userList) => {
+                        copiedUserList = JSON.parse(JSON.stringify(userList));
                         userList.forEach((user) => {
                             var u = `   <div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
                                             <div class="content">
                                                 <div class="header">${user.username}</div>
                                             </div>
-                                            <button id="oldButton" class="ui icon right floated mini button""><i class="right arrow icon"></i></button>
+                                            <button id="rightArrowButton" class="ui icon right floated mini button""><i class="right arrow icon"></i></button>
                                         </div>`
 
                             if (user.userId == userId) { // add user to top of user list
@@ -216,12 +213,12 @@ block content
                             }
 
                             // add onClick function to button
-                            var element = document.getElementById("oldButton");
-                            element.id = user.userId;
-                            document.getElementById(user.userId).onclick=function(){onClickUsername(user)};
+                            var element = document.getElementById("rightArrowButton");
+                            element.id = user.userId + 'rightArrowButton';
+                            document.getElementById(user.userId + 'rightArrowButton').onclick=function(){onClickUsername(user.userId)};
 
                             if (user.userId == userId) { // do not allow user to chat itself
-                                document.getElementById(user.userId).remove();
+                                document.getElementById(user.userId + 'rightArrowButton').remove();
                             }
                         });
                     });
@@ -230,10 +227,15 @@ block content
                     let chatPartnerUsername = null;
                     let chatPartnerUserId = null;
 
-                    function onClickUsername(user) {
-                        chatPartnerSocketId = user.socketId;
-                        chatPartnerUsername = user.username;
-                        chatPartnerUserId = user.userId;
+                    function onClickUsername(userId) {
+                        copiedUserList.forEach((user) => {
+                            if (user.userId == userId) {
+                                chatPartnerSocketId = user.socketId;
+                                chatPartnerUsername = user.username;
+                                chatPartnerUserId = user.userId;
+                            }
+                        });
+                        
                         $("#chatPartnerName").text(chatPartnerUsername);
                         $('#messages').empty();
                         $('#messageInput').show();
@@ -270,22 +272,17 @@ block content
                         }
                     });
 
-                   
                     // get all messages
                     socket.on("message-list", (messageList) => {
-                        for(let i = 0; i < messageList.length; i++) {
-                             if (messageList[i].from.userId == userId) {
-                            addChatSentMessage(messageList[i].msg.body, messageList[i].msg.time);
+                        for (let i = 0; i < messageList.length; i++) {
+                            if (messageList[i].from.userId == userId) {
+                                addChatSentMessage(messageList[i].msg.body, messageList[i].msg.time);
+                            }
+                            else if (messageList[i].to.userId == userId && messageList[i].from.userId == chatPartnerUserId) {
+                                addChatReceivedMessage(messageList[i].msg.body, messageList[i].msg.time);
+                            }
                         }
-                        else if (messageList[i].to.userId == userId && messageList[i].from.userId == chatPartnerUserId) {
-                            addChatReceivedMessage(messageList[i].msg.body, messageList[i].msg.time);
-                        }
-
-                        }
-                       
-                    })
-
-
+                    });
 
                     socket.on("receive-message", (msg) => {
                         if (msg.from.userId == userId) {
@@ -294,7 +291,7 @@ block content
                         else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
                             addChatReceivedMessage(msg.msg.body, msg.msg.time);
                         }
-                    })
+                    });
 
                     function addChatSentMessage(msg, time) {
                         var mes = ` <div class="row" style="padding-top:6px; padding-bottom:6px">
