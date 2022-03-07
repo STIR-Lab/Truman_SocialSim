@@ -124,15 +124,7 @@ block content
                         $('.ui.modal').modal('hide');
 
                         // after we get the chat partner info we want to get all messages
-                         socket.emit('get-messages', {
-                         to: {
-                                    username: chatPartnerUsername,
-                                    userId: chatPartnerUserId,
-                                    socketId: chatPartnerSocketId
-                                } 
-                    })
-                    }
-
+                         
                     $('#messageInput')[0].addEventListener('submit', function(e) {
                         e.preventDefault();
                         var input = $('#input')[0]; 

@@ -70,20 +70,6 @@ const chatSocket = (server) => {
     let allConvo = await getChatHistory(socket.username, socket.userId);
     io.to(socket.userId).emit("receive-chat-history", allConvo);
 
-    // FIXME: DO WE STILL NEED THIS?
-    // Finds conversation in db and sends back to the front end
-    socket.on("get-messages", async ({ to }) => {
-      let convoInfo = await searchConvo(
-        socket.username,
-        socket.userId,
-        to.username,
-        to.userId
-      );
-
-      // Sending back the conversation content to user
-      
-    });
-
     // TODO: Fetch all users to FE for discorver
     // socket.on("get-all-users", async()=>{
     //   let allUsers = await
