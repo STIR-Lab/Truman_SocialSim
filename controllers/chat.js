@@ -46,7 +46,7 @@ const chatSocket = (server) => {
     next();
   });
 
-  io.on("connection", (socket) => {
+  io.on("connection", async (socket) => {
     console.log("Websocket connection...");
 
     // Save session info and emit to the client
@@ -66,6 +66,9 @@ const chatSocket = (server) => {
     // Diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
 
+    let allConvo = await getChatHistory(socket.username, socket.userId);
+    io.to(socket.userId).emit("receive-chat-history", allConvo);
+
     // FIXME: DO WE STILL NEED THIS?
     // Finds conversation in db and sends back to the front end
     socket.on("get-messages", async ({ to }) => {
@@ -81,11 +84,6 @@ const chatSocket = (server) => {
     });
 
     // Finds all conversation history of a user
-    socket.on("get-chat-history", async () => {
-      let allConvo = await getChatHistory(socket.username, socket.userId);
-
-      io.to(socket.userId).emit("receive-chat-history", allConvo);
-    });
 
     // TODO: Fetch all users to FE for discorver
     // socket.on("get-all-users", async()=>{
