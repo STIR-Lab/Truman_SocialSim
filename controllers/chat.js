@@ -80,7 +80,7 @@ const chatSocket = (server) => {
       );
 
       // Sending back the conversation content to user
-      io.to(socket.userId).emit("message-list", convoInfo.content);
+      
     });
 
     // Finds all conversation history of a user
