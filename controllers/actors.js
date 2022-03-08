@@ -26,15 +26,9 @@ exports.getActor = async (req, res, next) => {
 
   console.log("START HERE Our Paramater is:::::");
   console.log(req.params.userId);
+  console.log(req.user.id);
   console.log("Time Diff");
   console.log(time_diff);
-
-  let userInfo = await User.findById(req.params.userId);
-
-  if (!userInfo) {
-    res.render("actor", { actor: userInfo });
-    return;
-  }
 
   User.findById(req.user.id).exec(function (err, user) {
     Actor.findOne({ username: req.params.userId }, (err, act) => {
@@ -45,9 +39,19 @@ exports.getActor = async (req, res, next) => {
 
       ////this is not solving the problem FUCKKKKK@
       if (act == null) {
-        console.log("NULLLLLLLLLLL");
-        var myerr = new Error("Record not found!");
-        return next(myerr);
+        // res.render("actor", {
+        //   script: script_feed,
+        //   actor: act,
+        //   blocked: isBlocked,
+        // });
+        // return;
+        act = user;
+        console.log(
+          "Fetching an actual user's profile, reassign user object to act"
+        );
+        // console.log("NULLLLLLLLLLL");
+        // var myerr = new Error("Record not found!");
+        // return next(myerr);
       }
 
       //console.log(act);
