@@ -224,6 +224,7 @@ block content
                     let chatPartnerUserId = null;
 
                     function onClickUsername(userId) {
+                        // searching in user list to see if this chat partner is online, since user list only sends current logged in user
                         copiedUserList.forEach((user) => {
                             if (user.userId == userId) {
                                 chatPartnerSocketId = user.socketId;
@@ -242,11 +243,11 @@ block content
                             to: {
                                     username: chatPartnerUsername,
                                     userId: chatPartnerUserId,
-                                    socketId: chatPartnerSocketId
                                 } 
                         })
                     }
 
+                    // TODO: Disable message input button if !chatParterUserId (meaning chatParterner is offline)
                     $('#messageInput')[0].addEventListener('submit', function(e) {
                         e.preventDefault();
                         var input = $('#input')[0]; 
