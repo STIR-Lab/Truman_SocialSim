@@ -83,7 +83,7 @@ const chatSocket = (server) => {
     // });
     // io.to(socket.userId).emit("discover-users", formattedAllUsers);
 
-    // Finds conversation in db and sends back to the front end
+    // Finds a specific conversation in db and sends back to the front end
     socket.on("get-messages", async ({ to }) => {
       let convoInfo = await searchConvo(
         socket.username,
