@@ -187,7 +187,7 @@ block content
 
                                 var element = document.getElementById("profileButton");
                                 element.id = user.userId + 'profileButton';
-                                document.getElementById(user.userId + 'profileButton').onclick=function(){onClickProfile(user.username)};
+                                document.getElementById(user.userId + 'profileButton').onclick=function(){onClickProfile(user.userId)};
 
                                 var element = document.getElementById("messageButton");
                                 element.id = user.userId + 'messageButton';
@@ -196,9 +196,9 @@ block content
                         });
                     });
 
-                    function onClickProfile(username) {
-                        console.log(username);
-                        window.location.href = "/user/" + username;
+                    function onClickProfile(userId) {
+                        console.log(userId);
+                        window.location.href = "/user/" + userId;
                     }
 
                     document.getElementById('recentButton').onclick=function(){onClickRecentButton()};
