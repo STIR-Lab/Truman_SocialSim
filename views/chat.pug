@@ -18,60 +18,6 @@ block content
                     #chatHistory.ui.relaxed.divided.list
            
                 #discoverProfiles.ui.grid.stackable
-                    .row
-                        .eight.wide.column
-                            .ui.card
-                                .content
-                                    i.right.floated.close.icon(style='margin-right:-4px; margin-top:-4px;')
-                                    br
-                                    .center.aligned.column
-                                        img.ui.circular.tiny.image(src='public/grey.jpg' style='margin-bottom:4px; margin-top:-10px;')
-                                    .description(style='text-align: center; margin-bottom:4px;')
-                                        | @test
-                                    button.ui.button.tiny.fluid.fluid(style='margin-bottom:4px')
-                                        | Profile 
-                                    button.ui.positive.button.tiny.fluid
-                                        | Message 
-                        .eight.wide.column
-                            .ui.card
-                                .content
-                                    i.right.floated.close.icon(style='margin-right:-4px; margin-top:-4px;')
-                                    br
-                                    .center.aligned.column
-                                        img.ui.circular.tiny.image(src='public/grey.jpg' style='margin-bottom:4px; margin-top:-10px;')
-                                    .description(style='text-align: center; margin-bottom:4px;')
-                                        | @test
-                                    button.ui.button.tiny.fluid.fluid(style='margin-bottom:4px')
-                                        | Profile 
-                                    button.ui.positive.button.tiny.fluid
-                                        | Message 
-                    .row
-                        .eight.wide.column
-                            .ui.card
-                                .content
-                                    i.right.floated.close.icon(style='margin-right:-4px; margin-top:-4px;')
-                                    br
-                                    .center.aligned.column
-                                        img.ui.circular.tiny.image(src='public/grey.jpg' style='margin-bottom:4px; margin-top:-10px;')
-                                    .description(style='text-align: center; margin-bottom:4px;')
-                                        | @test
-                                    button.ui.button.tiny.fluid.fluid(style='margin-bottom:4px')
-                                        | Profile 
-                                    button.ui.positive.button.tiny.fluid
-                                        | Message 
-                        .eight.wide.column
-                            .ui.card
-                                .content
-                                    i.right.floated.close.icon(style='margin-right:-4px; margin-top:-4px;')
-                                    br
-                                    .center.aligned.column
-                                        img.ui.circular.tiny.image(src='public/grey.jpg' style='margin-bottom:4px; margin-top:-10px;')
-                                    .description(style='text-align: center; margin-bottom:4px;')
-                                        | @test
-                                    button.ui.button.tiny.fluid.fluid(style='margin-bottom:4px')
-                                        | Profile 
-                                    button.ui.positive.button.tiny.fluid
-                                        | Message 
 
         .eleven.wide.column
             .ui.segment(style='height:90vh')
@@ -135,53 +81,6 @@ block content
                         socket.connect();
                     }
 
-                    $('#discoverProfiles').hide();
-
-                    socket.on("receive-chat-history", (allConvo) => {
-                         if (allConvo.length == 0) {
-                            $('#recentButton').hide();
-                            $('#recentChatHistory').hide();
-                            $('#discoverProfiles').show();
-                        }
-                        
-                        allConvo.forEach((chatPartner) => {
-                            let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
-                            let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
-                            let lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
-
-                            var listItem = `<div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
-                                                <div class="content"><a class="header">${chatPartnerUsername}</a>
-                                                    <div class="description">${lastMessage}</div>
-                                                </div>
-                                                <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
-                                            </div>`;
-
-                            $('#chatHistory').append(listItem);
-
-                            var element = document.getElementById("rightChevronButton");
-                            element.id = chatPartnerId + 'rightChevronButton';
-                            document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
-                        })
-                    });
-
-                    document.getElementById('recentButton').onclick=function(){onClickRecentButton()};
-                    function onClickRecentButton() {
-                        $('#recentButton').addClass('active');
-                        $('#discoverButton').removeClass('active');
-                        $('#discoverProfiles').hide();
-                        $('#recentChatHistory').show();
-                    }
-
-                    document.getElementById('discoverButton').onclick=function(){onClickDiscoverButton()};
-                    function onClickDiscoverButton() {
-                         if (history) {
-                            $('#discoverButton').addClass('active');
-                            $('#recentButton').removeClass('active');
-                            $('#discoverProfiles').show();
-                            $('#recentChatHistory').hide();
-                        }
-                    }
-
                     socket.on("session", ({ sessionId, userId }) => {
                         // attach the session ID to the next reconnection attempts
                         socket.auth = { sessionId };
@@ -222,6 +121,103 @@ block content
                             }
                         });
                     });
+
+                    $('#discoverProfiles').hide();
+
+                    socket.on("receive-chat-history", (allConvo) => {
+                         if (allConvo.length == 0) {
+                            $('#recentButton').hide();
+                            $('#recentChatHistory').hide();
+                            $('#discoverProfiles').show();
+                        }
+
+                        let usersInHistory = [];
+                        
+                        allConvo.forEach((chatPartner) => {
+                            let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
+                            let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
+                            let lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+
+                            usersInHistory.push(chatPartnerId);
+
+                            var listItem = `<div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
+                                                <div class="content"><a class="header">${chatPartnerUsername}</a>
+                                                    <div class="description">${lastMessage}</div>
+                                                </div>
+                                                <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
+                                            </div>`;
+
+                            $('#chatHistory').append(listItem);
+
+                            var element = document.getElementById("rightChevronButton");
+                            element.id = chatPartnerId + 'rightChevronButton';
+                            document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
+                        });
+
+                        copiedUserList.forEach((user) => {
+                            let count = 0;
+                            let prevRow = count;
+                            var row = `<div id="prevRow" class="row"></div>`;
+
+                            $('#discoverProfiles').append(row);
+                            var element = document.getElementById("prevRow");
+                            element.id = 'row' + count;
+
+                            if (user.userId != userId && !usersInHistory.includes(user.userId)) {
+                                console.log(user);
+
+                                count++;
+                                if (count > 0 && count % 2 == 0) {
+                                    $('#discoverProfiles').append(row);
+                                    prevRow = count;
+                                }
+
+                                var profile = ` <div class="eight wide column">
+                                                    <div class="ui card" style="margin-bottom:10px">
+                                                        <div class="content">
+                                                            <div class="center aligned column"><img class="ui circular tiny image" src="public/grey.jpg" style="margin-bottom:4px"/></div>
+                                                            <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username}</div>
+                                                            <button id="profileButton" class="ui button tiny fluid fluid" style="margin-bottom:4px">Profile </button>
+                                                            <button id="messageButton" class="ui positive button tiny fluid">Message </button>
+                                                        </div>
+                                                    </div>
+                                                </div>`
+                                
+                                document.getElementById('row' + prevRow).insertAdjacentHTML('beforeend', profile);
+
+                                var element = document.getElementById("profileButton");
+                                element.id = user.userId + 'profileButton';
+                                document.getElementById(user.userId + 'profileButton').onclick=function(){onClickProfile(user.username)};
+
+                                var element = document.getElementById("messageButton");
+                                element.id = user.userId + 'messageButton';
+                                document.getElementById(user.userId + 'messageButton').onclick=function(){onClickUsername(user.userId)};
+                            }
+                        });
+                    });
+
+                    function onClickProfile(username) {
+                        console.log(username);
+                        window.location.href = "/user/" + username;
+                    }
+
+                    document.getElementById('recentButton').onclick=function(){onClickRecentButton()};
+                    function onClickRecentButton() {
+                        $('#recentButton').addClass('active');
+                        $('#discoverButton').removeClass('active');
+                        $('#discoverProfiles').hide();
+                        $('#recentChatHistory').show();
+                    }
+
+                    document.getElementById('discoverButton').onclick=function(){onClickDiscoverButton()};
+                    function onClickDiscoverButton() {
+                         if (history) {
+                            $('#discoverButton').addClass('active');
+                            $('#recentButton').removeClass('active');
+                            $('#discoverProfiles').show();
+                            $('#recentChatHistory').hide();
+                        }
+                    }
 
                     let chatPartnerSocketId = null;
                     let chatPartnerUsername = null;
