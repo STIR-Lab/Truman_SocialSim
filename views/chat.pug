@@ -224,7 +224,7 @@ block content
                     let chatPartnerUserId = null;
 
                     function onClickUsername(userId) {
-                        // searching in user list to see if this chat partner is online, since user list only sends current logged in user
+                        // FIXME: searching in user list to see if this chat partner is online, since user list only sends current logged in user
                         copiedUserList.forEach((user) => {
                             if (user.userId == userId) {
                                 chatPartnerSocketId = user.socketId;
@@ -238,12 +238,13 @@ block content
                         $('#messageInput').show();
                         $('.ui.modal').modal('hide');
 
+                        // FIXME: Since chatPartner can be null, backend won't be able to find the history
                         // after we get the chat partner info we want to get all messages
                         socket.emit('get-messages', {
                             to: {
                                     username: chatPartnerUsername,
                                     userId: chatPartnerUserId,
-                                } 
+                                }
                         })
                     }
 
