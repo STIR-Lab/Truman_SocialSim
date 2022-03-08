@@ -25,13 +25,12 @@ exports.getActor = async (req, res, next) => {
   var time_diff = Date.now() - req.user.createdAt;
 
   console.log("START HERE Our Paramater is:::::");
-  console.log(req.params.userId);
-  console.log(req.user.id);
+  console.log("fetching user ", req.params.userId);
   console.log("Time Diff");
   console.log(time_diff);
 
   User.findById(req.user.id).exec(function (err, user) {
-    Actor.findOne({ username: req.params.userId }, (err, act) => {
+    Actor.findOne({ username: req.params.userId }, async (err, act) => {
       if (err) {
         console.log(err);
         return next(err);
@@ -39,13 +38,7 @@ exports.getActor = async (req, res, next) => {
 
       ////this is not solving the problem FUCKKKKK@
       if (act == null) {
-        // res.render("actor", {
-        //   script: script_feed,
-        //   actor: act,
-        //   blocked: isBlocked,
-        // });
-        // return;
-        act = user;
+        act = await User.findById(req.params.userId);
         console.log(
           "Fetching an actual user's profile, reassign user object to act"
         );
