@@ -71,17 +71,30 @@ const chatSocket = (server) => {
     let allConvo = await getChatHistory(socket.username, socket.userId);
     io.to(socket.userId).emit("receive-chat-history", allConvo);
 
-    let allUsers = await User.find({
-      active: true,
-    });
+    // Fetch all active users
+    // let allUsers = await User.find({
+    //   active: true,
+    // });
+    // const formattedAllUsers = allUsers.map((user) => {
+    //   return {
+    //     userId: user._id,
+    //     username: user.username,
+    //   };
+    // });
+    // io.to(socket.userId).emit("discover-users", formattedAllUsers);
 
-    const formattedAllUsers = allUsers.map((user) => {
-      return {
-        userId: user._id,
-        username: user.username,
-      };
+    // Finds conversation in db and sends back to the front end
+    socket.on("get-messages", async ({ to }) => {
+      let convoInfo = await searchConvo(
+        socket.username,
+        socket.userId,
+        to.username,
+        to.userId
+      );
+
+      // Sending back the conversation content to user
+      io.to(socket.userId).emit("message-list", convoInfo.content);
     });
-    io.to(socket.userId).emit("discover-users", formattedAllUsers);
 
     /**
      * Message
