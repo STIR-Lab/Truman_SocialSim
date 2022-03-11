@@ -126,6 +126,13 @@ const chatSocket = (server) => {
         to
       );
 
+       // io.to(to.userId) // to recipient
+       io.to(socket.userId) // to sender room
+       .emit(
+         "receive-message",
+         formattedMsg
+       );
+
       let convoInfo = await searchConvo(
         socket.username,
         socket.userId,
@@ -151,16 +158,12 @@ const chatSocket = (server) => {
         storeMessage(formattedMsg, newConvo);
       }
 
+      console.log(formattedMsg)
       io.to(to.userId) // to recipient
-        //.to(socket.userId) // to sender room
+       // .to(socket.userId) // to sender room
         .emit(
           "receive-message",
-
-          formatMessage(
-            msg,
-            { username: socket.username, userId: socket.userId },
-            to
-          )
+          formattedMsg
         );
 
       /**
@@ -184,62 +187,7 @@ const chatSocket = (server) => {
        *
        */
 
-      socket.on("send-reaction", async ({ msg, to }) => {
-        let convoInfo = await searchConvo(
-          socket.username,
-          socket.userId,
-          to.username,
-          to.userId
-        );
-
-        if (!convoInfo) {
-          console.log("Did not find corresponding conversation.");
-          return;
-        }
-
-        // search for the message according to body & time
-        for (let i = 0; i < convoInfo.curConvo.content.length; i++) {
-          let curMsg = convoInfo.curConvo.content[i];
-          if (curMsg.body === msg.body && curMsg.time === msg.time) {
-            // loop through and update each reaction in reaction array
-            for (let r of msg.reaction) {
-              // FIXME: Update a specific field in a specific message object in the content array
-              if (curMsg.from.userId === socket.userId) {
-                // flip self
-                let keyString = "content." + i + ".msg." + r + ".self";
-
-                await Conversation.updateOne(
-                  {
-                    usernameA: convoInfo.usernameA,
-                    userIdA: convoInfo.userIdA,
-                    usernameB: convoInfo.usernameB,
-                    userIdB: convoInfo.userIdB,
-                  },
-                  {
-                    $set: { keyString: !curMsg.msg.r.self },
-                  }
-                );
-              } else {
-                // flip other
-                let keyString = "content." + i + ".msg." + r + ".other";
-                await Conversation.updateOne(
-                  {
-                    usernameA: convoInfo.usernameA,
-                    userIdA: convoInfo.userIdA,
-                    usernameB: convoInfo.usernameB,
-                    userIdB: convoInfo.userIdB,
-                  },
-                  {
-                    $set: { keyString: !curMsg.msg.r.other },
-                  }
-                );
-              }
-            }
-
-            break;
-          }
-        }
-      });
+      
 
       socket.on("disconnect", async () => {
         const matchingSockets = await io.in(socket.userId).allSockets();
@@ -271,6 +219,53 @@ const chatSocket = (server) => {
           socket.emit("userList", userList);
         }
       });
+    });
+
+    socket.on("send-reaction", async ({ messageID, person, reactionType, reactions, to }) => {
+
+      io.to(socket.userId) // to sender room
+      .to(to.userId) // to recipient
+      .emit(
+        "receive-reaction",
+        {
+          reactions: reactions,
+          reactionType: reactionType,
+          person: person,
+          messageID: messageID,
+        }
+      );
+      
+      
+        
+      let convoInfo = await searchConvo(
+        socket.username,
+        socket.userId,
+        to.username,
+        to.userId
+      );
+
+      if (!convoInfo) {
+        return;
+      }
+
+    
+      //Finding index of the content array where messageID is equal to an id within that array
+      let messageIndex = convoInfo.content.findIndex((message) => {
+
+        return message._id == messageID
+      })
+   
+
+    
+
+      //Save reaction to db
+      convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
+
+
+      convoInfo.markModified('content');
+      await convoInfo.save();
+
+     
     });
   });
 
@@ -309,30 +304,20 @@ const chatSocket = (server) => {
    *
    */
   function formatMessage(msg, from, to) {
-    return {
+
+
+    return new Message({
       msg: {
         ...msg,
         time: moment().format("h:mm:ss a"),
-        thumbsUp: {
-          self: false,
-          other: false,
-        },
-        thumbsDown: {
-          self: false,
-          other: false,
-        },
-        like: {
-          self: false,
-          other: false,
-        },
-        laugh: {
-          self: false,
-          other: false,
-        },
+        reactions: {
+          self:"none",
+          other: "none",
+      }
       },
       from: from, // NOTE: string | object
       to: to,
-    };
+    });
   }
 
   /**
@@ -342,8 +327,7 @@ const chatSocket = (server) => {
    * @param {object} convoInfo
    */
   async function storeMessage(msg, convoInfo) {
-    let newMessage = new Message(msg);
-    convoInfo.content.push(newMessage);
+    convoInfo.content.push(msg);
 
     await convoInfo.save();
   }
@@ -452,3 +436,4 @@ getChat = (req, res) => {
 };
 
 module.exports = { chatSocket, getChat };
+

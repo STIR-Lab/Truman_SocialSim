@@ -28,8 +28,8 @@ block content
                 .ui.clearing.divider
                 p
 
-                .messages.container(style="height: 70vh; overflow-x: hidden; overflow-y: auto;")
-                    #messages.ui.grid(style="padding-top:10px")
+                .messages.container(style="height: 70vh; overflow-x: hidden; overflow-y: auto; display:flex; flex-direction: column-reverse;")
+                    #messages.ui.grid(style="padding-top:10px; padding-bottom:25px; padding-left:10px; padding-right:10px;")
                
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
@@ -59,6 +59,7 @@ block content
                     $('#messageInput').hide();
 
                     document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
+
 
                     function onClickNewChat() {
                         $('.ui.modal').modal('show');
@@ -95,6 +96,7 @@ block content
                     let copiedUserList = null;
 
                     socket.on("userList", (userList) => {
+                        console.log(userList)
                         copiedUserList = JSON.parse(JSON.stringify(userList));
                         userList.forEach((user) => {
                             var u = `   <div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
@@ -123,6 +125,7 @@ block content
                     });
 
                     $('#discoverProfiles').hide();
+                    let usersInHistory = [];
 
                     socket.on("receive-chat-history", (allConvo) => {
                          if (allConvo.length == 0) {
@@ -131,14 +134,16 @@ block content
                             $('#discoverProfiles').show();
                         }
 
-                        let usersInHistory = [];
+                        usersInHistory = [];
+
                         
                         allConvo.forEach((chatPartner) => {
                             let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
                             let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
                             let lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
 
-                            usersInHistory.push(chatPartnerId);
+                            usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername});
+                            console.log(usersInHistory)
 
                             var listItem = `<div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
                                                 <div class="content"><a class="header">${chatPartnerUsername}</a>
@@ -163,7 +168,7 @@ block content
                             var element = document.getElementById("prevRow");
                             element.id = 'row' + count;
 
-                            if (user.userId != userId && !usersInHistory.includes(user.userId)) {
+                            if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length) {
                                 console.log(user);
 
                                 count++;
@@ -224,7 +229,9 @@ block content
                     let chatPartnerUserId = null;
 
                     function onClickUsername(userId) {
-                        // FIXME: searching in user list to see if this chat partner is online, since user list only sends current logged in user
+                        console.log(copiedUserList);
+                        
+                        // find user in online list
                         copiedUserList.forEach((user) => {
                             if (user.userId == userId) {
                                 chatPartnerSocketId = user.socketId;
@@ -232,13 +239,20 @@ block content
                                 chatPartnerUserId = user.userId;
                             }
                         });
-                        
+
+                        // find user in chat history
+                        usersInHistory.forEach((user) => {
+                            if (user.userId == userId) {
+                                chatPartnerUsername = user.username;
+                                chatPartnerUserId = user.userId;
+                            }
+                        });
+
                         $("#chatPartnerName").text(chatPartnerUsername);
                         $('#messages').empty();
                         $('#messageInput').show();
                         $('.ui.modal').modal('hide');
 
-                        // FIXME: Since chatPartner can be null, backend won't be able to find the history
                         // after we get the chat partner info we want to get all messages
                         socket.emit('get-messages', {
                             to: {
@@ -248,13 +262,12 @@ block content
                         })
                     }
 
-                    // TODO: Disable message input button if !chatParterUserId (meaning chatParterner is offline)
                     $('#messageInput')[0].addEventListener('submit', function(e) {
                         e.preventDefault();
                         var input = $('#input')[0]; 
                         if (input.value) {
-                            let date = new Date()
-                            addChatSentMessage(input.value, date.toLocaleTimeString("en-US"))
+                            //- let date = new Date()
+                            //- addChatSentMessage(input.value, date.toLocaleTimeString("en-US"))
                             socket.emit('send-message', { 
                                 msg: {
                                     type: "txt",
@@ -274,49 +287,225 @@ block content
                     socket.on("message-list", (messageList) => {
                         for (let i = 0; i < messageList.length; i++) {
                             if (messageList[i].from.userId == userId) {
-                                addChatSentMessage(messageList[i].msg.body, messageList[i].msg.time);
+                                addChatSentMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id );
+                                 loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                             }
-                            else if (messageList[i].to.userId == userId && messageList[i].from.userId == chatPartnerUserId) {
-                                addChatReceivedMessage(messageList[i].msg.body, messageList[i].msg.time);
+                            else  {
+                                addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id);
+                                 loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                             }
+
+                            
                         }
                     });
                     
                     socket.on("receive-message", (msg) => {
+                       
                         if (msg.from.userId == userId) {
-                            addChatSentMessage(msg.msg.body, msg.msg.time);
+                            addChatSentMessage(msg.msg, msg.msg.time, msg._id);
                         }
                         else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
-                            addChatReceivedMessage(msg.msg.body, msg.msg.time);
+                            addChatReceivedMessage(msg.msg, msg.msg.time, msg._id);
                         }
                     });
 
-                    function addChatSentMessage(msg, time) {
-                        var mes = ` <div class="row" style="padding-top:6px; padding-bottom:6px">
-                                        <div class="right floated right aligned seven wide column">
-                                        <div class="ui mini blue compact message">
-                                            <p>${msg}</p>
-                                        </div>
-                                        <p style="font-size:10px; margin-top:-8px">${time}</p>
-                                        </div>
-                                    </div>`
-                        $('#messages').append(mes);
-                        $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                    function sendReaction(msg, person, reactionType, messageID) {
+
+                        let currentReaction;
+
+                        // get current reaction of message
+                        if ( person == "self") {
+                            currentReaction = document.getElementById(`${messageID}-reactArea2`).innerHTML;
+                        }
+                        else {
+                            currentReaction = document.getElementById(`${messageID}-reactArea1`).innerHTML;
+                        }
+
+                        rct = emojiToText(currentReaction)
+
+                        if(rct == reactionType) { // if new reaction equal current reaction
+                            reactionType = "none"   //change to none
+                        }
+
+                        socket.emit('send-reaction', {
+                            messageID: messageID,
+                            person: person,
+                            reactionType: reactionType,
+                            reactions: msg.reactions,
+                            to: {
+                                    username: chatPartnerUsername,
+                                    userId: chatPartnerUserId,
+                                    socketId: chatPartnerSocketId
+                            } 
+                        });
+
+                        document.getElementById(`${messageID}-react`).style.display = "none"
                     }
 
-                    function addChatReceivedMessage(msg, time) {
-                        var mes = ` <div class="row" style="padding-top:6px; padding-bottom:6px">
-                                        <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image" src="public/grey.jpg"/></div>
-                                        <div class="seven wide column">
-                                        <div class="ui mini compact message">
-                                            <p>${msg}</p>
+                    
+                    socket.on('receive-reaction',({reactions, messageID, reactionType, person}) => {
+                         let emoji = "none";
+                        emoji = textToEmoji(reactionType) 
+
+                        if(person == "self") {
+                            let selfElement = document.getElementById(`${messageID}-reactArea2`);
+                            selfElement.innerHTML = `${emoji}`;
+                        } else {
+                            let otherElement= document.getElementById(`${messageID}-reactArea1`);
+                            otherElement.innerHTML = `${emoji}`;
+                        }
+                    })
+
+
+                    // triggered when the user gets all messages
+                    function loadReactions(reactions, messageID) {
+                        
+                        let selfEmoji = "none";
+                        let otherEmoji = "none";
+
+                        selfEmoji = textToEmoji(reactions.self)
+                        let selfElement = document.getElementById(`${messageID}-reactArea2`);
+                        selfElement.innerHTML = `${selfEmoji}`;
+
+                        otherEmoji = textToEmoji(reactions.other)
+                        let otherElement= document.getElementById(`${messageID}-reactArea1`);
+                        otherElement.innerHTML = `${otherEmoji}`;
+                    }
+
+                    function textToEmoji(reaction) {
+                        if(reaction == "thumbsUp") {
+                             return "👍" 
+                        }
+                        else if(reaction == "thumbsDown") {
+                            return "👎"
+                        }
+                        else if(reaction == "like") {
+                             return "❤️"
+                        }
+                        else if(reaction == "laugh") {
+                            return "😂"
+                        }
+                        else if(reaction == "none") {
+                            return ""
+                        }
+                    }
+
+                     
+                    function emojiToText(reaction) {
+                        if(reaction == "👍") {
+                             return "thumbsUp" 
+                        }
+                        else if(reaction == "👎") {
+                            return "thumbsDown"
+                        }
+                        else if(reaction == "❤️") {
+                             return "like"
+                        }
+                        else if(reaction == "😂") {
+                            return "laugh"
+                        }
+                        else if(reaction == "") {
+                            return "none"
+                        }
+
+                    }
+                   
+
+                    function addChatSentMessage(msg, time, id) {
+                        // reaction box
+                        let react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
+                                        top:-10px; right:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
+                                        <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
+                                        <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
+                                        <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
+                                        <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
+                                    </div>`
+
+                        var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
+                                        <div class="right floated right aligned seven wide column">
+                                        ${react}
+                                        <div class="ui mini blue compact message" id="${id}">
+                                            <p>${msg.body}</p>
+                                            <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; left:2px;"></div> 
+                                             <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; left:14px;"></div>
                                         </div>
                                         <p style="font-size:10px; margin-top:-8px">${time}</p>
                                         </div>
                                     </div>`
                         $('#messages').append(mes);
                         $('#messages').scrollTop($('#messages')[0].scrollHeight);
-                    }   
+
+                       // on click actions for showing reaction box
+                        $(`#${id}`).on('click', function () {
+                            $(`#${id}-react`).css('display','flex').focus();
+                        });
+                        // when the user clicks outside of reaction box, stop displaying it
+                        $(`#${id}-react`).on('focusout', function () {
+                            $(`#${id}-react`).css('display','none');
+                        });
+
+                        
+                        
+                        // onclick actions for reactions
+                        document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "self", "thumbsUp", id)};
+                        document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "self", "thumbsDown", id)};
+                        document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "self", "like", id)};
+                        document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "self", "laugh", id)};
+
+
+                    }
+
+                    function addChatReceivedMessage(msg, time, id) {
+                        // reaction box
+                         let react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
+                                        top:-10px; left:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
+                                        <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
+                                        <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
+                                        <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
+                                        <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
+                                    </div>`
+
+                        var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
+                                        <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image" src="public/grey.jpg"/></div>
+                                        <div class="seven wide column">
+                                         ${react}
+                                        <div class="ui mini compact message" id="${id}">
+                                            <p>${msg.body}</p>
+                                            <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; right:2px;"></div> 
+                                            <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; right:14px;"></div> 
+                                        </div>
+
+                                        <p style="font-size:10px; margin-top:-8px">${time}</p>
+                                        </div>
+                                    </div>`
+                        $('#messages').append(mes);
+                        $('#messages').scrollTop($('#messages')[0].scrollHeight);
+
+                        
+                        // on click actions for showing reaction box
+                        $(`#${id}`).on('click', function () {
+                            $(`#${id}-react`).css('display','flex').focus();
+                        });
+
+                        // when the user clicks outside of reaction box, stop displaying it
+                        $(`#${id}-react`).on('focusout', function () {
+                            $(this).css('display','none');
+                        });
+
+                        // onclick actions for reactions
+                        document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "other", "thumbsUp", id)};
+                        document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "other", "thumbsDown", id)};
+                        document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "other", "like", id)};
+                        document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "other", "laugh", id)};
+
+                    }
+
+                     
+
+                   
+
+                    
+                       
                     
 //- TODO: update code for mobile view 
     .mobile.only.row
