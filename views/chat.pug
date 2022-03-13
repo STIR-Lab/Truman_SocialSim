@@ -96,7 +96,6 @@ block content
                     let copiedUserList = null;
 
                     socket.on("userList", (userList) => {
-                        console.log(userList)
                         copiedUserList = JSON.parse(JSON.stringify(userList));
                         userList.forEach((user) => {
                             var u = `   <div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
@@ -136,7 +135,6 @@ block content
 
                         usersInHistory = [];
 
-                        
                         allConvo.forEach((chatPartner) => {
                             let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
                             let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
@@ -145,16 +143,25 @@ block content
                             usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername});
                             console.log(usersInHistory)
 
-                            var listItem = `<div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
+                            var listItem = `<div class="item">
+                                                <i class="circle red icon" id="redBubble" style="margin-top:30px"></i>
+                                                <img class="ui avatar image" src="public/grey.jpg"/ style="margin-left:20px">
                                                 <div class="content"><a class="header">${chatPartnerUsername}</a>
-                                                    <div class="description">${lastMessage}</div>
+                                                    <div class="description" id="lastMessage">${lastMessage}</div>
                                                 </div>
                                                 <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
                                             </div>`;
 
                             $('#chatHistory').append(listItem);
 
-                            var element = document.getElementById("rightChevronButton");
+                            let element = document.getElementById("lastMessage");
+                            element.id = chatPartnerId + 'lastMessage';
+
+                            element = document.getElementById("redBubble");
+                            element.id = chatPartnerId + 'redBubble';
+                            $('#' + chatPartnerId + 'redBubble').hide();
+
+                            element = document.getElementById("rightChevronButton");
                             element.id = chatPartnerId + 'rightChevronButton';
                             document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
                         });
@@ -230,6 +237,8 @@ block content
 
                     function onClickUsername(userId) {
                         console.log(copiedUserList);
+
+                        $('#' + userId + 'redBubble').hide();
                         
                         // find user in online list
                         copiedUserList.forEach((user) => {
@@ -306,6 +315,11 @@ block content
                         }
                         else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
                             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id);
+                        }
+                        else if (msg.to.userId == userId) {
+                            $('#' + msg.from.userId + 'redBubble').show();
+                            console.log(msg.msg);
+                            $('#' + msg.from.userId + 'lastMessage').text(msg.msg.body);
                         }
                     });
 
