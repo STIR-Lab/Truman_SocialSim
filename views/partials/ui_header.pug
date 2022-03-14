@@ -11,6 +11,8 @@
         else
           //-a.item.newpost
             i.big.write.square.icon
+          a.item(href='/chat') 
+            i.big.comment.icon
           a.item(href='/notifications') 
             i.big.alarm.icon
           .ui.simple.dropdown.item
@@ -35,8 +37,10 @@
       a.item(href='/login') Login
       a.item(href='/signup') Create Account
     else
-      a.item.newpost
-        i.big.write.square.icon
+      //- a.item.newpost
+      //-   i.big.write.square.icon
+      a.item(href='/chat') 
+            i.big.comment.icon
       a.item(href='/notifications') 
         i.big.alarm.icon
       .ui.simple.dropdown.item
