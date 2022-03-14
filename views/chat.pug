@@ -36,6 +36,9 @@ block content
                         input#input(autocomplete="off" type='text' placeholder='Enter message')
                         button
                             i.paper.plane.icon
+                        input#fileInput.inputfile(type='file')
+                        label.button(for='fileInput' style="margin-left:10px")
+                            i.camera.icon
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
@@ -57,9 +60,32 @@ block content
 
                     // hide input until user picks chat partner
                     $('#messageInput').hide();
+                    $('#fileInput').hide();
 
                     document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
 
+                    // FILE INPUT
+                    //- $('#imageInput')[0].addEventListener('file', function(e) {
+                    //-     e.preventDefault();
+                    //-     var input = $('#uploadFile')[0]; 
+                    //-     if (input.value) {
+                    //-         //- let date = new Date()
+                    //-         //- addChatSentMessage(input.value, date.toLocaleTimeString("en-US"))
+                    //-         socket.emit('send-image', { 
+                    //-             msg: {
+                    //-                 type: "image",
+                    //-                 body: input.value,
+                    //-                 mimeType: "png"
+                    //-             },
+                    //-             to: {
+                    //-                 username: chatPartnerUsername,
+                    //-                 userId: chatPartnerUserId,
+                    //-                 socketId: chatPartnerSocketId
+                    //-             } 
+                    //-         });
+                    //-         input.value = '';
+                    //-     }
+                    //- });
 
                     function onClickNewChat() {
                         $('.ui.modal').modal('show');
@@ -141,7 +167,6 @@ block content
                             let lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
 
                             usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername});
-                            console.log(usersInHistory)
 
                             var listItem = `<div class="item">
                                                 <i class="circle red icon" id="redBubble" style="margin-top:30px"></i>
@@ -176,8 +201,6 @@ block content
                             element.id = 'row' + count;
 
                             if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length) {
-                                console.log(user);
-
                                 count++;
                                 if (count > 0 && count % 2 == 0) {
                                     $('#discoverProfiles').append(row);
@@ -209,7 +232,6 @@ block content
                     });
 
                     function onClickProfile(userId) {
-                        console.log(userId);
                         window.location.href = "/user/" + userId;
                     }
 
@@ -236,8 +258,6 @@ block content
                     let chatPartnerUserId = null;
 
                     function onClickUsername(userId) {
-                        console.log(copiedUserList);
-
                         $('#' + userId + 'redBubble').hide();
                         
                         // find user in online list
@@ -318,7 +338,6 @@ block content
                         }
                         else if (msg.to.userId == userId) {
                             $('#' + msg.from.userId + 'redBubble').show();
-                            console.log(msg.msg);
                             $('#' + msg.from.userId + 'lastMessage').text(msg.msg.body);
                         }
                     });
