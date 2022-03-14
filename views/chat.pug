@@ -141,7 +141,6 @@ block content
                             let lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
 
                             usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername});
-                            console.log(usersInHistory)
 
                             var listItem = `<div class="item">
                                                 <i class="circle red icon" id="redBubble" style="margin-top:30px"></i>
@@ -176,8 +175,6 @@ block content
                             element.id = 'row' + count;
 
                             if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length) {
-                                console.log(user);
-
                                 count++;
                                 if (count > 0 && count % 2 == 0) {
                                     $('#discoverProfiles').append(row);
@@ -209,7 +206,6 @@ block content
                     });
 
                     function onClickProfile(userId) {
-                        console.log(userId);
                         window.location.href = "/user/" + userId;
                     }
 
@@ -236,8 +232,6 @@ block content
                     let chatPartnerUserId = null;
 
                     function onClickUsername(userId) {
-                        console.log(copiedUserList);
-
                         $('#' + userId + 'redBubble').hide();
                         
                         // find user in online list
@@ -318,7 +312,6 @@ block content
                         }
                         else if (msg.to.userId == userId) {
                             $('#' + msg.from.userId + 'redBubble').show();
-                            console.log(msg.msg);
                             $('#' + msg.from.userId + 'lastMessage').text(msg.msg.body);
                         }
                     });
