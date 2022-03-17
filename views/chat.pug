@@ -303,7 +303,46 @@ block content
                     });
                     
                     socket.on("receive-message", (msg) => {
-                       
+                        // update latest message in recent chat history
+                        partnerId = msg.from.userId == userId ? msg.to.userId : msg.from.userId;
+                        $('#' + partnerId + 'lastMessage').text(msg.msg.body);
+
+                        partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
+
+                        const userInDiscover = !usersInHistory.some(user => {
+                            if (user.userId == partnerId) {
+                                return true;
+                            }
+                        });
+
+                        if (userInDiscover) {
+                            var listItem = `<div class="item">
+                                                <i class="circle red icon" id="redBubble" style="margin-top:30px"></i>
+                                                <img class="ui avatar image" src="public/grey.jpg"/ style="margin-left:20px">
+                                                <div class="content"><a class="header">${partnerUsername}</a>
+                                                    <div class="description" id="lastMessage">${msg.msg.body}</div>
+                                                </div>
+                                                <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
+                                            </div>`;
+
+                            $('#chatHistory').append(listItem);
+
+                            let element = document.getElementById("lastMessage");
+                            element.id = partnerId + 'lastMessage';
+
+                            element = document.getElementById("redBubble");
+                            element.id = partnerId + 'redBubble';
+                            $('#' + partnerId + 'redBubble').hide();
+
+                            element = document.getElementById("rightChevronButton");
+                            element.id = partnerId + 'rightChevronButton';
+                            document.getElementById(partnerId + 'rightChevronButton').onclick=function(){onClickUsername(partnerId)};
+
+                            $('#recentButton').show();
+                            onClickRecentButton();
+
+                            usersInHistory.push({userId: partnerId, username: partnerUsername});
+                        }
                         if (msg.from.userId == userId) {
                             addChatSentMessage(msg.msg, msg.msg.time, msg._id);
                         }
@@ -312,7 +351,6 @@ block content
                         }
                         else if (msg.to.userId == userId) {
                             $('#' + msg.from.userId + 'redBubble').show();
-                            $('#' + msg.from.userId + 'lastMessage').text(msg.msg.body);
                         }
                     });
 
