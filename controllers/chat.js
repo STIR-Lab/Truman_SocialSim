@@ -5,7 +5,6 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
-const { ObjectId } = require("mongoose");
 const User = require("../models/User");
 
 const sessionStore = new InMemorySessionStore();
@@ -126,12 +125,9 @@ const chatSocket = (server) => {
         to
       );
 
-       // io.to(to.userId) // to recipient
-       io.to(socket.userId) // to sender room
-       .emit(
-         "receive-message",
-         formattedMsg
-       );
+      // io.to(to.userId) // to recipient
+      io.to(socket.userId) // to sender room
+        .emit("receive-message", formattedMsg);
 
       let convoInfo = await searchConvo(
         socket.username,
@@ -158,13 +154,10 @@ const chatSocket = (server) => {
         storeMessage(formattedMsg, newConvo);
       }
 
-      console.log(formattedMsg)
+      console.log(formattedMsg);
       io.to(to.userId) // to recipient
-       // .to(socket.userId) // to sender room
-        .emit(
-          "receive-message",
-          formattedMsg
-        );
+        // .to(socket.userId) // to sender room
+        .emit("receive-message", formattedMsg);
 
       /**
        * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
@@ -187,7 +180,66 @@ const chatSocket = (server) => {
        *
        */
 
-      
+      socket.on("read-message", async ({ messageID, from }) => {
+        // search convo between from & socket user
+        let convoInfo = await searchConvo(
+          socket.username,
+          socket.userId,
+          from.username,
+          from.userId
+        );
+
+        if (!convoInfo) {
+          return;
+        }
+
+        //Finding index of the content array where messageID is equal to an id within that array
+        let messageIndex = convoInfo.content.findIndex((message) => {
+          return message._id == messageID;
+        });
+
+        //Save reaction to db
+        convoInfo.content[messageIndex].msg.read = true;
+
+        convoInfo.markModified("content");
+        await convoInfo.save();
+      });
+
+      socket.on(
+        "send-reaction",
+        async ({ messageID, person, reactionType, reactions, to }) => {
+          io.to(socket.userId) // to sender room
+            .to(to.userId) // to recipient
+            .emit("receive-reaction", {
+              reactions: reactions,
+              reactionType: reactionType,
+              person: person,
+              messageID: messageID,
+            });
+
+          let convoInfo = await searchConvo(
+            socket.username,
+            socket.userId,
+            to.username,
+            to.userId
+          );
+
+          if (!convoInfo) {
+            return;
+          }
+
+          //Finding index of the content array where messageID is equal to an id within that array
+          let messageIndex = convoInfo.content.findIndex((message) => {
+            return message._id == messageID;
+          });
+
+          //Save reaction to db
+          convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
+
+          convoInfo.markModified("content");
+          await convoInfo.save();
+        }
+      );
 
       socket.on("disconnect", async () => {
         const matchingSockets = await io.in(socket.userId).allSockets();
@@ -219,53 +271,6 @@ const chatSocket = (server) => {
           socket.emit("userList", userList);
         }
       });
-    });
-
-    socket.on("send-reaction", async ({ messageID, person, reactionType, reactions, to }) => {
-
-      io.to(socket.userId) // to sender room
-      .to(to.userId) // to recipient
-      .emit(
-        "receive-reaction",
-        {
-          reactions: reactions,
-          reactionType: reactionType,
-          person: person,
-          messageID: messageID,
-        }
-      );
-      
-      
-        
-      let convoInfo = await searchConvo(
-        socket.username,
-        socket.userId,
-        to.username,
-        to.userId
-      );
-
-      if (!convoInfo) {
-        return;
-      }
-
-    
-      //Finding index of the content array where messageID is equal to an id within that array
-      let messageIndex = convoInfo.content.findIndex((message) => {
-
-        return message._id == messageID
-      })
-   
-
-    
-
-      //Save reaction to db
-      convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
-
-
-      convoInfo.markModified('content');
-      await convoInfo.save();
-
-     
     });
   });
 
@@ -304,16 +309,15 @@ const chatSocket = (server) => {
    *
    */
   function formatMessage(msg, from, to) {
-
-
     return new Message({
       msg: {
         ...msg,
+        read: false,
         time: moment().format("h:mm:ss a"),
         reactions: {
-          self:"none",
+          self: "none",
           other: "none",
-      }
+        },
       },
       from: from, // NOTE: string | object
       to: to,
@@ -436,4 +440,3 @@ getChat = (req, res) => {
 };
 
 module.exports = { chatSocket, getChat };
-
