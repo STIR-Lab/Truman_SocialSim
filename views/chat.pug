@@ -303,6 +303,7 @@ block content
                     });
                     
                     socket.on("receive-message", (msg) => {
+                        
                         // update latest message in recent chat history
                         partnerId = msg.from.userId == userId ? msg.to.userId : msg.from.userId;
                         $('#' + partnerId + 'lastMessage').text(msg.msg.body);
@@ -353,7 +354,7 @@ block content
                             $('#' + msg.from.userId + 'redBubble').show();
                         }
                     });
-
+                    
                     function sendReaction(msg, person, reactionType, messageID) {
 
                         let currentReaction;
@@ -383,7 +384,6 @@ block content
                                     socketId: chatPartnerSocketId
                             } 
                         });
-
                         document.getElementById(`${messageID}-react`).style.display = "none"
                     }
 
@@ -492,6 +492,7 @@ block content
                         
                         
                         // onclick actions for reactions
+                        //- document.getElementById(`${id}-thumbsup`).onclick=function(){readMessage(id, "test321", "bdskdbkjads")};
                         document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "self", "thumbsUp", id)};
                         document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "self", "thumbsDown", id)};
                         document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "self", "like", id)};
@@ -538,6 +539,8 @@ block content
                         });
 
                         // onclick actions for reactions
+                        //- document.getElementById(`${id}-thumbsup`).onclick=function(){readMessage(id, "test321", "bdskdbkjads")};
+
                         document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "other", "thumbsUp", id)};
                         document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "other", "thumbsDown", id)};
                         document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "other", "like", id)};

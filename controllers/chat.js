@@ -125,10 +125,6 @@ const chatSocket = (server) => {
         to
       );
 
-      // io.to(to.userId) // to recipient
-      io.to(socket.userId) // to sender room
-        .emit("receive-message", formattedMsg);
-
       let convoInfo = await searchConvo(
         socket.username,
         socket.userId,
@@ -137,7 +133,7 @@ const chatSocket = (server) => {
       );
 
       if (convoInfo) {
-        storeMessage(formattedMsg, convoInfo);
+        await storeMessage(formattedMsg, convoInfo);
       }
       // ok new convo
       else {
@@ -151,16 +147,21 @@ const chatSocket = (server) => {
         });
         await newConvo.save();
 
-        storeMessage(formattedMsg, newConvo);
+        await storeMessage(formattedMsg, newConvo);
       }
 
       console.log(formattedMsg);
       io.to(to.userId) // to recipient
         // .to(socket.userId) // to sender room
         .emit("receive-message", formattedMsg);
+
+      // io.to(to.userId) // to recipient
+      io.to(socket.userId) // to sender room
+        .emit("receive-message", formattedMsg);
     });
 
     socket.on("read-message", async ({ messageID, from }) => {
+      console.log("MARKING-READ-MESSAGE");
       // search convo between from & socket user
       let convoInfo = await searchConvo(
         socket.username,
@@ -267,170 +268,171 @@ const chatSocket = (server) => {
         const userList = getCurrentUsers();
         socket.emit("userList", userList);
       }
-    });
+    }); // socket.on disconnect
+  }); // io.on connection
+}; // chatSocket
+
+/**
+ * Utils
+ *
+ */
+
+/**
+ * Generate a session id for a newly joined user
+ *
+ */
+const randomId = () => crypto.randomBytes(8).toString("hex");
+
+const chatBot = "chatBot";
+
+/**
+ * Format leave notification which is different from user message object
+ *
+ * @param {object} from
+ *
+ */
+function leaveNotification(from) {
+  return {
+    type: "txt",
+    body: `${from} has left the chat`,
+  };
+}
+
+/**
+ * Format message with reactions and a timestamp, etc.
+ *
+ * @param {object} msg
+ * @param {object} from
+ * @param {object} to
+ *
+ */
+function formatMessage(msg, from, to) {
+  return new Message({
+    msg: {
+      ...msg,
+      read: false,
+      time: moment().format("h:mm:ss a"),
+      reactions: {
+        self: "none",
+        other: "none",
+      },
+    },
+    from: from, // NOTE: string | object
+    to: to,
+  });
+}
+
+/**
+ * Store new message obejct to the existing conversation and save to the DB
+ *
+ * @param {object} msg
+ * @param {object} convoInfo
+ */
+async function storeMessage(msg, convoInfo) {
+  convoInfo.content.push(msg);
+
+  await convoInfo.save();
+}
+
+/**
+ * Fetch a list of current active users
+ *
+ */
+function getCurrentUsers() {
+  const userList = [];
+  sessionStore.findAllSessions().forEach((session) => {
+    if (session.connected) {
+      userList.push({
+        userId: session.userId,
+        username: session.username,
+      });
+    }
   });
 
-  /**
-   * Utils
-   *
-   */
+  return userList;
+}
 
-  /**
-   * Generate a session id for a newly joined user
-   *
-   */
-  const randomId = () => crypto.randomBytes(8).toString("hex");
-
-  const chatBot = "chatBot";
-
-  /**
-   * Format leave notification which is different from user message object
-   *
-   * @param {object} from
-   *
-   */
-  function leaveNotification(from) {
-    return {
-      type: "txt",
-      body: `${from} has left the chat`,
-    };
-  }
-
-  /**
-   * Format message with reactions and a timestamp, etc.
-   *
-   * @param {object} msg
-   * @param {object} from
-   * @param {object} to
-   *
-   */
-  function formatMessage(msg, from, to) {
-    return new Message({
-      msg: {
-        ...msg,
-        read: false,
-        time: moment().format("h:mm:ss a"),
-        reactions: {
-          self: "none",
-          other: "none",
-        },
+/**
+ * Find all conversation history of a user
+ *
+ * @param {string} username
+ * @param {string} userId
+ *
+ */
+async function getChatHistory(username, userId) {
+  let allConvo = await Conversation.find({
+    $or: [
+      {
+        usernameA: username,
+        userIdA: userId,
       },
-      from: from, // NOTE: string | object
-      to: to,
+      {
+        usernameB: username,
+        userIdB: userId,
+      },
+    ],
+  });
+
+  return allConvo;
+}
+
+/**
+ * Find a specific conversation history between two users
+ *
+ * @param {string} usernameA
+ * @param {string} userIdA
+ * @param {string} usernameB
+ * @param {string} userIdB
+ *
+ */
+async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
+  let curConvo = await Conversation.findOne({
+    usernameA: usernameA,
+    userIdA: userIdA,
+    usernameB: usernameB,
+    userIdB: userIdB,
+  });
+
+  if (curConvo) {
+    console.log("found existing convo", curConvo);
+    return curConvo;
+
+    // {
+    //   curConvo: curConvo,
+    //   usernameA: usernameA,
+    //   userIdA: userIdA,
+    //   usernameB: usernameB,
+    //   userIdB: userIdB,
+    // };
+  } else {
+    curConvo = await Conversation.findOne({
+      usernameA: usernameB,
+      userIdA: userIdB,
+      usernameB: usernameA,
+      userIdB: userIdA,
     });
-  }
-
-  /**
-   * Store new message obejct to the existing conversation and save to the DB
-   *
-   * @param {object} msg
-   * @param {object} convoInfo
-   */
-  async function storeMessage(msg, convoInfo) {
-    convoInfo.content.push(msg);
-
-    await convoInfo.save();
-  }
-
-  /**
-   * Fetch a list of current active users
-   *
-   */
-  function getCurrentUsers() {
-    const userList = [];
-    sessionStore.findAllSessions().forEach((session) => {
-      if (session.connected) {
-        userList.push({
-          userId: session.userId,
-          username: session.username,
-        });
-      }
-    });
-
-    return userList;
-  }
-
-  /**
-   * Find all conversation history of a user
-   *
-   * @param {string} username
-   * @param {string} userId
-   *
-   */
-  async function getChatHistory(username, userId) {
-    let allConvo = await Conversation.find({
-      $or: [
-        {
-          usernameA: username,
-          userIdA: userId,
-        },
-        {
-          usernameB: username,
-          userIdB: userId,
-        },
-      ],
-    });
-
-    return allConvo;
-  }
-
-  /**
-   * Find a specific conversation history between two users
-   *
-   * @param {string} usernameA
-   * @param {string} userIdA
-   * @param {string} usernameB
-   * @param {string} userIdB
-   *
-   */
-  async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
-    let curConvo = await Conversation.findOne({
-      usernameA: usernameA,
-      userIdA: userIdA,
-      usernameB: usernameB,
-      userIdB: userIdB,
-    });
-
     if (curConvo) {
       console.log("found existing convo", curConvo);
       return curConvo;
 
       // {
       //   curConvo: curConvo,
-      //   usernameA: usernameA,
-      //   userIdA: userIdA,
-      //   usernameB: usernameB,
-      //   userIdB: userIdB,
+      //   usernameA: usernameB,
+      //   userIdA: userIdB,
+      //   usernameB: usernameA,
+      //   userIdB: userIdA,
       // };
-    } else {
-      curConvo = await Conversation.findOne({
-        usernameA: usernameB,
-        userIdA: userIdB,
-        usernameB: usernameA,
-        userIdB: userIdA,
-      });
-      if (curConvo) {
-        console.log("found existing convo", curConvo);
-        return curConvo;
-
-        // {
-        //   curConvo: curConvo,
-        //   usernameA: usernameB,
-        //   userIdA: userIdB,
-        //   usernameB: usernameA,
-        //   userIdB: userIdA,
-        // };
-      }
     }
-
-    return null;
   }
 
-  /**
-   * Routes, Exports
-   *
-   */
-};
+  return null;
+}
+
+/**
+ * Routes, Exports
+ *
+ */
+
 getChat = (req, res) => {
   res.render("chat", {});
 };
