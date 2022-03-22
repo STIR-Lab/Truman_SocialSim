@@ -158,35 +158,71 @@ const chatSocket = (server) => {
       io.to(to.userId) // to recipient
         // .to(socket.userId) // to sender room
         .emit("receive-message", formattedMsg);
+    });
 
-      /**
-       * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
-       *
-       * {
-       *  msg: {
-       *    type: "txt" | "img"
-       *    body: string | blob, actual content of the message
-       *    mimeType?: "png" | "jpg", etc
-       *    fileName?: string
-       *    time: string
-       *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
-       *  }
-       *  to: {
-       *     username: string
-       *     userId: string,
-       *     socketId: string
-       *   }
-       * }
-       *
-       */
+    socket.on("read-message", async ({ messageID, from }) => {
+      // search convo between from & socket user
+      let convoInfo = await searchConvo(
+        socket.username,
+        socket.userId,
+        from.username,
+        from.userId
+      );
 
-      socket.on("read-message", async ({ messageID, from }) => {
-        // search convo between from & socket user
+      if (!convoInfo) {
+        return;
+      }
+
+      //Finding index of the content array where messageID is equal to an id within that array
+      let messageIndex = convoInfo.content.findIndex((message) => {
+        return message._id == messageID;
+      });
+
+      //Mark message as read in db
+      convoInfo.content[messageIndex].msg.read = true;
+
+      convoInfo.markModified("content");
+      await convoInfo.save();
+    });
+
+    /**
+     * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
+     *
+     * {
+     *  msg: {
+     *    type: "txt" | "img"
+     *    body: string | blob, actual content of the message
+     *    mimeType?: "png" | "jpg", etc
+     *    fileName?: string
+     *    time: string
+     *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
+     *  }
+     *  to: {
+     *     username: string
+     *     userId: string,
+     *     socketId: string
+     *   }
+     * }
+     *
+     */
+
+    socket.on(
+      "send-reaction",
+      async ({ messageID, person, reactionType, reactions, to }) => {
+        io.to(socket.userId) // to sender room
+          .to(to.userId) // to recipient
+          .emit("receive-reaction", {
+            reactions: reactions,
+            reactionType: reactionType,
+            person: person,
+            messageID: messageID,
+          });
+
         let convoInfo = await searchConvo(
           socket.username,
           socket.userId,
-          from.username,
-          from.userId
+          to.username,
+          to.userId
         );
 
         if (!convoInfo) {
@@ -199,78 +235,38 @@ const chatSocket = (server) => {
         });
 
         //Save reaction to db
-        convoInfo.content[messageIndex].msg.read = true;
+        convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
 
         convoInfo.markModified("content");
         await convoInfo.save();
-      });
+      }
+    );
 
-      socket.on(
-        "send-reaction",
-        async ({ messageID, person, reactionType, reactions, to }) => {
-          io.to(socket.userId) // to sender room
-            .to(to.userId) // to recipient
-            .emit("receive-reaction", {
-              reactions: reactions,
-              reactionType: reactionType,
-              person: person,
-              messageID: messageID,
-            });
-
-          let convoInfo = await searchConvo(
-            socket.username,
-            socket.userId,
-            to.username,
-            to.userId
-          );
-
-          if (!convoInfo) {
-            return;
-          }
-
-          //Finding index of the content array where messageID is equal to an id within that array
-          let messageIndex = convoInfo.content.findIndex((message) => {
-            return message._id == messageID;
-          });
-
-          //Save reaction to db
-          convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
-
-          convoInfo.markModified("content");
-          await convoInfo.save();
-        }
-      );
-
-      socket.on("disconnect", async () => {
-        const matchingSockets = await io.in(socket.userId).allSockets();
-        const isDisconnected = matchingSockets.size === 0;
-        if (isDisconnected) {
-          // Disconnect current session from sessionStore
-          sessionStore.disconnectSession(socket.sessionId);
-          /** 
+    socket.on("disconnect", async () => {
+      const matchingSockets = await io.in(socket.userId).allSockets();
+      const isDisconnected = matchingSockets.size === 0;
+      if (isDisconnected) {
+        // Disconnect current session from sessionStore
+        sessionStore.disconnectSession(socket.sessionId);
+        /** 
           socket.broadcast.emit(
             "disconneted",
             formatMessage(leaveNotification(socket.username), chatBot, "ALL")
           );
           */
-          // FIXME: Name of the event subject to change for FE's convenience
-          socket.rooms.forEach((roomId) => {
-            socket.broadcast
-              .to(roomId)
-              .emit(
-                "disconneted",
-                formatMessage(
-                  leaveNotification(socket.username),
-                  chatBot,
-                  "ALL"
-                )
-              );
-          });
-          // refresh current users
-          const userList = getCurrentUsers();
-          socket.emit("userList", userList);
-        }
-      });
+        // FIXME: Name of the event subject to change for FE's convenience
+        socket.rooms.forEach((roomId) => {
+          socket.broadcast
+            .to(roomId)
+            .emit(
+              "disconneted",
+              formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+            );
+        });
+        // refresh current users
+        const userList = getCurrentUsers();
+        socket.emit("userList", userList);
+      }
     });
   });
 
