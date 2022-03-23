@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const User = require("../models/User");
+const { ObjectId } = require("mongoose");
 
 const sessionStore = new InMemorySessionStore();
 
@@ -160,8 +161,7 @@ const chatSocket = (server) => {
         .emit("receive-message", formattedMsg);
     });
 
-    socket.on("read-message", async ({ messageID, other }) => {
-      console.log("MARKING-READ-MESSAGE");
+    socket.on("read-messages", async ({ messageIds, other }) => {
       // search convo between from & socket user
       let convoInfo = await searchConvo(
         socket.username,
@@ -174,11 +174,15 @@ const chatSocket = (server) => {
         return;
       }
 
-      //Finding index of the content array where messageID is equal to an id within that array
-      let messageIndex = convoInfo.content.findIndex((message) => {
-        return message._id == messageID;
+      convoInfo.content.forEach((content) => {
+        messageIds.forEach((id) => {
+          if (id == content._id) {
+            content.msg.read = true;
+          }
+        });
       });
 
+<<<<<<< HEAD
       Conversation.findById(convoInfo._id, async function (err, result) {
         if (!err) {
           if (!result) {
@@ -199,6 +203,10 @@ const chatSocket = (server) => {
       // convoInfo.content[messageIndex].msg.read = true;
       // convoInfo.markModified("content");
       // await convoInfo.save();
+=======
+      convoInfo.markModified("content");
+      await convoInfo.save();
+>>>>>>> chat-frontend
     });
 
     /**
@@ -409,7 +417,7 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
   });
 
   if (curConvo) {
-    console.log("found existing convo", curConvo);
+    // console.log("found existing convo", curConvo);
     return curConvo;
 
     // {
@@ -427,7 +435,7 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
       userIdB: userIdA,
     });
     if (curConvo) {
-      console.log("found existing convo", curConvo);
+      // console.log("found existing convo", curConvo);
       return curConvo;
 
       // {
