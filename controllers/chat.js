@@ -182,31 +182,8 @@ const chatSocket = (server) => {
         });
       });
 
-<<<<<<< HEAD
-      Conversation.findById(convoInfo._id, async function (err, result) {
-        if (!err) {
-          if (!result) {
-            console.log("conversation not found!");
-            return;
-          } else {
-            result.content.id(messageID).msg.read = true;
-            convoInfo.markModified("content");
-            await result.save();
-            return;
-          }
-        } else {
-          console.log(err);
-        }
-      });
-
-      //Mark message as read in db
-      // convoInfo.content[messageIndex].msg.read = true;
-      // convoInfo.markModified("content");
-      // await convoInfo.save();
-=======
       convoInfo.markModified("content");
       await convoInfo.save();
->>>>>>> chat-frontend
     });
 
     /**
