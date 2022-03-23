@@ -160,14 +160,14 @@ const chatSocket = (server) => {
         .emit("receive-message", formattedMsg);
     });
 
-    socket.on("read-message", async ({ messageID, from }) => {
+    socket.on("read-message", async ({ messageID, other }) => {
       console.log("MARKING-READ-MESSAGE");
       // search convo between from & socket user
       let convoInfo = await searchConvo(
         socket.username,
         socket.userId,
-        from.username,
-        from.userId
+        other.username,
+        other.userId
       );
 
       if (!convoInfo) {
@@ -183,6 +183,7 @@ const chatSocket = (server) => {
       convoInfo.content[messageIndex].msg.read = true;
 
       convoInfo.markModified("content");
+      convoInfo.content[messageIndex].msg["markModified"]("read");
       await convoInfo.save();
     });
 
