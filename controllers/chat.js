@@ -61,7 +61,7 @@ const chatSocket = (server) => {
     });
 
     // Fetch existing users
-    socket.emit("userList", getCurrentUsers());
+    socket.broadcast.emit("userList", getCurrentUsers());
 
     // Diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
@@ -179,12 +179,26 @@ const chatSocket = (server) => {
         return message._id == messageID;
       });
 
-      //Mark message as read in db
-      convoInfo.content[messageIndex].msg.read = true;
+      Conversation.findById(convoInfo._id, async function (err, result) {
+        if (!err) {
+          if (!result) {
+            console.log("conversation not found!");
+            return;
+          } else {
+            result.content.id(messageID).msg.read = true;
+            convoInfo.markModified("content");
+            await result.save();
+            return;
+          }
+        } else {
+          console.log(err);
+        }
+      });
 
-      convoInfo.markModified("content");
-      convoInfo.content[messageIndex].msg["markModified"]("read");
-      await convoInfo.save();
+      //Mark message as read in db
+      // convoInfo.content[messageIndex].msg.read = true;
+      // convoInfo.markModified("content");
+      // await convoInfo.save();
     });
 
     /**
