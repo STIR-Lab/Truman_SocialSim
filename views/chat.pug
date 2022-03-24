@@ -100,30 +100,43 @@ block content
 
                     let copiedUserList = null;
 
+                    let usersInUserList = [];
+
+                    let loadedHistory = false;
+
                     socket.on("userList", (userList) => {
                         copiedUserList = JSON.parse(JSON.stringify(userList));
+                        
                         userList.forEach((user) => {
-                            var u = `   <div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
-                                            <div class="content">
-                                                <div class="header">${user.username}</div>
-                                            </div>
-                                            <button id="rightArrowButton" class="ui icon right floated mini button""><i class="right arrow icon"></i></button>
-                                        </div>`
+                            if (!usersInUserList.includes(user.userId)) {
+                                usersInUserList.push(user.userId);
 
-                            if (user.userId == userId) { // add user to top of user list
-                                $('#userList').prepend(u);
-                            }
-                            else {
-                                $('#userList').append(u);
-                            }
+                                var u = `   <div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
+                                                <div class="content">
+                                                    <div class="header">${user.username}</div>
+                                                </div>
+                                                <button id="rightArrowButton" class="ui icon right floated mini button""><i class="right arrow icon"></i></button>
+                                            </div>`
 
-                            // add onClick function to button
-                            var element = document.getElementById("rightArrowButton");
-                            element.id = user.userId + 'rightArrowButton';
-                            document.getElementById(user.userId + 'rightArrowButton').onclick=function(){onClickUsername(user.userId)};
+                                if (user.userId == userId) { // add user to top of user list
+                                    $('#userList').prepend(u);
+                                }
+                                else {
+                                    $('#userList').append(u);
+                                }
 
-                            if (user.userId == userId) { // do not allow user to chat itself
-                                document.getElementById(user.userId + 'rightArrowButton').remove();
+                                // add onClick function to button
+                                var element = document.getElementById("rightArrowButton");
+                                element.id = user.userId + 'rightArrowButton';
+                                document.getElementById(user.userId + 'rightArrowButton').onclick=function(){onClickUsername(user.userId)};
+
+                                if (user.userId == userId) { // do not allow user to chat itself
+                                    document.getElementById(user.userId + 'rightArrowButton').remove();
+                                }
+
+                                if (loadedHistory) {
+                                    addUserInDiscover(user);
+                                }
                             }
                         });
                     });
@@ -163,13 +176,15 @@ block content
                     }
 
                     socket.on("receive-chat-history", (allConvo) => {
-                         if (allConvo.length == 0) {
+                        if (allConvo.length == 0) {
                             $('#recentButton').hide();
                             $('#recentChatHistory').hide();
                             $('#discoverProfiles').show();
                         }
 
                         usersInHistory = [];
+
+                        loadedHistory = true;
 
                         allConvo.forEach((chatPartner) => {
                             let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
@@ -184,45 +199,49 @@ block content
                         });
 
                         copiedUserList.forEach((user) => {
-                            let count = 0;
-                            let prevRow = count;
-                            var row = `<div id="prevRow" class="row"></div>`;
-
-                            $('#discoverProfiles').append(row);
-                            var element = document.getElementById("prevRow");
-                            element.id = 'row' + count;
-
-                            if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length) {
-                                count++;
-                                if (count > 0 && count % 2 == 0) {
-                                    $('#discoverProfiles').append(row);
-                                    prevRow = count;
-                                }
-
-                                var profile = ` <div class="eight wide column">
-                                                    <div class="ui card" style="margin-bottom:10px">
-                                                        <div class="content">
-                                                            <div class="center aligned column"><img class="ui circular tiny image" src="https://trumanprofilepictures.s3.amazonaws.com/${chatPartnerpfp}" style="margin-bottom:4px"/></div>
-                                                            <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username}</div>
-                                                            <button id="profileButton" class="ui button tiny fluid fluid" style="margin-bottom:4px">Profile </button>
-                                                            <button id="messageButton" class="ui positive button tiny fluid">Message </button>
-                                                        </div>
-                                                    </div>
-                                                </div>`
-                                
-                                document.getElementById('row' + prevRow).insertAdjacentHTML('beforeend', profile);
-                                console.log(chatPartnerpfp)
-
-                                var element = document.getElementById("profileButton");
-                                element.id = user.userId + 'profileButton';
-                                document.getElementById(user.userId + 'profileButton').onclick=function(){onClickProfile(user.userId)};
-
-                                var element = document.getElementById("messageButton");
-                                element.id = user.userId + 'messageButton';
-                                document.getElementById(user.userId + 'messageButton').onclick=function(){onClickUsername(user.userId)};
-                            }
+                            addUserInDiscover(user);
                         });
                     });
+
+                    
+                    function addUserInDiscover(user) {
+                        let count = 0;
+                        let prevRow = count;
+                        var row = `<div id="prevRow" class="row"></div>`;
+
+                        $('#discoverProfiles').append(row);
+                        var element = document.getElementById("prevRow");
+                        element.id = 'row' + count;
+
+                        if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length) {
+                            count++;
+                            if (count > 0 && count % 2 == 0) {
+                                $('#discoverProfiles').append(row);
+                                prevRow = count;
+                            }
+
+                            var profile = ` <div class="eight wide column">
+                                                <div class="ui card" style="margin-bottom:10px">
+                                                    <div class="content">
+                                                        <div class="center aligned column"><img class="ui circular tiny image" src="public/grey.jpg" style="margin-bottom:4px"/></div>
+                                                        <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username}</div>
+                                                        <button id="profileButton" class="ui button tiny fluid fluid" style="margin-bottom:4px">Profile </button>
+                                                        <button id="messageButton" class="ui positive button tiny fluid">Message </button>
+                                                    </div>
+                                                </div>
+                                            </div>`
+                            
+                            document.getElementById('row' + prevRow).insertAdjacentHTML('beforeend', profile);
+
+                            var element = document.getElementById("profileButton");
+                            element.id = user.userId + 'profileButton';
+                            document.getElementById(user.userId + 'profileButton').onclick=function(){onClickProfile(user.userId)};
+
+                            var element = document.getElementById("messageButton");
+                            element.id = user.userId + 'messageButton';
+                            document.getElementById(user.userId + 'messageButton').onclick=function(){onClickUsername(user.userId)};
+                        }
+                    }
 
                     function onClickProfile(userId) {
                         window.location.href = "/user/" + userId;
@@ -363,6 +382,13 @@ block content
                         }
                         else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
                             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id);
+                            socket.emit("read-messages", {
+                                messageIds: [msg._id],
+                                other: {
+                                    username: chatPartnerUsername,
+                                    userId: chatPartnerUserId,
+                                }
+                            });
                         }
                         else if (msg.to.userId == userId) {
                             $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);

@@ -68,6 +68,7 @@ const chatSocket = (server) => {
     });
 
     // Fetch existing users
+    socket.emit("userList", getCurrentUsers());
     socket.broadcast.emit("userList", getCurrentUsers());
 
     // Diff tabs opened by the same user, thus we need to make diff sockets join the same room
