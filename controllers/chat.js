@@ -22,27 +22,32 @@ const chatSocket = (server) => {
         socket.sessionId = sessionId;
         socket.userId = session.userId;
         socket.username = session.username;
+        socket.userpfp = session.pfp;
         return next();
       }
     } else {
       const username = socket.handshake.auth.username;
       const userId = socket.handshake.auth.userId;
+      const userpfp = socket.handshake.auth.userpfp;
       if (!username || !userId) {
         return next(new Error("Invalid username/userId"));
       }
       socket.sessionId = randomId();
       socket.username = username;
       socket.userId = userId;
+      socket.userpfp = userpfp;
       next();
     }
     const username = socket.handshake.auth.username;
     const userId = socket.handshake.auth.userId;
+    const userpfp = socket.handshake.auth.userpfp;
     if (!username || !userId) {
       return next(new Error("Invalid username/userId"));
     }
     socket.sessionId = randomId();
     socket.username = username;
     socket.userId = userId;
+    socket.userpfp = userpfp;
     next();
   });
 
@@ -54,6 +59,7 @@ const chatSocket = (server) => {
       userId: socket.userId,
       username: socket.username,
       socketId: socket.id,
+      userpfp: socket.pfp,
       connected: true,
     });
     socket.emit("session", {
@@ -87,6 +93,7 @@ const chatSocket = (server) => {
       let convoInfo = await searchConvo(
         socket.username,
         socket.userId,
+        socket.userpfp,
         to.username,
         to.userId
       );
@@ -146,7 +153,9 @@ const chatSocket = (server) => {
         let newConvo = new Conversation({
           usernameA: to.username,
           userIdA: to.userId,
+          userpfpA: to.userpfp,
           usernameB: socket.username,
+          userpfpB: socket.userpfp,
           userIdB: socket.userId,
         });
         await newConvo.save();
@@ -347,6 +356,7 @@ const chatSocket = (server) => {
         userList.push({
           userId: session.userId,
           username: session.username,
+          userpfp: session.pfp,
         });
       }
     });
@@ -361,16 +371,18 @@ const chatSocket = (server) => {
    * @param {string} userId
    *
    */
-  async function getChatHistory(username, userId) {
+  async function getChatHistory(username, userId, userpfp) {
     let allConvo = await Conversation.find({
       $or: [
         {
           usernameA: username,
           userIdA: userId,
+          userpfpA: userpfp
         },
         {
           usernameB: username,
           userIdB: userId,
+          userpfpB: userpfp,
         },
       ],
     });
@@ -387,11 +399,13 @@ const chatSocket = (server) => {
    * @param {string} userIdB
    *
    */
-  async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
+  async function searchConvo(usernameA, userIdA, usernameB, userIdB, userpfpA, userpfpB) {
     let curConvo = await Conversation.findOne({
       usernameA: usernameA,
       userIdA: userIdA,
+      userpfpA: userpfpA,
       usernameB: usernameB,
+      userpfpB: userpfpB,
       userIdB: userIdB,
     });
 
@@ -410,8 +424,10 @@ const chatSocket = (server) => {
       curConvo = await Conversation.findOne({
         usernameA: usernameB,
         userIdA: userIdB,
+        userpfpA: userpfpA,
         usernameB: usernameA,
         userIdB: userIdA,
+        userpfpB: userpfpB
       });
       if (curConvo) {
         console.log("found existing convo", curConvo);
