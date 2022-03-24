@@ -1,6 +1,7 @@
 extends ui_layout
 
 block content
+    link(rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css')
     .computer.only.tablet.only.row
         .five.wide.column
             .ui.segment(style='height:90vh')
@@ -130,6 +131,37 @@ block content
                     $('#discoverProfiles').hide();
                     let usersInHistory = [];
 
+                    let numUnread = 0;
+
+                    function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread) {
+                        var listItem = `<div class="item">
+                                                <img class="ui avatar image" src="public/grey.jpg"/ style="margin-left:20px">
+                                                <div class="content"><a class="header">${chatPartnerUsername}</a>
+                                                    <div class="description" id="lastMessage">${lastMessage}</div>
+                                                </div>
+                                                <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
+                                                <span id="redBubble" class="w3-badge w3-red"></span>
+                                            </div>`;
+
+                        $('#chatHistory').append(listItem);
+
+                        let element = document.getElementById("lastMessage");
+                        element.id = chatPartnerId + 'lastMessage';
+
+                        element = document.getElementById("redBubble");
+                        element.id = chatPartnerId + 'redBubble';
+                        $('#' + chatPartnerId + 'redBubble').hide();
+
+                        element = document.getElementById("rightChevronButton");
+                        element.id = chatPartnerId + 'rightChevronButton';
+                        document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
+
+                        $('#' + chatPartnerId + 'redBubble').text(numUnread);
+                        if (numUnread > 0) {
+                            $('#' + chatPartnerId + 'redBubble').show();
+                        }
+                    }
+
                     socket.on("receive-chat-history", (allConvo) => {
                          if (allConvo.length == 0) {
                             $('#recentButton').hide();
@@ -146,27 +178,9 @@ block content
 
                             usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername});
 
-                            var listItem = `<div class="item">
-                                                <i class="circle red icon" id="redBubble" style="margin-top:30px"></i>
-                                                <img class="ui avatar image" src="https://trumanprofilepictures.s3.amazonaws.com/${chatPartnerpfp}"/ style="margin-left:20px">
-                                                <div class="content"><a class="header">${chatPartnerUsername}</a>
-                                                    <div class="description" id="lastMessage">${lastMessage}</div>
-                                                </div>
-                                                <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
-                                            </div>`;
+                            numUnread = chatPartner.content.filter(c => c.from.userId == chatPartnerId).filter(c => !c.msg.read).length
 
-                            $('#chatHistory').append(listItem);
-
-                            let element = document.getElementById("lastMessage");
-                            element.id = chatPartnerId + 'lastMessage';
-
-                            element = document.getElementById("redBubble");
-                            element.id = chatPartnerId + 'redBubble';
-                            $('#' + chatPartnerId + 'redBubble').hide();
-
-                            element = document.getElementById("rightChevronButton");
-                            element.id = chatPartnerId + 'rightChevronButton';
-                            document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
+                            addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread);
                         });
 
                         copiedUserList.forEach((user) => {
@@ -239,6 +253,7 @@ block content
 
                     function onClickUsername(userId) {
                         $('#' + userId + 'redBubble').hide();
+                        $('#' + userId + 'redBubble').text(0);
                         
                         // find user in online list
                         copiedUserList.forEach((user) => {
@@ -297,6 +312,7 @@ block content
 
                     // get all messages
                     socket.on("message-list", (messageList) => {
+                        let messageIds = [];
                         for (let i = 0; i < messageList.length; i++) {
                             if (messageList[i].from.userId == userId) {
                                 addChatSentMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id );
@@ -307,12 +323,41 @@ block content
                                  loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                             }
 
-                            
+                            if (messageList[i].to.userId == userId && !messageList[i].msg.read) {
+                                messageIds.push(messageList[i]._id);
+                            }
                         }
+                        socket.emit("read-messages", {
+                            messageIds: messageIds,
+                            other: {
+                                    username: chatPartnerUsername,
+                                    userId: chatPartnerUserId,
+                                }
+                        });
                     });
                     
                     socket.on("receive-message", (msg) => {
-                       
+                        
+                        // update latest message in recent chat history
+                        partnerId = msg.from.userId == userId ? msg.to.userId : msg.from.userId;
+                        $('#' + partnerId + 'lastMessage').text(msg.msg.body);
+
+                        partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
+
+                        const userInDiscover = !usersInHistory.some(user => {
+                            if (user.userId == partnerId) {
+                                return true;
+                            }
+                        });
+
+                        if (userInDiscover) {
+                            addUserInHistory(partnerUsername, msg.msg.body, partnerId, 0);
+                         
+                            $('#recentButton').show();
+                            onClickRecentButton();
+
+                            usersInHistory.push({userId: partnerId, username: partnerUsername});
+                        }
                         if (msg.from.userId == userId) {
                             addChatSentMessage(msg.msg, msg.msg.time, msg._id);
                         }
@@ -320,11 +365,11 @@ block content
                             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id);
                         }
                         else if (msg.to.userId == userId) {
+                            $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
                             $('#' + msg.from.userId + 'redBubble').show();
-                            $('#' + msg.from.userId + 'lastMessage').text(msg.msg.body);
                         }
                     });
-
+                    
                     function sendReaction(msg, person, reactionType, messageID) {
 
                         let currentReaction;
@@ -354,7 +399,6 @@ block content
                                     socketId: chatPartnerSocketId
                             } 
                         });
-
                         document.getElementById(`${messageID}-react`).style.display = "none"
                     }
 
@@ -425,6 +469,18 @@ block content
                         }
 
                     }
+
+                    function formatTime(time) {
+                        let seen = false;
+                        let idx = -1;
+                        for (let i = 0; i < time.length; i++) {
+                            if (time[i] == ':' && !seen)
+                                seen = true;
+                            else if (time[i] == ':' && seen)
+                                idx = i;
+                        }
+                        return time.slice(0, idx) + time.slice(idx + 3);
+                    }
                    
 
                     function addChatSentMessage(msg, time, id) {
@@ -445,7 +501,7 @@ block content
                                             <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; left:2px;"></div> 
                                              <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; left:14px;"></div>
                                         </div>
-                                        <p style="font-size:10px; margin-top:-8px">${time}</p>
+                                        <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
                                         </div>
                                     </div>`
                         $('#messages').append(mes);
@@ -463,6 +519,7 @@ block content
                         
                         
                         // onclick actions for reactions
+                        //- document.getElementById(`${id}-thumbsup`).onclick=function(){readMessage(id, "test321", "bdskdbkjads")};
                         document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "self", "thumbsUp", id)};
                         document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "self", "thumbsDown", id)};
                         document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "self", "like", id)};
@@ -491,7 +548,7 @@ block content
                                             <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; right:14px;"></div> 
                                         </div>
 
-                                        <p style="font-size:10px; margin-top:-8px">${time}</p>
+                                        <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
                                         </div>
                                     </div>`
                         $('#messages').append(mes);
@@ -509,6 +566,8 @@ block content
                         });
 
                         // onclick actions for reactions
+                        //- document.getElementById(`${id}-thumbsup`).onclick=function(){readMessage(id, "test321", "bdskdbkjads")};
+
                         document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "other", "thumbsUp", id)};
                         document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "other", "thumbsDown", id)};
                         document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "other", "like", id)};

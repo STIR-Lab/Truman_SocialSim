@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const User = require("../models/User");
+const { ObjectId } = require("mongoose");
 
 const sessionStore = new InMemorySessionStore();
 
@@ -67,7 +68,7 @@ const chatSocket = (server) => {
     });
 
     // Fetch existing users
-    socket.emit("userList", getCurrentUsers());
+    socket.broadcast.emit("userList", getCurrentUsers());
 
     // Diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
@@ -132,10 +133,6 @@ const chatSocket = (server) => {
         to
       );
 
-      // io.to(to.userId) // to recipient
-      io.to(socket.userId) // to sender room
-        .emit("receive-message", formattedMsg);
-
       let convoInfo = await searchConvo(
         socket.username,
         socket.userId,
@@ -144,7 +141,7 @@ const chatSocket = (server) => {
       );
 
       if (convoInfo) {
-        storeMessage(formattedMsg, convoInfo);
+        await storeMessage(formattedMsg, convoInfo);
       }
       // ok new convo
       else {
@@ -160,7 +157,7 @@ const chatSocket = (server) => {
         });
         await newConvo.save();
 
-        storeMessage(formattedMsg, newConvo);
+        await storeMessage(formattedMsg, newConvo);
       }
 
       console.log(formattedMsg);
@@ -168,34 +165,74 @@ const chatSocket = (server) => {
         // .to(socket.userId) // to sender room
         .emit("receive-message", formattedMsg);
 
-      /**
-       * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
-       *
-       * {
-       *  msg: {
-       *    type: "txt" | "img"
-       *    body: string | blob, actual content of the message
-       *    mimeType?: "png" | "jpg", etc
-       *    fileName?: string
-       *    time: string
-       *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
-       *  }
-       *  to: {
-       *     username: string
-       *     userId: string,
-       *     socketId: string
-       *   }
-       * }
-       *
-       */
+      // io.to(to.userId) // to recipient
+      io.to(socket.userId) // to sender room
+        .emit("receive-message", formattedMsg);
+    });
 
-      socket.on("read-message", async ({ messageID, from }) => {
-        // search convo between from & socket user
+    socket.on("read-messages", async ({ messageIds, other }) => {
+      // search convo between from & socket user
+      let convoInfo = await searchConvo(
+        socket.username,
+        socket.userId,
+        other.username,
+        other.userId
+      );
+
+      if (!convoInfo) {
+        return;
+      }
+
+      convoInfo.content.forEach((content) => {
+        messageIds.forEach((id) => {
+          if (id == content._id) {
+            content.msg.read = true;
+          }
+        });
+      });
+
+      convoInfo.markModified("content");
+      await convoInfo.save();
+    });
+
+    /**
+     * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
+     *
+     * {
+     *  msg: {
+     *    type: "txt" | "img"
+     *    body: string | blob, actual content of the message
+     *    mimeType?: "png" | "jpg", etc
+     *    fileName?: string
+     *    time: string
+     *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
+     *  }
+     *  to: {
+     *     username: string
+     *     userId: string,
+     *     socketId: string
+     *   }
+     * }
+     *
+     */
+
+    socket.on(
+      "send-reaction",
+      async ({ messageID, person, reactionType, reactions, to }) => {
+        io.to(socket.userId) // to sender room
+          .to(to.userId) // to recipient
+          .emit("receive-reaction", {
+            reactions: reactions,
+            reactionType: reactionType,
+            person: person,
+            messageID: messageID,
+          });
+
         let convoInfo = await searchConvo(
           socket.username,
           socket.userId,
-          from.username,
-          from.userId
+          to.username,
+          to.userId
         );
 
         if (!convoInfo) {
@@ -208,249 +245,203 @@ const chatSocket = (server) => {
         });
 
         //Save reaction to db
-        convoInfo.content[messageIndex].msg.read = true;
+        convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
 
         convoInfo.markModified("content");
         await convoInfo.save();
-      });
+      }
+    );
 
-      socket.on(
-        "send-reaction",
-        async ({ messageID, person, reactionType, reactions, to }) => {
-          io.to(socket.userId) // to sender room
-            .to(to.userId) // to recipient
-            .emit("receive-reaction", {
-              reactions: reactions,
-              reactionType: reactionType,
-              person: person,
-              messageID: messageID,
-            });
-
-          let convoInfo = await searchConvo(
-            socket.username,
-            socket.userId,
-            to.username,
-            to.userId
-          );
-
-          if (!convoInfo) {
-            return;
-          }
-
-          //Finding index of the content array where messageID is equal to an id within that array
-          let messageIndex = convoInfo.content.findIndex((message) => {
-            return message._id == messageID;
-          });
-
-          //Save reaction to db
-          convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
-
-          convoInfo.markModified("content");
-          await convoInfo.save();
-        }
-      );
-
-      socket.on("disconnect", async () => {
-        const matchingSockets = await io.in(socket.userId).allSockets();
-        const isDisconnected = matchingSockets.size === 0;
-        if (isDisconnected) {
-          // Disconnect current session from sessionStore
-          sessionStore.disconnectSession(socket.sessionId);
-          /** 
+    socket.on("disconnect", async () => {
+      const matchingSockets = await io.in(socket.userId).allSockets();
+      const isDisconnected = matchingSockets.size === 0;
+      if (isDisconnected) {
+        // Disconnect current session from sessionStore
+        sessionStore.disconnectSession(socket.sessionId);
+        /** 
           socket.broadcast.emit(
             "disconneted",
             formatMessage(leaveNotification(socket.username), chatBot, "ALL")
           );
           */
-          // FIXME: Name of the event subject to change for FE's convenience
-          socket.rooms.forEach((roomId) => {
-            socket.broadcast
-              .to(roomId)
-              .emit(
-                "disconneted",
-                formatMessage(
-                  leaveNotification(socket.username),
-                  chatBot,
-                  "ALL"
-                )
-              );
-          });
-          // refresh current users
-          const userList = getCurrentUsers();
-          socket.emit("userList", userList);
-        }
+        // FIXME: Name of the event subject to change for FE's convenience
+        socket.rooms.forEach((roomId) => {
+          socket.broadcast
+            .to(roomId)
+            .emit(
+              "disconneted",
+              formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+            );
+        });
+        // refresh current users
+        const userList = getCurrentUsers();
+        socket.emit("userList", userList);
+      }
+    }); // socket.on disconnect
+  }); // io.on connection
+}; // chatSocket
+
+/**
+ * Utils
+ *
+ */
+
+/**
+ * Generate a session id for a newly joined user
+ *
+ */
+const randomId = () => crypto.randomBytes(8).toString("hex");
+
+const chatBot = "chatBot";
+
+/**
+ * Format leave notification which is different from user message object
+ *
+ * @param {object} from
+ *
+ */
+function leaveNotification(from) {
+  return {
+    type: "txt",
+    body: `${from} has left the chat`,
+  };
+}
+
+/**
+ * Format message with reactions and a timestamp, etc.
+ *
+ * @param {object} msg
+ * @param {object} from
+ * @param {object} to
+ *
+ */
+function formatMessage(msg, from, to) {
+  return new Message({
+    msg: {
+      ...msg,
+      read: false,
+      time: moment().format("h:mm:ss a"),
+      reactions: {
+        self: "none",
+        other: "none",
+      },
+    },
+    from: from, // NOTE: string | object
+    to: to,
+  });
+}
+
+/**
+ * Store new message obejct to the existing conversation and save to the DB
+ *
+ * @param {object} msg
+ * @param {object} convoInfo
+ */
+async function storeMessage(msg, convoInfo) {
+  convoInfo.content.push(msg);
+
+  await convoInfo.save();
+}
+
+/**
+ * Fetch a list of current active users
+ *
+ */
+function getCurrentUsers() {
+  const userList = [];
+  sessionStore.findAllSessions().forEach((session) => {
+    if (session.connected) {
+      userList.push({
+        userId: session.userId,
+        username: session.username,
       });
-    });
+    }
   });
 
-  /**
-   * Utils
-   *
-   */
+  return userList;
+}
 
-  /**
-   * Generate a session id for a newly joined user
-   *
-   */
-  const randomId = () => crypto.randomBytes(8).toString("hex");
-
-  const chatBot = "chatBot";
-
-  /**
-   * Format leave notification which is different from user message object
-   *
-   * @param {object} from
-   *
-   */
-  function leaveNotification(from) {
-    return {
-      type: "txt",
-      body: `${from} has left the chat`,
-    };
-  }
-
-  /**
-   * Format message with reactions and a timestamp, etc.
-   *
-   * @param {object} msg
-   * @param {object} from
-   * @param {object} to
-   *
-   */
-  function formatMessage(msg, from, to) {
-    return new Message({
-      msg: {
-        ...msg,
-        read: false,
-        time: moment().format("h:mm:ss a"),
-        reactions: {
-          self: "none",
-          other: "none",
-        },
+/**
+ * Find all conversation history of a user
+ *
+ * @param {string} username
+ * @param {string} userId
+ *
+ */
+async function getChatHistory(username, userId) {
+  let allConvo = await Conversation.find({
+    $or: [
+      {
+        usernameA: username,
+        userIdA: userId,
       },
-      from: from, // NOTE: string | object
-      to: to,
+      {
+        usernameB: username,
+        userIdB: userId,
+      },
+    ],
+  });
+
+  return allConvo;
+}
+
+/**
+ * Find a specific conversation history between two users
+ *
+ * @param {string} usernameA
+ * @param {string} userIdA
+ * @param {string} usernameB
+ * @param {string} userIdB
+ *
+ */
+async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
+  let curConvo = await Conversation.findOne({
+    usernameA: usernameA,
+    userIdA: userIdA,
+    usernameB: usernameB,
+    userIdB: userIdB,
+  });
+
+  if (curConvo) {
+    // console.log("found existing convo", curConvo);
+    return curConvo;
+
+    // {
+    //   curConvo: curConvo,
+    //   usernameA: usernameA,
+    //   userIdA: userIdA,
+    //   usernameB: usernameB,
+    //   userIdB: userIdB,
+    // };
+  } else {
+    curConvo = await Conversation.findOne({
+      usernameA: usernameB,
+      userIdA: userIdB,
+      usernameB: usernameA,
+      userIdB: userIdA,
     });
-  }
-
-  /**
-   * Store new message obejct to the existing conversation and save to the DB
-   *
-   * @param {object} msg
-   * @param {object} convoInfo
-   */
-  async function storeMessage(msg, convoInfo) {
-    convoInfo.content.push(msg);
-
-    await convoInfo.save();
-  }
-
-  /**
-   * Fetch a list of current active users
-   *
-   */
-  function getCurrentUsers() {
-    const userList = [];
-    sessionStore.findAllSessions().forEach((session) => {
-      if (session.connected) {
-        userList.push({
-          userId: session.userId,
-          username: session.username,
-          userpfp: session.pfp,
-        });
-      }
-    });
-
-    return userList;
-  }
-
-  /**
-   * Find all conversation history of a user
-   *
-   * @param {string} username
-   * @param {string} userId
-   *
-   */
-  async function getChatHistory(username, userId, userpfp) {
-    let allConvo = await Conversation.find({
-      $or: [
-        {
-          usernameA: username,
-          userIdA: userId,
-          userpfpA: userpfp
-        },
-        {
-          usernameB: username,
-          userIdB: userId,
-          userpfpB: userpfp,
-        },
-      ],
-    });
-
-    return allConvo;
-  }
-
-  /**
-   * Find a specific conversation history between two users
-   *
-   * @param {string} usernameA
-   * @param {string} userIdA
-   * @param {string} usernameB
-   * @param {string} userIdB
-   *
-   */
-  async function searchConvo(usernameA, userIdA, usernameB, userIdB, userpfpA, userpfpB) {
-    let curConvo = await Conversation.findOne({
-      usernameA: usernameA,
-      userIdA: userIdA,
-      userpfpA: userpfpA,
-      usernameB: usernameB,
-      userpfpB: userpfpB,
-      userIdB: userIdB,
-    });
-
     if (curConvo) {
-      console.log("found existing convo", curConvo);
+      // console.log("found existing convo", curConvo);
       return curConvo;
 
       // {
       //   curConvo: curConvo,
-      //   usernameA: usernameA,
-      //   userIdA: userIdA,
-      //   usernameB: usernameB,
-      //   userIdB: userIdB,
+      //   usernameA: usernameB,
+      //   userIdA: userIdB,
+      //   usernameB: usernameA,
+      //   userIdB: userIdA,
       // };
-    } else {
-      curConvo = await Conversation.findOne({
-        usernameA: usernameB,
-        userIdA: userIdB,
-        userpfpA: userpfpA,
-        usernameB: usernameA,
-        userIdB: userIdA,
-        userpfpB: userpfpB
-      });
-      if (curConvo) {
-        console.log("found existing convo", curConvo);
-        return curConvo;
-
-        // {
-        //   curConvo: curConvo,
-        //   usernameA: usernameB,
-        //   userIdA: userIdB,
-        //   usernameB: usernameA,
-        //   userIdB: userIdA,
-        // };
-      }
     }
-
-    return null;
   }
 
-  /**
-   * Routes, Exports
-   *
-   */
-};
+  return null;
+}
+
+/**
+ * Routes, Exports
+ *
+ */
+
 getChat = (req, res) => {
   res.render("chat", {});
 };
