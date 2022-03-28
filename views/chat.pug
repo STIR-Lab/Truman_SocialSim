@@ -114,7 +114,8 @@ block content
                 if (!usersInUserList.includes(user.userId)) {
                     usersInUserList.push(user.userId);
 
-                    var u = `   <div class="item"><img class="ui avatar image" src=""/>
+                    let userpfplink = user.userpfp == "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp;
+                    var u = `   <div class="item"><img class="ui avatar image" src= "${userpfplink}"/>
                                     <div class="content">
                                         <div class="header">${user.username}</div>
                                     </div>
