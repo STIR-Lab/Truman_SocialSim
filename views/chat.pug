@@ -19,6 +19,7 @@ block content
                     #chatHistory.ui.relaxed.divided.list
            
                 #discoverProfiles.ui.grid.stackable
+                    #discoverProfileNoUsersText.p(style="margin-top:20px") There are no new users online.
 
         .eleven.wide.column
             .ui.segment(style='height:90vh')
@@ -29,8 +30,8 @@ block content
                 .ui.clearing.divider
                 p
 
-                .messages.container(style="height: 70vh; overflow-x: hidden; overflow-y: auto; display:flex; flex-direction: column-reverse;")
-                    #messages.ui.grid(style="padding-top:10px; padding-bottom:25px; padding-left:10px; padding-right:10px;")
+                .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
+                    #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
                
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
@@ -41,15 +42,20 @@ block content
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
 
-    .ui.mini.modal
+    #newChatModal.ui.mini.modal
         .header
             .ui.center.aligned.container
                 | New Message
         .content
             #userList.ui.relaxed.divided.list
+
+    #nudge1Modal.ui.mini.modal
+        .content
+            .ui.center.aligned.container
+                | This user is asking for sensitive information. We strongly recommend you not give out personal information to strangers.
         .actions
-            button.positive.ui.button.right.floated(style="margin-bottom:10px") 
-                | Next
+            #dismissModalButton.button.ui.button
+                | Dismiss
 
                 script(src='/socket.io/socket.io.js')
                 script.
@@ -63,7 +69,7 @@ block content
 
 
                     function onClickNewChat() {
-                        $('.ui.modal').modal('show');
+                        $('#newChatModal').modal('show');
                     }
                     
                     const URL = "http://localhost:3000";
@@ -144,13 +150,14 @@ block content
 
                     function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread) {
                         var listItem = `<div class="item">
-                                                <img class="ui avatar image" src="public/grey.jpg"/ style="margin-left:20px">
-                                                <div class="content"><a class="header">${chatPartnerUsername}</a>
-                                                    <div class="description" id="lastMessage">${lastMessage}</div>
-                                                </div>
-                                                <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
-                                                <span id="redBubble" class="w3-badge w3-red"></span>
-                                            </div>`;
+                                            <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute"></span>
+                                            <img class="ui avatar image" src="public/grey.jpg" style="margin-left:5px; margin-top:5px">
+                                            <div class="content">
+                                                <a class="header">${chatPartnerUsername}</a>
+                                                <div class="description" style="max-width: 180px" id="lastMessage">${lastMessage}</div>
+                                            </div>
+                                            <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
+                                        </div>`;
 
                         $('#chatHistory').append(listItem);
 
@@ -199,7 +206,7 @@ block content
                         });
                     });
 
-                    
+
                     function addUserInDiscover(user) {
                         let count = 0;
                         let prevRow = count;
@@ -236,6 +243,8 @@ block content
                             var element = document.getElementById("messageButton");
                             element.id = user.userId + 'messageButton';
                             document.getElementById(user.userId + 'messageButton').onclick=function(){onClickUsername(user.userId)};
+
+                            $('#discoverProfileNoUsersText').hide();
                         }
                     }
 
@@ -289,7 +298,7 @@ block content
                         $("#chatPartnerName").text(chatPartnerUsername);
                         $('#messages').empty();
                         $('#messageInput').show();
-                        $('.ui.modal').modal('hide');
+                        $('#newChatModal').modal('hide');
 
                         // after we get the chat partner info we want to get all messages
                         socket.emit('get-messages', {
@@ -346,6 +355,11 @@ block content
                                 }
                         });
                     });
+
+                    document.getElementById('dismissModalButton').onclick=function(){onClickDismissButton()};
+                    function onClickDismissButton() {
+                        $('#nudge1Modal').modal('hide');
+                    }
                     
                     socket.on("receive-message", (msg) => {
                         
@@ -381,6 +395,12 @@ block content
                                     userId: chatPartnerUserId,
                                 }
                             });
+
+                            const scenario1 = "just finished from my school here in orlando wat is your house address";
+
+                            if (msg.msg.body == scenario1) {
+                                $('#nudge1Modal').modal('show');
+                            }
                         }
                         else if (msg.to.userId == userId) {
                             $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
