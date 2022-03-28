@@ -17,13 +17,21 @@ const chatSocket = (server) => {
   // middleware: check username & userId, allows connection
   io.use((socket, next) => {
     const sessionId = socket.handshake.auth.sessionId;
+    
     if (sessionId) {
       const session = sessionStore.findSession(sessionId);
       if (session) {
+        // attach user pfp to session 
+        session.userpfp = socket.handshake.auth.userpfp;
+
         socket.sessionId = sessionId;
         socket.userId = session.userId;
         socket.username = session.username;
-        socket.userpfp = session.pfp;
+        socket.userpfp = session.userpfp;
+
+        console.log("HERE 1")
+        //console.log(socket)
+
         return next();
       }
     } else {
@@ -37,6 +45,10 @@ const chatSocket = (server) => {
       socket.username = username;
       socket.userId = userId;
       socket.userpfp = userpfp;
+
+      console.log("HERE 2")
+      //console.log(socket.userpfp)
+
       next();
     }
     const username = socket.handshake.auth.username;
@@ -60,12 +72,22 @@ const chatSocket = (server) => {
       userId: socket.userId,
       username: socket.username,
       socketId: socket.id,
-      userpfp: socket.pfp,
+      userpfp: socket.userpfp,
       connected: true,
     });
     socket.emit("session", {
       sessionId: socket.sessionId,
     });
+
+    socket.on("find-partner", async ( userId )=> {
+
+      let pfp =  await getChatPartnerPFP(userId.userId)
+
+      console.log(pfp)
+
+      io.to(socket.userId).emit("partner-pfp", {pfp: pfp, userId: userId.userId});
+    })
+    
 
     // Fetch existing users
     socket.emit("userList", getCurrentUsers());
@@ -95,7 +117,7 @@ const chatSocket = (server) => {
       let convoInfo = await searchConvo(
         socket.username,
         socket.userId,
-        socket.userpfp,
+        //socket.userpfp,
         to.username,
         to.userId
       );
@@ -151,9 +173,9 @@ const chatSocket = (server) => {
         let newConvo = new Conversation({
           usernameA: to.username,
           userIdA: to.userId,
-          userpfpA: to.userpfp,
+          //userpfpA: to.userpfp,
           usernameB: socket.username,
-          userpfpB: socket.userpfp,
+          //userpfpB: socket.userpfp,
           userIdB: socket.userId,
         });
         await newConvo.save();
@@ -355,6 +377,7 @@ function getCurrentUsers() {
       userList.push({
         userId: session.userId,
         username: session.username,
+        userpfp: session.userpfp
       });
     }
   });
@@ -383,8 +406,27 @@ async function getChatHistory(username, userId) {
     ],
   });
 
+
+
+
+
   return allConvo;
 }
+
+async function getChatPartnerPFP(userId) {
+
+  let chatPartner = await User.find(
+    {
+      _id: userId,
+    }
+  );
+
+  console.log(chatPartner[0].profile.picture)
+
+  return chatPartner[0].profile.picture;
+
+}
+
 
 /**
  * Find a specific conversation history between two users

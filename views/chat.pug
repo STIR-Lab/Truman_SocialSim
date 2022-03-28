@@ -40,8 +40,8 @@ block content
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
-                #userProfilePicture(userpfp=user.profile.picture)
-
+                #userProfilePicture(userpfp= user.profile.picture ? user.profile.picture : "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg")
+ 
     .ui.mini.modal
         .header
             .ui.center.aligned.container
@@ -58,7 +58,7 @@ block content
                     const username = document.getElementById('usernameTag').getAttribute('username');
                     const userpfp = document.getElementById('userProfilePicture').getAttribute('userpfp');
 
-                    console.log(userpfp);
+                    //console.log(userpfp);
 
                     // hide input until user picks chat partner
                     $('#messageInput').hide();
@@ -79,11 +79,12 @@ block content
 
                     const sessionId = localStorage.getItem("sessionId");
                     if (sessionId) {
-                        socket.auth = { sessionId, username, userId};
+                        console.log(userpfp + "hello")
+                        socket.auth = { sessionId, username, userId, userpfp};
                         socket.connect();
                     }
                     else {
-                        socket.auth = { username, userId};
+                        socket.auth = { username, userId, userpfp};
                         socket.connect();
                     }
 
@@ -106,12 +107,15 @@ block content
 
                     socket.on("userList", (userList) => {
                         copiedUserList = JSON.parse(JSON.stringify(userList));
+
+                        console.log("copiedUserList: ")
+                        console.log(copiedUserList);
                         
                         userList.forEach((user) => {
                             if (!usersInUserList.includes(user.userId)) {
                                 usersInUserList.push(user.userId);
 
-                                var u = `   <div class="item"><img class="ui avatar image" src="public/grey.jpg"/>
+                                var u = `   <div class="item"><img class="ui avatar image" src=""/>
                                                 <div class="content">
                                                     <div class="header">${user.username}</div>
                                                 </div>
@@ -146,9 +150,10 @@ block content
 
                     let numUnread = 0;
 
-                    function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread) {
+                   async function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread) {
+                            
                         var listItem = `<div class="item">
-                                                <img class="ui avatar image" src="public/grey.jpg"/ style="margin-left:20px">
+                                                <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:20px">
                                                 <div class="content"><a class="header">${chatPartnerUsername}</a>
                                                     <div class="description" id="lastMessage">${lastMessage}</div>
                                                 </div>
@@ -157,6 +162,22 @@ block content
                                             </div>`;
 
                         $('#chatHistory').append(listItem);
+
+                        await socket.emit("find-partner",{userId: chatPartnerId})
+                        await socket.on("partner-pfp",({pfp , userId})=>{
+                            
+                            if(pfp != null && userId == chatPartnerId) {
+                                let pic = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
+                                console.log("IN HERE")
+                                document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
+                            }
+                            else if (userId == chatPartnerId) {
+                                document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg";
+                            }
+                                                 
+                        })
+
+
 
                         let element = document.getElementById("lastMessage");
                         element.id = chatPartnerId + 'lastMessage';
@@ -190,8 +211,11 @@ block content
                             let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
                             let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
                             let lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                           
 
-                            usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername});
+                            
+
+                            usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
 
                             numUnread = chatPartner.content.filter(c => c.from.userId == chatPartnerId).filter(c => !c.msg.read).length
 
@@ -223,7 +247,7 @@ block content
                             var profile = ` <div class="eight wide column">
                                                 <div class="ui card" style="margin-bottom:10px">
                                                     <div class="content">
-                                                        <div class="center aligned column"><img class="ui circular tiny image" src="public/grey.jpg" style="margin-bottom:4px"/></div>
+                                                        <div class="center aligned column"><img class="ui circular tiny image" src="https://trumanprofilepictures.s3.amazonaws.com/${user.userpfp}" style="margin-bottom:4px"/></div>
                                                         <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username}</div>
                                                         <button id="profileButton" class="ui button tiny fluid fluid" style="margin-bottom:4px">Profile </button>
                                                         <button id="messageButton" class="ui positive button tiny fluid">Message </button>
@@ -268,7 +292,7 @@ block content
                     let chatPartnerSocketId = null;
                     let chatPartnerUsername = null;
                     let chatPartnerUserId = null;
-                    let chatPartnerpfp = null;
+                    let chatPartnerPFP = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg";
 
                     function onClickUsername(userId) {
                         $('#' + userId + 'redBubble').hide();
@@ -280,6 +304,7 @@ block content
                                 chatPartnerSocketId = user.socketId;
                                 chatPartnerUsername = user.username;
                                 chatPartnerUserId = user.userId;
+                               
                             }
                         });
 
@@ -288,11 +313,28 @@ block content
                             if (user.userId == userId) {
                                 chatPartnerUsername = user.username;
                                 chatPartnerUserId = user.userId;
-                                chatPartnerpfp = user.profile.picture;
+                                
                             }
                         });
 
+                        socket.emit("find-partner",{userId: chatPartnerUserId})
+
+                        socket.on("partner-pfp",({ pfp, userId})=>{
+                            if(pfp != null && userId == chatPartnerUserId) {
+                                chatPartnerPFP = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
+                                console.log("IN HERE")
+                            }
+                                
+                            
+                            console.log(pfp)
+                            
+                            //document.getElementById("chatPartnerPFP").src = 
+                        })
+
+                        
                         $("#chatPartnerName").text(chatPartnerUsername);
+                        //$("#chatPartnerPFP").src("https://trumanprofilepictures.s3.amazonaws.com/" + chatPartnerPFP)
+                        
                         $('#messages').empty();
                         $('#messageInput').show();
                         $('.ui.modal').modal('hide');
@@ -302,10 +344,13 @@ block content
                             to: {
                                     username: chatPartnerUsername,
                                     userId: chatPartnerUserId,
-                                    userpfp: chatPartnerpfp
+                                   // userpfp: chatPartnerPFP
                                 }
                         })
                     }
+
+                     
+
 
                     $('#messageInput')[0].addEventListener('submit', function(e) {
                         e.preventDefault();
@@ -321,7 +366,7 @@ block content
                                 to: {
                                     username: chatPartnerUsername,
                                     userId: chatPartnerUserId,
-                                    userpfp: chatPartnerpfp,    
+                                   // userpfp: chatPartnerPFP,    
                                     socketId: chatPartnerSocketId
                                 } 
                             });
@@ -338,7 +383,7 @@ block content
                                  loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                             }
                             else  {
-                                addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id);
+                                addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id, messageList[i].from.userId);
                                  loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                             }
 
@@ -362,6 +407,7 @@ block content
                         $('#' + partnerId + 'lastMessage').text(msg.msg.body);
 
                         partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
+                        partnerPFP = msg.from.username == username ? msg.to.userpfp : msg.from.userpfp;
 
                         const userInDiscover = !usersInHistory.some(user => {
                             if (user.userId == partnerId) {
@@ -381,7 +427,7 @@ block content
                             addChatSentMessage(msg.msg, msg.msg.time, msg._id);
                         }
                         else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
-                            addChatReceivedMessage(msg.msg, msg.msg.time, msg._id);
+                            addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId);
                             socket.emit("read-messages", {
                                 messageIds: [msg._id],
                                 other: {
@@ -554,7 +600,7 @@ block content
 
                     }
 
-                    function addChatReceivedMessage(msg, time, id) {
+                    function addChatReceivedMessage(msg, time, id, user) {
                         // reaction box
                          let react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
                                         top:-10px; left:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
@@ -565,7 +611,7 @@ block content
                                     </div>`
 
                         var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
-                                        <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image" src="public/grey.jpg"/></div>
+                                        <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image chatPartnerMessagePFP-${user}" id="" src=""/></div>
                                         <div class="seven wide column">
                                          ${react}
                                         <div class="ui mini compact message" id="${id}">
@@ -579,6 +625,18 @@ block content
                                     </div>`
                         $('#messages').append(mes);
                         $('#messages').scrollTop($('#messages')[0].scrollHeight);
+
+
+                        var x = document.getElementsByClassName(`chatPartnerMessagePFP-${user}`);
+                        console.log(user)
+    
+                        for(i=0; i<x.length; i++){
+                            x[i].src = document.getElementById(`chatPartnerPFP-${user}`).src;
+                        }
+
+
+
+                         // document.getElementById(`chatPartnerMessagePFP-${id}`).src = document.getElementById(`chatPartnerPFP-${id}`).src
 
                         
                         // on click actions for showing reaction box
