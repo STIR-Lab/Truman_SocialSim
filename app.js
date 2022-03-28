@@ -21,6 +21,7 @@ const expressValidator = require("express-validator");
 const expressStatusMonitor = require("express-status-monitor");
 var schedule = require("node-schedule");
 const { chatSocket } = require("./controllers/chat");
+const { uploadFile } = require("./s3")
 
 const multer = require("multer");
 //Math.random().toString(36)+'00000000000000000').slice(2, 10) + Date.now()
@@ -42,11 +43,13 @@ var userpost_options = multer.diskStorage({
   },
 });
 
-var useravatar_options = multer.diskStorage({
+var useravatar_options =  multer.diskStorage({
   destination: path.join(__dirname, "uploads/user_post"),
-  filename: function (req, file, cb) {
+  filename: async function (req, file, cb) {
     var prefix = req.user.id + Math.random().toString(36).slice(2, 10);
     cb(null, prefix + file.originalname.replace(/[^A-Z0-9]+/gi, "_"));
+    //const result = uploadFile(file);
+    //console.log(result)
   },
 });
 
@@ -285,6 +288,7 @@ app.get("/", passportConfig.isAuthenticated, scriptController.getScript);
 
 app.get("/newsfeed/:caseId", scriptController.getScriptFeed);
 
+
 app.post(
   "/post/new",
   userpostupload.single("picinput"),
@@ -299,6 +303,7 @@ app.post(
   useravatarupload.single("picinput"),
   check,
   csrf,
+
   userController.postUpdateProfile
 );
 //app.post('/api/upload', upload.single('myFile'), apiController.postFileUpload);
@@ -329,6 +334,7 @@ app.get("/profile_info", passportConfig.isAuthenticated, function (req, res) {
 
 //User's Page
 app.get("/me", passportConfig.isAuthenticated, userController.getMe);
+
 
 app.get(
   "/completed",
