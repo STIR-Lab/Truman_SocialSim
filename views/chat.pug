@@ -234,10 +234,12 @@ block content
                     prevRow = count;
                 }
 
+                const pfpSrc = user.userpfp == "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp; 
+
                 var profile = ` <div class="eight wide column">
                                     <div class="ui card" style="margin-bottom:10px">
                                         <div class="content">
-                                            <div class="center aligned column"><img class="ui circular tiny image" src="https://trumanprofilepictures.s3.amazonaws.com/${user.userpfp}" style="margin-bottom:4px"/></div>
+                                            <div class="center aligned column"><img class="ui circular tiny image" src=${pfpSrc} style="margin-bottom:4px; object-fit:cover; width:75px; height:75px"/></div>
                                             <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username}</div>
                                             <button id="profileButton" class="ui button tiny fluid fluid" style="margin-bottom:4px">Profile </button>
                                             <button id="messageButton" class="ui positive button tiny fluid">Message </button>
