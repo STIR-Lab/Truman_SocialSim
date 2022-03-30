@@ -183,7 +183,7 @@ const chatSocket = (server) => {
         await storeMessage(formattedMsg, newConvo);
       }
 
-      console.log(formattedMsg);
+      // console.log(formattedMsg);
       io.to(to.userId) // to recipient
         // .to(socket.userId) // to sender room
         .emit("receive-message", formattedMsg);
@@ -339,6 +339,10 @@ function leaveNotification(from) {
  *
  */
 function formatMessage(msg, from, to) {
+
+  if(msg.type == "img") {
+
+  }
   return new Message({
     msg: {
       ...msg,
