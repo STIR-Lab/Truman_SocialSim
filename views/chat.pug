@@ -35,9 +35,17 @@ block content
                
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
+                        img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
                         input#input(autocomplete="off" type='text' placeholder='Enter message')
-                        button
-                            i.paper.plane.icon
+                        button#submitMessage(type="submit")
+                            i.paper.plane.icon 
+                        button(type="button" style='position: relative; right: 2px;')     
+                            label.custom-file-upload(for='fileupload' )
+                                i.camera.icon
+                        input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/png, image/jpeg, image/svg")
+                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
+
+
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
@@ -63,11 +71,14 @@ block content
         const userId = document.getElementById('userIdTag').getAttribute('userId');
         const username = document.getElementById('usernameTag').getAttribute('username');
         const userpfp = document.getElementById('userProfilePicture').getAttribute('userpfp');
+        let pictureFile = null;
 
         // hide input until user picks chat partner
         $('#messageInput').hide();
 
         document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
+         document.getElementById('uploadImage').onclick=function(){uploadImage()};
+         document.getElementById('fileupload').onchange=function(){loadFile(event)};
 
         function onClickNewChat() {
             $('#newChatModal').modal('show');
@@ -150,13 +161,20 @@ block content
 
         let numUnread = 0;
 
-        async function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread) {
+        async function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType) {
+
+            let lastmsg = lastMessage;
+            if(msgType == "img") {
+                lastmsg = "*image*"
+            }
+
+                
             var listItem = `<div class="item">
                                 <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute"></span>
                                 <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
                                 <div class="content">
                                     <a class="header">${chatPartnerUsername}</a>
-                                    <div class="description" style="max-width: 180px" id="lastMessage">${lastMessage}</div>
+                                    <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
                                 </div>
                                 <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
                             </div>`;
@@ -205,13 +223,19 @@ block content
             allConvo.forEach((chatPartner) => {
                 let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
                 let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
-                let lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                let lastMessage = ""
+                let msgType = chatPartner.content[chatPartner.content.length - 1].msg.type
+                if(chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
+                     lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                else {
+                    lastMessage = "*image*"
+                }
                 
                 usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
 
                 numUnread = chatPartner.content.filter(c => c.from.userId == chatPartnerId).filter(c => !c.msg.read).length
 
-                addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread);
+                addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType);
             });
 
             copiedUserList.forEach((user) => {
@@ -349,7 +373,57 @@ block content
                 });
                 input.value = '';
             }
+
+            if (pictureFile) {
+
+                socket.emit('send-message', { 
+                    msg: {
+                        type: "img",
+                        body: pictureFile
+                    },
+                    to: {
+                        username: chatPartnerUsername,
+                        userId: chatPartnerUserId,
+                        socketId: chatPartnerSocketId
+                    } 
+                });
+                document.getElementById("outputImage").style.display = "none"
+                document.getElementById("outputImage").src = "#"
+                pictureFile = null;
+            }
         });
+
+        // upload image
+         function uploadImage () {
+            
+            let formData = new FormData();
+            formData.append("file", fileupload.files[0])
+
+            for (var value of formData.values()) {
+                console.log(value);
+            }
+
+        }
+
+        async function loadFile(event) {
+            var image = document.getElementById('outputImage');
+
+            var reader = new FileReader();
+
+            console.log(fileupload.files[0])
+            
+            reader.readAsDataURL(fileupload.files[0])
+
+            reader.onload = function(e) {
+                var result = reader.result;
+                console.log(result);
+                pictureFile = result;
+                image.src = result
+                image.style.display = "block";
+
+            };
+
+        }
 
         // get all messages
         socket.on("message-list", (messageList) => {
@@ -385,10 +459,16 @@ block content
         socket.on("receive-message", (msg) => {
             // update latest message in recent chat history
             partnerId = msg.from.userId == userId ? msg.to.userId : msg.from.userId;
-            $('#' + partnerId + 'lastMessage').text(msg.msg.body);
+
+            if(msg.msg.type == "txt")
+                $('#' + partnerId + 'lastMessage').text(msg.msg.body);
+            else   
+                $('#' + partnerId + 'lastMessage').text("*image*");
 
             partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
             partnerPFP = msg.from.username == username ? msg.to.userpfp : msg.from.userpfp;
+
+            
 
             const userInDiscover = !usersInHistory.some(user => {
                 if (user.userId == partnerId) {
@@ -397,7 +477,7 @@ block content
             });
 
             if (userInDiscover) {
-                addUserInHistory(partnerUsername, msg.msg.body, partnerId, 0);
+                addUserInHistory(partnerUsername, msg.msg.body, partnerId, 0, msg.msg.type);
                 
                 $('#recentButton').show();
                 onClickRecentButton();
@@ -405,6 +485,7 @@ block content
                 usersInHistory.push({userId: partnerId, username: partnerUsername});
             }
             if (msg.from.userId == userId) {
+                
                 addChatSentMessage(msg.msg, msg.msg.time, msg._id);
             }
             else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
@@ -536,6 +617,16 @@ block content
         }
 
         function addChatSentMessage(msg, time, id) {
+
+            let msgType = "";
+
+            if(msg.type == "txt") {
+                msgType = `<p>${msg.body}</p>`
+                
+            }
+            else {
+                 msgType = `<img src="${msg.body}" style ="height: auto; width: 200px "></img>`
+            }
             // reaction box
             let react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
                             top:-10px; right:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
@@ -549,7 +640,7 @@ block content
                             <div class="right floated right aligned seven wide column">
                             ${react}
                             <div class="ui mini blue compact message" id="${id}">
-                                <p>${msg.body}</p>
+                                ${msgType}
                                 <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; left:2px;"></div> 
                                     <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; left:14px;"></div>
                             </div>
@@ -576,6 +667,17 @@ block content
         }
 
         function addChatReceivedMessage(msg, time, id, user) {
+
+             let msgType = "";
+
+            if(msg.type == "txt") {
+                msgType = `<p>${msg.body}</p>`
+                
+            }
+            else {
+                 msgType = `<img src="${msg.body}" style ="height: auto; width: 200px;"></img>`
+            }
+
             // reaction box
             let react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
                         top:-10px; left:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
@@ -590,7 +692,7 @@ block content
                             <div class="seven wide column">
                                 ${react}
                             <div class="ui mini compact message" id="${id}">
-                                <p>${msg.body}</p>
+                                ${msgType}
                                 <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; right:2px;"></div> 
                                 <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; right:14px;"></div> 
                             </div>
