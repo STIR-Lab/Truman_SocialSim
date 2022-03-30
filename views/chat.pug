@@ -36,7 +36,7 @@ block content
                         input#input(autocomplete="off" type='text' placeholder='Enter message')
                         button
                             i.paper.plane.icon
-                        input#fileInput.inputfile(type='file')
+                        input#fileInput(type='file', name='imageUpload')
                         label.button(for='fileInput' style="margin-left:10px")
                             i.camera.icon
 
@@ -60,32 +60,10 @@ block content
 
                     // hide input until user picks chat partner
                     $('#messageInput').hide();
-                    $('#fileInput').hide();
+                    //- $('#fileInput').hide();
 
                     document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
 
-                    // FILE INPUT
-                    //- $('#imageInput')[0].addEventListener('file', function(e) {
-                    //-     e.preventDefault();
-                    //-     var input = $('#uploadFile')[0]; 
-                    //-     if (input.value) {
-                    //-         //- let date = new Date()
-                    //-         //- addChatSentMessage(input.value, date.toLocaleTimeString("en-US"))
-                    //-         socket.emit('send-image', { 
-                    //-             msg: {
-                    //-                 type: "image",
-                    //-                 body: input.value,
-                    //-                 mimeType: "png"
-                    //-             },
-                    //-             to: {
-                    //-                 username: chatPartnerUsername,
-                    //-                 userId: chatPartnerUserId,
-                    //-                 socketId: chatPartnerSocketId
-                    //-             } 
-                    //-         });
-                    //-         input.value = '';
-                    //-     }
-                    //- });
 
                     function onClickNewChat() {
                         $('.ui.modal').modal('show');
@@ -291,9 +269,51 @@ block content
                         })
                     }
 
+                    //- $('#messageInput')[0].addEventListener('submit', function(e) {
+                    //-     e.preventDefault();
+                    //-     var input = $('#input')[0]; 
+                    //-     if (input.value) {
+                    //-         //- let date = new Date()
+                    //-         //- addChatSentMessage(input.value, date.toLocaleTimeString("en-US"))
+                    //-         socket.emit('send-message', { 
+                    //-             msg: {
+                    //-                 type: "txt",
+                    //-                 body: input.value
+                    //-             },
+                    //-             to: {
+                    //-                 username: chatPartnerUsername,
+                    //-                 userId: chatPartnerUserId,
+                    //-                 socketId: chatPartnerSocketId
+                    //-             } 
+                    //-         });
+                    //-         input.value = '';
+                    //-     }
+                    //- });
+                    
+
+                    // FILE INPUT
                     $('#messageInput')[0].addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        var input = $('#input')[0]; 
+                        e.preventDefault();                       
+                        var input = $('#input')[0];
+                        //- var finput = $('#fileInput'); 
+                        var myFile = $('#fileInput').prop('files')[0];
+                        console.log("LOOK HERE ", myFile);
+                        if (myFile) {
+                            console.log("look again ", myFile);
+                            socket.emit('send-message',{
+                                msg: {
+                                    type: "img",
+                                    body: myFile,
+                                    mimeType: file.type,
+                                    fileName: file.name 
+                                },
+                                to: {
+                                    username: chatPartnerUsername,
+                                    userId: chatPartnerUserId,
+                                    socketId: chatPartnerSocketId
+                                }
+                            });
+                        }
                         if (input.value) {
                             //- let date = new Date()
                             //- addChatSentMessage(input.value, date.toLocaleTimeString("en-US"))
@@ -308,8 +328,9 @@ block content
                                     socketId: chatPartnerSocketId
                                 } 
                             });
-                            input.value = '';
                         }
+                        input.value = '';
+                        myFile.file = null;
                     });
 
                     // get all messages
@@ -484,7 +505,6 @@ block content
                         document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "self", "thumbsDown", id)};
                         document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "self", "like", id)};
                         document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "self", "laugh", id)};
-
 
                     }
 
