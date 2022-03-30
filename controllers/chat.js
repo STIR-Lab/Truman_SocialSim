@@ -156,13 +156,6 @@ const chatSocket = (server) => {
         to
       );
 
-<<<<<<< HEAD
-      // io.to(to.userId) // to recipient
-      io.to(socket.userId) // to sender room
-        .emit("receive-message", formattedMsg);
-
-=======
->>>>>>> chat-frontend
       let convoInfo = await searchConvo(
         socket.username,
         socket.userId,
@@ -195,97 +188,6 @@ const chatSocket = (server) => {
         // .to(socket.userId) // to sender room
         .emit("receive-message", formattedMsg);
 
-<<<<<<< HEAD
-      /**
-       * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
-       *
-       * {
-       *  msg: {
-       *    type: "txt" | "img"
-       *    body: string | blob, actual content of the message
-       *    mimeType?: "png" | "jpg", etc
-       *    fileName?: string
-       *    time: string
-       *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
-       *  }
-       *  to: {
-       *     username: string
-       *     userId: string,
-       *     socketId: string
-       *   }
-       * }
-       *
-       */
-
-      socket.on("disconnect", async () => {
-        const matchingSockets = await io.in(socket.userId).allSockets();
-        const isDisconnected = matchingSockets.size === 0;
-        if (isDisconnected) {
-          // Disconnect current session from sessionStore
-          sessionStore.disconnectSession(socket.sessionId);
-          /** 
-          socket.broadcast.emit(
-            "disconneted",
-            formatMessage(leaveNotification(socket.username), chatBot, "ALL")
-          );
-          */
-          // FIXME: Name of the event subject to change for FE's convenience
-          socket.rooms.forEach((roomId) => {
-            socket.broadcast
-              .to(roomId)
-              .emit(
-                "disconneted",
-                formatMessage(
-                  leaveNotification(socket.username),
-                  chatBot,
-                  "ALL"
-                )
-              );
-          });
-          // refresh current users
-          const userList = getCurrentUsers();
-          socket.emit("userList", userList);
-        }
-      });
-    });
-
-    socket.on(
-      "send-reaction",
-      async ({ messageID, person, reactionType, reactions, to }) => {
-        io.to(socket.userId) // to sender room
-          .to(to.userId) // to recipient
-          .emit("receive-reaction", {
-            reactions: reactions,
-            reactionType: reactionType,
-            person: person,
-            messageID: messageID,
-          });
-
-        let convoInfo = await searchConvo(
-          socket.username,
-          socket.userId,
-          to.username,
-          to.userId
-        );
-
-        if (!convoInfo) {
-          return;
-        }
-
-        //Finding index of the content array where messageID is equal to an id within that array
-        let messageIndex = convoInfo.content.findIndex((message) => {
-          return message._id == messageID;
-        });
-
-        //Save reaction to db
-        convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
-
-        convoInfo.markModified("content");
-        await convoInfo.save();
-      }
-    );
-  });
-=======
       // io.to(to.userId) // to recipient
       io.to(socket.userId) // to sender room
         .emit("receive-message", formattedMsg);
@@ -364,30 +266,10 @@ const chatSocket = (server) => {
         let messageIndex = convoInfo.content.findIndex((message) => {
           return message._id == messageID;
         });
->>>>>>> chat-frontend
 
         //Save reaction to db
         convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
 
-<<<<<<< HEAD
-  /**
-   * Format message with reactions and a timestamp, etc.
-   *
-   * @param {object} msg
-   * @param {object} from
-   * @param {object} to
-   *
-   */
-  function formatMessage(msg, from, to) {
-    return new Message({
-      msg: {
-        ...msg,
-        time: moment().format("h:mm:ss a"),
-        reactions: {
-          self: "none",
-          other: "none",
-        },
-=======
         convoInfo.markModified("content");
         await convoInfo.save();
       }
@@ -465,7 +347,6 @@ function formatMessage(msg, from, to) {
       reactions: {
         self: "none",
         other: "none",
->>>>>>> chat-frontend
       },
     },
     from: from, // NOTE: string | object
