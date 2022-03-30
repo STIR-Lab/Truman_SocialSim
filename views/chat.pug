@@ -1,6 +1,7 @@
 extends ui_layout
 
 block content
+    link(rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css')
     .computer.only.tablet.only.row
         .five.wide.column
             .ui.segment(style='height:90vh')
@@ -18,6 +19,7 @@ block content
                     #chatHistory.ui.relaxed.divided.list
            
                 #discoverProfiles.ui.grid.stackable
+                    #discoverProfileNoUsersText.p(style="margin-top:20px") There are no new users online.
 
         .eleven.wide.column
             .ui.segment(style='height:90vh')
@@ -28,8 +30,8 @@ block content
                 .ui.clearing.divider
                 p
 
-                .messages.container(style="height: 70vh; overflow-x: hidden; overflow-y: auto; display:flex; flex-direction: column-reverse;")
-                    #messages.ui.grid(style="padding-top:10px; padding-bottom:25px; padding-left:10px; padding-right:10px;")
+                .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
+                    #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
                
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
@@ -42,13 +44,15 @@ block content
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
-
-    .ui.mini.modal
+                #userProfilePicture(userpfp= user.profile.picture ? user.profile.picture : "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg")
+ 
+    #newChatModal.ui.mini.modal
         .header
             .ui.center.aligned.container
                 | New Message
         .content
             #userList.ui.relaxed.divided.list
+<<<<<<< HEAD
         .actions
             button.positive.ui.button.right.floated(style="margin-bottom:10px") 
                 | Next
@@ -63,25 +67,85 @@ block content
                     //- $('#fileInput').hide();
 
                     document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
+=======
+>>>>>>> chat-frontend
 
+    #nudge1Modal.ui.mini.modal
+        .content
+            .ui.center.aligned.container
+                | This user is asking for sensitive information. We strongly recommend you not give out personal information to strangers.
+        .actions
+            #dismissModalButton.button.ui.button
+                | Dismiss
 
-                    function onClickNewChat() {
-                        $('.ui.modal').modal('show');
-                    }
-                    
-                    const URL = "http://localhost:3000";
-                    const socket = io(URL, { autoConnect: false, transports: ['websocket'], upgrade: false });
-                    
-                    socket.onAny((event, ...args) => {
-                        console.log(event, args);
-                    });
+    script(src='/socket.io/socket.io.js')
+    script.
+        const userId = document.getElementById('userIdTag').getAttribute('userId');
+        const username = document.getElementById('usernameTag').getAttribute('username');
+        const userpfp = document.getElementById('userProfilePicture').getAttribute('userpfp');
 
-                    const sessionId = localStorage.getItem("sessionId");
-                    if (sessionId) {
-                        socket.auth = { sessionId, username, userId};
-                        socket.connect();
+        // hide input until user picks chat partner
+        $('#messageInput').hide();
+
+        document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
+
+        function onClickNewChat() {
+            $('#newChatModal').modal('show');
+        }
+        
+        const URL = "http://localhost:3000";
+        const socket = io(URL, { autoConnect: false, transports: ['websocket'], upgrade: false });
+        
+        socket.onAny((event, ...args) => {
+            console.log(event, args);
+        });
+
+        const sessionId = localStorage.getItem("sessionId");
+        if (sessionId) {
+            socket.auth = { sessionId, username, userId, userpfp};
+            socket.connect();
+        }
+        else {
+            socket.auth = { username, userId, userpfp};
+            socket.connect();
+        }
+
+        socket.on("session", ({ sessionId, userId }) => {
+            // attach the session ID to the next reconnection attempts
+            socket.auth = { sessionId };
+            localStorage.setItem("sessionId", sessionId);
+            socket.userId = userId;
+        });
+
+        socket.on("connect_error", (err) => {
+            console.log(`connect_error due to ${err.message}`);
+        });
+
+        let copiedUserList = null;
+
+        let usersInUserList = [];
+
+        let loadedHistory = false;
+
+        socket.on("userList", (userList) => {
+            copiedUserList = JSON.parse(JSON.stringify(userList));
+
+            userList.forEach((user) => {
+                if (!usersInUserList.includes(user.userId)) {
+                    usersInUserList.push(user.userId);
+
+                    var u = `   <div class="item"><img class="ui avatar image" src=""/>
+                                    <div class="content">
+                                        <div class="header">${user.username}</div>
+                                    </div>
+                                    <button id="rightArrowButton" class="ui icon right floated mini button""><i class="right arrow icon"></i></button>
+                                </div>`
+
+                    if (user.userId == userId) { // add user to top of user list
+                        $('#userList').prepend(u);
                     }
                     else {
+<<<<<<< HEAD
                         socket.auth = { username, userId};
                         socket.connect();
                     }
@@ -395,96 +459,128 @@ block content
 
                         document.getElementById(`${messageID}-react`).style.display = "none"
                     }
-
-                    
-                    socket.on('receive-reaction',({reactions, messageID, reactionType, person}) => {
-                         let emoji = "none";
-                        emoji = textToEmoji(reactionType) 
-
-                        if(person == "self") {
-                            let selfElement = document.getElementById(`${messageID}-reactArea2`);
-                            selfElement.innerHTML = `${emoji}`;
-                        } else {
-                            let otherElement= document.getElementById(`${messageID}-reactArea1`);
-                            otherElement.innerHTML = `${emoji}`;
-                        }
-                    })
-
-
-                    // triggered when the user gets all messages
-                    function loadReactions(reactions, messageID) {
-                        
-                        let selfEmoji = "none";
-                        let otherEmoji = "none";
-
-                        selfEmoji = textToEmoji(reactions.self)
-                        let selfElement = document.getElementById(`${messageID}-reactArea2`);
-                        selfElement.innerHTML = `${selfEmoji}`;
-
-                        otherEmoji = textToEmoji(reactions.other)
-                        let otherElement= document.getElementById(`${messageID}-reactArea1`);
-                        otherElement.innerHTML = `${otherEmoji}`;
+=======
+                        $('#userList').append(u);
                     }
 
-                    function textToEmoji(reaction) {
-                        if(reaction == "thumbsUp") {
-                             return "👍" 
-                        }
-                        else if(reaction == "thumbsDown") {
-                            return "👎"
-                        }
-                        else if(reaction == "like") {
-                             return "❤️"
-                        }
-                        else if(reaction == "laugh") {
-                            return "😂"
-                        }
-                        else if(reaction == "none") {
-                            return ""
-                        }
+                    // add onClick function to button
+                    var element = document.getElementById("rightArrowButton");
+                    element.id = user.userId + 'rightArrowButton';
+                    document.getElementById(user.userId + 'rightArrowButton').onclick=function(){onClickUsername(user.userId)};
+>>>>>>> chat-frontend
+
+                    if (user.userId == userId) { // do not allow user to chat itself
+                        document.getElementById(user.userId + 'rightArrowButton').remove();
                     }
 
-                     
-                    function emojiToText(reaction) {
-                        if(reaction == "👍") {
-                             return "thumbsUp" 
-                        }
-                        else if(reaction == "👎") {
-                            return "thumbsDown"
-                        }
-                        else if(reaction == "❤️") {
-                             return "like"
-                        }
-                        else if(reaction == "😂") {
-                            return "laugh"
-                        }
-                        else if(reaction == "") {
-                            return "none"
-                        }
-
+                    if (loadedHistory) {
+                        addUserInDiscover(user);
                     }
-                   
+                }
+            });
+        });
 
-                    function addChatSentMessage(msg, time, id) {
-                        // reaction box
-                        let react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
-                                        top:-10px; right:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
-                                        <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
-                                        <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
-                                        <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
-                                        <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
-                                    </div>`
+        $('#discoverProfiles').hide();
+        let usersInHistory = [];
 
-                        var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
-                                        <div class="right floated right aligned seven wide column">
-                                        ${react}
-                                        <div class="ui mini blue compact message" id="${id}">
-                                            <p>${msg.body}</p>
-                                            <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; left:2px;"></div> 
-                                             <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; left:14px;"></div>
+        let numUnread = 0;
+
+        async function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread) {
+            var listItem = `<div class="item">
+                                <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute"></span>
+                                <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
+                                <div class="content">
+                                    <a class="header">${chatPartnerUsername}</a>
+                                    <div class="description" style="max-width: 180px" id="lastMessage">${lastMessage}</div>
+                                </div>
+                                <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
+                            </div>`;
+
+            $('#chatHistory').append(listItem);
+
+            await socket.emit("find-partner",{userId: chatPartnerId})
+            await socket.on("partner-pfp",({pfp , userId})=>{
+                if (pfp != null && userId == chatPartnerId) {
+                    let pic = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
+                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
+                }
+                else if (userId == chatPartnerId) {
+                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg";
+                }
+            })
+
+            let element = document.getElementById("lastMessage");
+            element.id = chatPartnerId + 'lastMessage';
+
+            element = document.getElementById("redBubble");
+            element.id = chatPartnerId + 'redBubble';
+            $('#' + chatPartnerId + 'redBubble').hide();
+
+            element = document.getElementById("rightChevronButton");
+            element.id = chatPartnerId + 'rightChevronButton';
+            document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
+
+            $('#' + chatPartnerId + 'redBubble').text(numUnread);
+            if (numUnread > 0) {
+                $('#' + chatPartnerId + 'redBubble').show();
+            }
+        }
+
+        socket.on("receive-chat-history", (allConvo) => {
+            if (allConvo.length == 0) {
+                $('#recentButton').hide();
+                $('#recentChatHistory').hide();
+                $('#discoverProfiles').show();
+            }
+
+            usersInHistory = [];
+
+            loadedHistory = true;
+
+            allConvo.forEach((chatPartner) => {
+                let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
+                let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
+                let lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                
+                usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
+
+                numUnread = chatPartner.content.filter(c => c.from.userId == chatPartnerId).filter(c => !c.msg.read).length
+
+                addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread);
+            });
+
+            copiedUserList.forEach((user) => {
+                addUserInDiscover(user);
+            });
+        });
+
+        function addUserInDiscover(user) {
+            let count = 0;
+            let prevRow = count;
+            var row = `<div id="prevRow" class="row"></div>`;
+
+            $('#discoverProfiles').append(row);
+            var element = document.getElementById("prevRow");
+            element.id = 'row' + count;
+
+            if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length) {
+                count++;
+                if (count > 0 && count % 2 == 0) {
+                    $('#discoverProfiles').append(row);
+                    prevRow = count;
+                }
+
+                const pfpSrc = user.userpfp == "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp; 
+
+                var profile = ` <div class="eight wide column">
+                                    <div class="ui card" style="margin-bottom:10px">
+                                        <div class="content">
+                                            <div class="center aligned column"><img class="ui circular tiny image" src=${pfpSrc} style="margin-bottom:4px; object-fit:cover; width:75px; height:75px"/></div>
+                                            <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username}</div>
+                                            <button id="profileButton" class="ui button tiny fluid fluid" style="margin-bottom:4px">Profile </button>
+                                            <button id="messageButton" class="ui positive button tiny fluid">Message </button>
                                         </div>
-                                        <p style="font-size:10px; margin-top:-8px">${time}</p>
-                                        </div>
+<<<<<<< HEAD
                                     </div>`
                         $('#messages').append(mes);
                         $('#messages').scrollTop($('#messages')[0].scrollHeight);
@@ -506,59 +602,388 @@ block content
                         document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "self", "like", id)};
                         document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "self", "laugh", id)};
 
+=======
+                                    </div>
+                                </div>`
+                
+                document.getElementById('row' + prevRow).insertAdjacentHTML('beforeend', profile);
+
+                var element = document.getElementById("profileButton");
+                element.id = user.userId + 'profileButton';
+                document.getElementById(user.userId + 'profileButton').onclick=function(){onClickProfile(user.userId)};
+
+                var element = document.getElementById("messageButton");
+                element.id = user.userId + 'messageButton';
+                document.getElementById(user.userId + 'messageButton').onclick=function(){onClickUsername(user.userId)};
+
+                $('#discoverProfileNoUsersText').hide();
+            }
+        }
+
+        function onClickProfile(userId) {
+            window.location.href = "/user/" + userId;
+        }
+
+        document.getElementById('recentButton').onclick=function(){onClickRecentButton()};
+        function onClickRecentButton() {
+            $('#recentButton').addClass('active');
+            $('#discoverButton').removeClass('active');
+            $('#discoverProfiles').hide();
+            $('#recentChatHistory').show();
+        }
+
+        document.getElementById('discoverButton').onclick=function(){onClickDiscoverButton()};
+        function onClickDiscoverButton() {
+                if (history) {
+                $('#discoverButton').addClass('active');
+                $('#recentButton').removeClass('active');
+                $('#discoverProfiles').show();
+                $('#recentChatHistory').hide();
+            }
+        }
+
+        let chatPartnerSocketId = null;
+        let chatPartnerUsername = null;
+        let chatPartnerUserId = null;
+        let chatPartnerPFP = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg";
+
+        function onClickUsername(userId) {
+            $('#' + userId + 'redBubble').hide();
+            $('#' + userId + 'redBubble').text(0);
+            
+            // find user in online list
+            copiedUserList.forEach((user) => {
+                if (user.userId == userId) {
+                    chatPartnerSocketId = user.socketId;
+                    chatPartnerUsername = user.username;
+                    chatPartnerUserId = user.userId;
+                }
+            });
+
+            // find user in chat history
+            usersInHistory.forEach((user) => {
+                if (user.userId == userId) {
+                    chatPartnerUsername = user.username;
+                    chatPartnerUserId = user.userId;
+                }
+            });
+
+            socket.emit("find-partner",{userId: chatPartnerUserId})
+
+            socket.on("partner-pfp",({ pfp, userId})=>{
+                if(pfp != null && userId == chatPartnerUserId) {
+                    chatPartnerPFP = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
+                }
+            })
+            
+            $("#chatPartnerName").text(chatPartnerUsername);
+            $('#messages').empty();
+            $('#messageInput').show();
+            $('#newChatModal').modal('hide');
+
+            // after we get the chat partner info we want to get all messages
+            socket.emit('get-messages', {
+                to: {
+                        username: chatPartnerUsername,
+                        userId: chatPartnerUserId,
+>>>>>>> chat-frontend
                     }
+            })
+        }
 
-                    function addChatReceivedMessage(msg, time, id) {
-                        // reaction box
-                         let react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
-                                        top:-10px; left:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
-                                        <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
-                                        <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
-                                        <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
-                                        <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
-                                    </div>`
+        $('#messageInput')[0].addEventListener('submit', function(e) {
+            e.preventDefault();
+            var input = $('#input')[0]; 
+            if (input.value) {
+                socket.emit('send-message', { 
+                    msg: {
+                        type: "txt",
+                        body: input.value
+                    },
+                    to: {
+                        username: chatPartnerUsername,
+                        userId: chatPartnerUserId,
+                        socketId: chatPartnerSocketId
+                    } 
+                });
+                input.value = '';
+            }
+        });
 
-                        var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
-                                        <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image" src="public/grey.jpg"/></div>
-                                        <div class="seven wide column">
-                                         ${react}
-                                        <div class="ui mini compact message" id="${id}">
-                                            <p>${msg.body}</p>
-                                            <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; right:2px;"></div> 
-                                            <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; right:14px;"></div> 
-                                        </div>
+        // get all messages
+        socket.on("message-list", (messageList) => {
+            let messageIds = [];
+            for (let i = 0; i < messageList.length; i++) {
+                if (messageList[i].from.userId == userId) {
+                    addChatSentMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id );
+                    loadReactions(messageList[i].msg.reactions, messageList[i]._id)
+                }
+                else  {
+                    addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id, messageList[i].from.userId);
+                    loadReactions(messageList[i].msg.reactions, messageList[i]._id)
+                }
 
-                                        <p style="font-size:10px; margin-top:-8px">${time}</p>
-                                        </div>
-                                    </div>`
-                        $('#messages').append(mes);
-                        $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                if (messageList[i].to.userId == userId && !messageList[i].msg.read) {
+                    messageIds.push(messageList[i]._id);
+                }
+            }
+            socket.emit("read-messages", {
+                messageIds: messageIds,
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        });
 
-                        
-                        // on click actions for showing reaction box
-                        $(`#${id}`).on('click', function () {
-                            $(`#${id}-react`).css('display','flex').focus();
-                        });
+        document.getElementById('dismissModalButton').onclick=function(){onClickDismissButton()};
+        function onClickDismissButton() {
+            $('#nudge1Modal').modal('hide');
+        }
+        
+        socket.on("receive-message", (msg) => {
+            // update latest message in recent chat history
+            partnerId = msg.from.userId == userId ? msg.to.userId : msg.from.userId;
+            $('#' + partnerId + 'lastMessage').text(msg.msg.body);
 
-                        // when the user clicks outside of reaction box, stop displaying it
-                        $(`#${id}-react`).on('focusout', function () {
-                            $(this).css('display','none');
-                        });
+            partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
+            partnerPFP = msg.from.username == username ? msg.to.userpfp : msg.from.userpfp;
 
-                        // onclick actions for reactions
-                        document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "other", "thumbsUp", id)};
-                        document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "other", "thumbsDown", id)};
-                        document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "other", "like", id)};
-                        document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "other", "laugh", id)};
+            const userInDiscover = !usersInHistory.some(user => {
+                if (user.userId == partnerId) {
+                    return true;
+                }
+            });
 
+            if (userInDiscover) {
+                addUserInHistory(partnerUsername, msg.msg.body, partnerId, 0);
+                
+                $('#recentButton').show();
+                onClickRecentButton();
+
+                usersInHistory.push({userId: partnerId, username: partnerUsername});
+            }
+            if (msg.from.userId == userId) {
+                addChatSentMessage(msg.msg, msg.msg.time, msg._id);
+            }
+            else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
+                addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId);
+                socket.emit("read-messages", {
+                    messageIds: [msg._id],
+                    other: {
+                        username: chatPartnerUsername,
+                        userId: chatPartnerUserId,
                     }
+                });
 
-                     
+                const scenario1 = "just finished from my school here in orlando wat is your house address";
 
-                   
+                if (msg.msg.body == scenario1) {
+                    $('#nudge1Modal').modal('show');
+                }
+            }
+            else if (msg.to.userId == userId) {
+                $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
+                $('#' + msg.from.userId + 'redBubble').show();
+            }
+        });
+        
+        function sendReaction(msg, person, reactionType, messageID) {
+            let currentReaction;
 
-                    
-                       
-                    
+            // get current reaction of message
+            if ( person == "self") {
+                currentReaction = document.getElementById(`${messageID}-reactArea2`).innerHTML;
+            }
+            else {
+                currentReaction = document.getElementById(`${messageID}-reactArea1`).innerHTML;
+            }
+
+            rct = emojiToText(currentReaction)
+
+            if (rct == reactionType) { // if new reaction equal current reaction
+                reactionType = "none"   //change to none
+            }
+
+            socket.emit('send-reaction', {
+                messageID: messageID,
+                person: person,
+                reactionType: reactionType,
+                reactions: msg.reactions,
+                to: {
+                        username: chatPartnerUsername,
+                        userId: chatPartnerUserId,
+                        socketId: chatPartnerSocketId
+                } 
+            });
+            document.getElementById(`${messageID}-react`).style.display = "none"
+        }
+
+        socket.on('receive-reaction',({reactions, messageID, reactionType, person}) => {
+            let emoji = "none";
+            emoji = textToEmoji(reactionType) 
+
+            if (person == "self") {
+                let selfElement = document.getElementById(`${messageID}-reactArea2`);
+                selfElement.innerHTML = `${emoji}`;
+            } else {
+                let otherElement= document.getElementById(`${messageID}-reactArea1`);
+                otherElement.innerHTML = `${emoji}`;
+            }
+        })
+
+        // triggered when the user gets all messages
+        function loadReactions(reactions, messageID) {
+            let selfEmoji = "none";
+            let otherEmoji = "none";
+
+            selfEmoji = textToEmoji(reactions.self)
+            let selfElement = document.getElementById(`${messageID}-reactArea2`);
+            selfElement.innerHTML = `${selfEmoji}`;
+
+            otherEmoji = textToEmoji(reactions.other)
+            let otherElement= document.getElementById(`${messageID}-reactArea1`);
+            otherElement.innerHTML = `${otherEmoji}`;
+        }
+
+        function textToEmoji(reaction) {
+            if(reaction == "thumbsUp") {
+                    return "👍" 
+            }
+            else if(reaction == "thumbsDown") {
+                return "👎"
+            }
+            else if(reaction == "like") {
+                    return "❤️"
+            }
+            else if(reaction == "laugh") {
+                return "😂"
+            }
+            else if(reaction == "none") {
+                return ""
+            }
+        }
+
+        function emojiToText(reaction) {
+            if(reaction == "👍") {
+                    return "thumbsUp" 
+            }
+            else if(reaction == "👎") {
+                return "thumbsDown"
+            }
+            else if(reaction == "❤️") {
+                    return "like"
+            }
+            else if(reaction == "😂") {
+                return "laugh"
+            }
+            else if(reaction == "") {
+                return "none"
+            }
+        }
+
+        function formatTime(time) {
+            let seen = false;
+            let idx = -1;
+            for (let i = 0; i < time.length; i++) {
+                if (time[i] == ':' && !seen)
+                    seen = true;
+                else if (time[i] == ':' && seen)
+                    idx = i;
+            }
+            return time.slice(0, idx) + time.slice(idx + 3);
+        }
+
+        function addChatSentMessage(msg, time, id) {
+            // reaction box
+            let react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
+                            top:-10px; right:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
+                            <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
+                            <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
+                            <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
+                            <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
+                        </div>`
+
+            var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
+                            <div class="right floated right aligned seven wide column">
+                            ${react}
+                            <div class="ui mini blue compact message" id="${id}">
+                                <p>${msg.body}</p>
+                                <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; left:2px;"></div> 
+                                    <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; left:14px;"></div>
+                            </div>
+                            <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
+                            </div>
+                        </div>`
+            $('#messages').append(mes);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+
+            // on click actions for showing reaction box
+            $(`#${id}`).on('click', function () {
+                $(`#${id}-react`).css('display','flex').focus();
+            });
+            // when the user clicks outside of reaction box, stop displaying it
+            $(`#${id}-react`).on('focusout', function () {
+                $(`#${id}-react`).css('display','none');
+            });
+
+            // onclick actions for reactions
+            document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "self", "thumbsUp", id)};
+            document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "self", "thumbsDown", id)};
+            document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "self", "like", id)};
+            document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "self", "laugh", id)};
+        }
+
+        function addChatReceivedMessage(msg, time, id, user) {
+            // reaction box
+            let react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
+                        top:-10px; left:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
+                        <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
+                        <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
+                        <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
+                        <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
+                    </div>`
+
+            var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
+                            <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image chatPartnerMessagePFP-${user}" id="" src=""/></div>
+                            <div class="seven wide column">
+                                ${react}
+                            <div class="ui mini compact message" id="${id}">
+                                <p>${msg.body}</p>
+                                <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; right:2px;"></div> 
+                                <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; right:14px;"></div> 
+                            </div>
+
+                            <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
+                            </div>
+                        </div>`
+            $('#messages').append(mes);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+
+            var x = document.getElementsByClassName(`chatPartnerMessagePFP-${user}`);
+
+            for(i=0; i<x.length; i++){
+                x[i].src = document.getElementById(`chatPartnerPFP-${user}`).src;
+            }
+            
+            // on click actions for showing reaction box
+            $(`#${id}`).on('click', function () {
+                $(`#${id}-react`).css('display','flex').focus();
+            });
+
+            // when the user clicks outside of reaction box, stop displaying it
+            $(`#${id}-react`).on('focusout', function () {
+                $(this).css('display','none');
+            });
+
+            // onclick actions for reactions
+            //- document.getElementById(`${id}-thumbsup`).onclick=function(){readMessage(id, "test321", "bdskdbkjads")};
+
+            document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "other", "thumbsUp", id)};
+            document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "other", "thumbsDown", id)};
+            document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "other", "like", id)};
+            document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "other", "laugh", id)};
+        }
+              
 //- TODO: update code for mobile view 
     .mobile.only.row
