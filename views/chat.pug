@@ -65,6 +65,20 @@ block content
         .actions
             #dismissModalButton.button.ui.button
                 | Dismiss
+    
+    //- Guided Actions Nudge styling
+    #nudge3Modal.ui.mini.modal
+        .content
+            .ui.center.aligned.container
+                .ui.vertical.menu
+                    a.item
+                        | No, thank you
+                    a.item
+                        | Please leave me alone
+                    a.item
+                        | I am not going to
+                    a.item 
+                        | Block and Report Contact
 
     script(src='/socket.io/socket.io.js')
     script.
@@ -75,6 +89,7 @@ block content
 
         // hide input until user picks chat partner
         $('#messageInput').hide();
+        //- $('#nudge3Modal').modal('show');
 
         document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
          document.getElementById('uploadImage').onclick=function(){uploadImage()};
