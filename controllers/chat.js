@@ -7,22 +7,26 @@ const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const User = require("../models/User");
 const { ObjectId } = require("mongoose");
+const { uploadFile } = require("../s3");
 
 const sessionStore = new InMemorySessionStore();
 
 const chatSocket = (server) => {
-  const io = new Server(server);
+  const io = new Server(server, {
+    maxHttpBufferSize: 1e7,
+    pingTimeout: 30000,
+  });
 
   // TODO: Receive pfp from the frontend
   // middleware: check username & userId, allows connection
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     const sessionId = socket.handshake.auth.sessionId;
 
     if (sessionId) {
       const session = sessionStore.findSession(sessionId);
       if (session) {
         // attach user pfp to session
-        session.userpfp = socket.handshake.auth.userpfp;
+        session.userpfp = await getChatPartnerPFP(session.userId); //socket.handshake.auth.userpfp;
 
         socket.sessionId = sessionId;
         socket.userId = session.userId;
@@ -30,7 +34,7 @@ const chatSocket = (server) => {
         socket.userpfp = session.userpfp;
 
         console.log("HERE 1");
-        //console.log(socket)
+        console.log(session);
 
         return next();
       }
@@ -82,7 +86,7 @@ const chatSocket = (server) => {
     socket.on("find-partner", async (userId) => {
       let pfp = await getChatPartnerPFP(userId.userId);
 
-      console.log(pfp);
+      //console.log(pfp)
 
       io.to(socket.userId).emit("partner-pfp", {
         pfp: pfp,
@@ -168,7 +172,7 @@ const chatSocket = (server) => {
     socket.on("send-message", async ({ msg, to }) => {
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
 
-      let formattedMsg = formatMessage(
+      let formattedMsg = await formatMessage(
         msg,
         { username: socket.username, userId: socket.userId }, // from
         to
@@ -306,12 +310,16 @@ const chatSocket = (server) => {
           );
           */
         // FIXME: Name of the event subject to change for FE's convenience
-        socket.rooms.forEach((roomId) => {
+        socket.rooms.forEach(async (roomId) => {
           socket.broadcast
             .to(roomId)
             .emit(
               "disconneted",
-              formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+              await formatMessage(
+                leaveNotification(socket.username),
+                chatBot,
+                "ALL"
+              )
             );
         });
         // refresh current users
@@ -356,8 +364,18 @@ function leaveNotification(from) {
  * @param {object} to
  *
  */
-function formatMessage(msg, from, to) {
-  if (msg.type == "img") {
+async function formatMessage(msg, from, to) {
+  if (msg.type == "img" || msg.type == "vid") {
+    //   for (var value of msg.body.values()) {
+    //     console.log(value);
+    //  }
+
+    let prefix = from.userId + Math.random().toString(36).slice(2, 10);
+    msg.body.filename = prefix + msg.body.filename.replace(/[^A-Z0-9]+/gi, "_");
+    console.log(msg.body);
+    await uploadFile(msg.body);
+
+    msg.body = msg.body.filename;
   } else if (msg.type == "nudge") {
     return new Nudge({
       ...msg,
@@ -436,13 +454,21 @@ async function getChatHistory(username, userId) {
 }
 
 async function getChatPartnerPFP(userId) {
-  let chatPartner = await User.find({
-    _id: userId,
-  });
+  let chatPartner;
 
-  console.log(chatPartner[0].profile.picture);
+  try {
+    chatPartner = await User.find({
+      _id: userId,
+    });
 
-  return chatPartner[0].profile.picture;
+    console.log("GOT " + userId + " PFP");
+    return chatPartner[0].profile.picture;
+  } catch (error) {
+    console.log(error);
+    return "";
+  }
+
+  // console.log(chatPartner[0].profile.picture)
 }
 
 /**

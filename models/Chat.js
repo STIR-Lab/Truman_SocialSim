@@ -37,17 +37,20 @@ const Schema = mongoose.Schema;
 //   },
 // });
 
-const messageSchema = new Schema({
-  from: {
-    username: String,
-    userId: String,
+const messageSchema = new Schema(
+  {
+    from: {
+      username: String,
+      userId: String,
+    },
+    to: {
+      username: String,
+      userId: String,
+    },
+    msg: Object,
   },
-  to: {
-    username: String,
-    userId: String,
-  },
-  msg: Object,
-});
+  { versionKey: false }
+);
 
 const nudgeSchema = new Schema({
   from: {
@@ -65,13 +68,16 @@ const nudgeSchema = new Schema({
   userAction: String,
 });
 
-const conversationSchema = new Schema({
-  usernameA: String,
-  userIdA: String,
-  usernameB: String,
-  userIdB: String,
-  content: [messageSchema | nudgeSchema],
-});
+const conversationSchema = new Schema(
+  {
+    usernameA: String,
+    userIdA: String,
+    usernameB: String,
+    userIdB: String,
+    content: [messageSchema | nudgeSchema],
+  },
+  { versionKey: false }
+);
 
 const Nudge = mongoose.model("Nudge", nudgeSchema);
 const Message = mongoose.model("Message", messageSchema);
