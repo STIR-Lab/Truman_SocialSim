@@ -32,7 +32,24 @@ block content
 
                 .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
                     #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
-               
+                
+                //- Guided Actions Nudge styling
+                #nudge3Modal.ui.mini.modal(style='position: absolute; bottom: 225px; left: 50%; transform: translate(-50%, -50%); width:450px;')
+                    .content
+                        .ui.center.aligned.container
+                            .ui.top.attached.label
+                                | Risky message detected, here are some ways you can respond
+                                .ui.vertical.menu(style='overflow: hidden; width:425px;')
+                                    a.item
+                                        | No, thank you
+                                    a.item
+                                        | Please leave me alone
+                                    a.item
+                                        | I am not going to
+                                    a.item(style = 'color: red;' )
+                                        | Block and Report Contact
+                                
+
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
                         img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
@@ -43,9 +60,7 @@ block content
                             label.custom-file-upload(for='fileupload' )
                                 i.camera.icon
                         input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/png, image/jpeg, image/svg")
-                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
-
-
+                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
@@ -66,19 +81,6 @@ block content
             #dismissModalButton.button.ui.button
                 | Dismiss
     
-    //- Guided Actions Nudge styling
-    #nudge3Modal.ui.mini.modal
-        .content
-            .ui.center.aligned.container
-                .ui.vertical.menu
-                    a.item
-                        | No, thank you
-                    a.item
-                        | Please leave me alone
-                    a.item
-                        | I am not going to
-                    a.item 
-                        | Block and Report Contact
 
     script(src='/socket.io/socket.io.js')
     script.
@@ -89,7 +91,8 @@ block content
 
         // hide input until user picks chat partner
         $('#messageInput').hide();
-        //- $('#nudge3Modal').modal('show');
+        /////////////
+        //- $('#nudge3Modal').show();
 
         document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
          document.getElementById('uploadImage').onclick=function(){uploadImage()};
@@ -514,10 +517,15 @@ block content
                 });
 
                 const scenario1 = "just finished from my school here in orlando wat is your house address";
+                const scenario3 = "you should totally send a pic of your credit card for funsies"
 
                 if (msg.msg.body == scenario1) {
                     $('#nudge1Modal').modal('show');
                 }
+                if (msg.msg.body == scenario3) {
+                    $('#nudge3Modal').modal('show');
+                }
+                
             }
             else if (msg.to.userId == userId) {
                 $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
