@@ -1,10 +1,9 @@
+const { mongo } = require("mongoose");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-
-
 // const messageSchema = new Schema({
-  
+
 //   from: {
 //     username: String,
 //     userId: String,
@@ -38,9 +37,7 @@ const Schema = mongoose.Schema;
 //   },
 // });
 
-
 const messageSchema = new Schema({
-  
   from: {
     username: String,
     userId: String,
@@ -49,19 +46,34 @@ const messageSchema = new Schema({
     username: String,
     userId: String,
   },
-  msg: Object
+  msg: Object,
 });
 
+const nudgeSchema = new Schema({
+  from: {
+    username: String,
+    userId: String,
+  },
+  to: {
+    username: String,
+    userId: String,
+  },
+  type: String,
+  nudgeShown: Boolean,
+  riskyScenario: String,
+  nudgeType: String,
+  userAction: String,
+});
 
 const conversationSchema = new Schema({
   usernameA: String,
   userIdA: String,
   usernameB: String,
   userIdB: String,
-  content: [messageSchema],
+  content: [messageSchema | nudgeSchema],
 });
 
-
+const Nudge = mongoose.model("Nudge", nudgeSchema);
 const Message = mongoose.model("Message", messageSchema);
 const Conversation = mongoose.model("Conversation", conversationSchema);
-module.exports = {Conversation, Message};
+module.exports = { Conversation, Message };

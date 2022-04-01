@@ -17,11 +17,11 @@ const chatSocket = (server) => {
   // middleware: check username & userId, allows connection
   io.use((socket, next) => {
     const sessionId = socket.handshake.auth.sessionId;
-    
+
     if (sessionId) {
       const session = sessionStore.findSession(sessionId);
       if (session) {
-        // attach user pfp to session 
+        // attach user pfp to session
         session.userpfp = socket.handshake.auth.userpfp;
 
         socket.sessionId = sessionId;
@@ -29,7 +29,7 @@ const chatSocket = (server) => {
         socket.username = session.username;
         socket.userpfp = session.userpfp;
 
-        console.log("HERE 1")
+        console.log("HERE 1");
         //console.log(socket)
 
         return next();
@@ -46,7 +46,7 @@ const chatSocket = (server) => {
       socket.userId = userId;
       socket.userpfp = userpfp;
 
-      console.log("HERE 2")
+      console.log("HERE 2");
       //console.log(socket.userpfp)
 
       next();
@@ -79,15 +79,16 @@ const chatSocket = (server) => {
       sessionId: socket.sessionId,
     });
 
-    socket.on("find-partner", async ( userId )=> {
+    socket.on("find-partner", async (userId) => {
+      let pfp = await getChatPartnerPFP(userId.userId);
 
-      let pfp =  await getChatPartnerPFP(userId.userId)
+      console.log(pfp);
 
-      console.log(pfp)
-
-      io.to(socket.userId).emit("partner-pfp", {pfp: pfp, userId: userId.userId});
-    })
-    
+      io.to(socket.userId).emit("partner-pfp", {
+        pfp: pfp,
+        userId: userId.userId,
+      });
+    });
 
     // Fetch existing users
     socket.emit("userList", getCurrentUsers());
@@ -145,6 +146,23 @@ const chatSocket = (server) => {
      *     socketId: string
      *   }
      * }
+     * 
+     * Nudge
+     * 
+     * {
+        msg: {
+          type: "nudge"
+          nudgeShown: Boolean, --> Nudge was shown/not shown, keep true for all for now, future research will only show the nudge to half of the teens
+          riskyScenario: String, --> Risky Scenario type, "info_breach_1", "explicit_content_2", etc
+          nudgeType: String, --> Nudge type, Pop up vs censored
+          userAction: String, --> Action taken by the user 
+        },
+        to: {
+          username: string,
+          userId: string,
+          socketId: string
+        }
+      }
      */
 
     socket.on("send-message", async ({ msg, to }) => {
@@ -152,7 +170,7 @@ const chatSocket = (server) => {
 
       let formattedMsg = formatMessage(
         msg,
-        { username: socket.username, userId: socket.userId },
+        { username: socket.username, userId: socket.userId }, // from
         to
       );
 
@@ -339,9 +357,13 @@ function leaveNotification(from) {
  *
  */
 function formatMessage(msg, from, to) {
-
-  if(msg.type == "img") {
-
+  if (msg.type == "img") {
+  } else if (msg.type == "nudge") {
+    return new Nudge({
+      ...msg,
+      from: from,
+      to: to,
+    });
   }
   return new Message({
     msg: {
@@ -353,7 +375,7 @@ function formatMessage(msg, from, to) {
         other: "none",
       },
     },
-    from: from, // NOTE: string | object
+    from: from,
     to: to,
   });
 }
@@ -381,7 +403,7 @@ function getCurrentUsers() {
       userList.push({
         userId: session.userId,
         username: session.username,
-        userpfp: session.userpfp
+        userpfp: session.userpfp,
       });
     }
   });
@@ -410,27 +432,18 @@ async function getChatHistory(username, userId) {
     ],
   });
 
-
-
-
-
   return allConvo;
 }
 
 async function getChatPartnerPFP(userId) {
+  let chatPartner = await User.find({
+    _id: userId,
+  });
 
-  let chatPartner = await User.find(
-    {
-      _id: userId,
-    }
-  );
-
-  console.log(chatPartner[0].profile.picture)
+  console.log(chatPartner[0].profile.picture);
 
   return chatPartner[0].profile.picture;
-
 }
-
 
 /**
  * Find a specific conversation history between two users
