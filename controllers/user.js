@@ -329,7 +329,7 @@ exports.postUpdateProfile = (req, res, next) => {
     if (req.file) {
       console.log("Changeing Picture now to: " + req.file.filename);
       user.profile.picture = req.file.filename;
-      //console.log(req.file)
+      console.log(req.file)
       uploadFile(req.file);
  
     }

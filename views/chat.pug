@@ -36,13 +36,15 @@ block content
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
                         img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
+                        video#outputVideo(width="60" controls style="position: absolute; bottom: 70px; left: 50%; display: none;")
+                            source#outputVideoSource(src="#" type="video/mp4")
                         input#input(autocomplete="off" type='text' placeholder='Enter message')
                         button#submitMessage(type="submit")
                             i.paper.plane.icon 
                         button(type="button" style='position: relative; right: 2px;')     
                             label.custom-file-upload(for='fileupload' )
                                 i.camera.icon
-                        input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/png, image/jpeg, image/svg")
+                        input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/*,video/mp4,video/x-m4v,video/*")
                         button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
 
 
@@ -71,13 +73,13 @@ block content
         const userId = document.getElementById('userIdTag').getAttribute('userId');
         const username = document.getElementById('usernameTag').getAttribute('username');
         const userpfp = document.getElementById('userProfilePicture').getAttribute('userpfp');
-        let pictureFile = null;
+        
 
         // hide input until user picks chat partner
         $('#messageInput').hide();
 
         document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
-         document.getElementById('uploadImage').onclick=function(){uploadImage()};
+         //document.getElementById('uploadImage').onclick=function(){uploadImage()};
          document.getElementById('fileupload').onchange=function(){loadFile(event)};
 
         function onClickNewChat() {
@@ -165,7 +167,7 @@ block content
 
             let lastmsg = lastMessage;
             if(msgType == "img") {
-                lastmsg = "*image*"
+                lastmsg = "Sent media"
             }
 
                 
@@ -228,7 +230,7 @@ block content
                 if(chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
                      lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
                 else {
-                    lastMessage = "*image*"
+                    lastMessage = "*sent media*"
                 }
                 
                 usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
@@ -374,55 +376,108 @@ block content
                 input.value = '';
             }
 
-            if (pictureFile) {
+            let file = uploadImage();
+            
+            if (file) {
 
-                socket.emit('send-message', { 
-                    msg: {
-                        type: "img",
-                        body: pictureFile
-                    },
-                    to: {
-                        username: chatPartnerUsername,
-                        userId: chatPartnerUserId,
-                        socketId: chatPartnerSocketId
-                    } 
-                });
-                document.getElementById("outputImage").style.display = "none"
-                document.getElementById("outputImage").src = "#"
-                pictureFile = null;
+                if(file.type.includes("image")) {
+                    socket.emit('send-message', { 
+                        msg: {
+                            type: "img",
+                            body: {path: file, filename: file.name}
+                        },
+                        to: {
+                            username: chatPartnerUsername,
+                            userId: chatPartnerUserId,
+                            socketId: chatPartnerSocketId
+                        } 
+                    });
+                    document.getElementById("outputImage").style.display = "none"
+                    document.getElementById("outputImage").src = "#"
+                }
+                else if(file.type.includes("video")) {
+                    socket.emit('send-message', { 
+                        msg: {
+                            type: "vid",
+                            body: {path: file, filename: file.name}
+                        },
+                        to: {
+                            username: chatPartnerUsername,
+                            userId: chatPartnerUserId,
+                            socketId: chatPartnerSocketId
+                        } 
+                    });
+                    document.getElementById("outputVideo").style.display = "none"
+                    document.getElementById("outputVideoSource").src = "#"
+                }
+
+                
+                //- pictureFile = null;
             }
         });
 
         // upload image
          function uploadImage () {
+             let pictureFile;
             
-            let formData = new FormData();
-            formData.append("file", fileupload.files[0])
+            if(fileupload.files[0]) {
 
-            for (var value of formData.values()) {
-                console.log(value);
+                if(fileupload.files[0].size >= 10000000) {
+                    return null;
+                }
+                
+
+                
+                    pictureFile = fileupload.files[0]
+                    document.getElementById('fileupload').value = "";
+                    return pictureFile;
+                
+                
             }
-
+            return null;
         }
 
         async function loadFile(event) {
             var image = document.getElementById('outputImage');
-
+            var video = document.getElementById("outputVideo")
+            var videoSrc = document.getElementById("outputVideoSource")
             var reader = new FileReader();
-
             console.log(fileupload.files[0])
-            
-            reader.readAsDataURL(fileupload.files[0])
+ 
+            if(fileupload.files[0]) {
 
-            reader.onload = function(e) {
-                var result = reader.result;
-                console.log(result);
-                pictureFile = result;
-                image.src = result
-                image.style.display = "block";
+                if(fileupload.files[0].size >= 10000000) {
+                    alert("Image Size too large!")
+                    fileupload.files[0] = null;
+                    return;
+                }
 
-            };
+                if(fileupload.files[0].type.includes("image")) {
+                    console.log("THIS IS AN IMAGE")
+                    reader.readAsDataURL(fileupload.files[0])
+                    reader.onload = function(e) {
+                        var result = reader.result;
+                        image.src = result;  
+                        image.style.display = "block";
+                    };
 
+                }
+
+                if(fileupload.files[0].type.includes("video")) {
+                    console.log("THIS IS A VIDEO")
+                    reader.readAsDataURL(fileupload.files[0])
+                    reader.onload = function(e) {
+                        var result = reader.result;
+                        videoSrc.src = result;  
+                        video.style.display = "block";
+                    };
+
+                }
+
+
+
+               
+            }
         }
 
         // get all messages
@@ -463,7 +518,7 @@ block content
             if(msg.msg.type == "txt")
                 $('#' + partnerId + 'lastMessage').text(msg.msg.body);
             else   
-                $('#' + partnerId + 'lastMessage').text("*image*");
+                $('#' + partnerId + 'lastMessage').text("*sent media*");
 
             partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
             partnerPFP = msg.from.username == username ? msg.to.userpfp : msg.from.userpfp;
@@ -624,8 +679,11 @@ block content
                 msgType = `<p>${msg.body}</p>`
                 
             }
-            else {
-                 msgType = `<img src="${msg.body}" style ="height: auto; width: 200px "></img>`
+            else if(msg.type == "img") {
+                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px "></img>`
+            }
+            else if(msg.type == "vid") {
+                msgType = `<video width="200" controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
             // reaction box
             let react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
@@ -674,8 +732,11 @@ block content
                 msgType = `<p>${msg.body}</p>`
                 
             }
-            else {
-                 msgType = `<img src="${msg.body}" style ="height: auto; width: 200px;"></img>`
+            else if(msg.type == "img") {
+                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px "></img>`
+            }
+            else if(msg.type == "vid") {
+                msgType = `<video width="200"  controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
 
             // reaction box

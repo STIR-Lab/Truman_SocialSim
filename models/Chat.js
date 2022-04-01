@@ -50,7 +50,7 @@ const messageSchema = new Schema({
     userId: String,
   },
   msg: Object
-});
+},{ versionKey: false });
 
 
 const conversationSchema = new Schema({
@@ -59,7 +59,7 @@ const conversationSchema = new Schema({
   usernameB: String,
   userIdB: String,
   content: [messageSchema],
-});
+},{ versionKey: false });
 
 
 const Message = mongoose.model("Message", messageSchema);
