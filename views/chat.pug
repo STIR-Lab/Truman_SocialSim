@@ -36,8 +36,9 @@ block content
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
                         img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
-                        video#outputVideo(width="60" controls style="position: absolute; bottom: 70px; left: 50%; display: none;")
-                            source#outputVideoSource(src="#" type="video/mp4")
+                        #sending(src="#" style="position: absolute; bottom: 70px; left: 50%; display: none;")
+                            code
+                                | sending...
                         input#input(autocomplete="off" type='text' placeholder='Enter message')
                         button#submitMessage(type="submit")
                             i.paper.plane.icon 
@@ -392,8 +393,8 @@ block content
                             socketId: chatPartnerSocketId
                         } 
                     });
-                    document.getElementById("outputImage").style.display = "none"
-                    document.getElementById("outputImage").src = "#"
+                    document.getElementById("sending").style.display = "block"
+                    
                 }
                 else if(file.type.includes("video")) {
                     socket.emit('send-message', { 
@@ -407,8 +408,8 @@ block content
                             socketId: chatPartnerSocketId
                         } 
                     });
-                    document.getElementById("outputVideo").style.display = "none"
-                    document.getElementById("outputVideoSource").src = "#"
+                    document.getElementById("sending").style.display = "block"
+                    
                 }
 
                 
@@ -439,8 +440,6 @@ block content
 
         async function loadFile(event) {
             var image = document.getElementById('outputImage');
-            var video = document.getElementById("outputVideo")
-            var videoSrc = document.getElementById("outputVideoSource")
             var reader = new FileReader();
             console.log(fileupload.files[0])
  
@@ -468,8 +467,8 @@ block content
                     reader.readAsDataURL(fileupload.files[0])
                     reader.onload = function(e) {
                         var result = reader.result;
-                        videoSrc.src = result;  
-                        video.style.display = "block";
+                        image.src = "https://cdn.iconscout.com/icon/free/png-256/video-file-85-1120664.png";  
+                        image.style.display = "block"
                     };
 
                 }
@@ -563,6 +562,10 @@ block content
                 $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
                 $('#' + msg.from.userId + 'redBubble').show();
             }
+
+                    document.getElementById("outputImage").style.display = "none"
+                    document.getElementById("sending").style.display = "none"
+                    document.getElementById("outputImage").src = "#"
         });
         
         function sendReaction(msg, person, reactionType, messageID) {
@@ -680,10 +683,10 @@ block content
                 
             }
             else if(msg.type == "img") {
-                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px "></img>`
+                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
             }
             else if(msg.type == "vid") {
-                msgType = `<video width="200" controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
+                msgType = `<video width="200" style="border-radius:6px" controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
             // reaction box
             let react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
@@ -733,10 +736,10 @@ block content
                 
             }
             else if(msg.type == "img") {
-                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px "></img>`
+                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
             }
             else if(msg.type == "vid") {
-                msgType = `<video width="200"  controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
+                msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
 
             // reaction box
