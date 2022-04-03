@@ -27,6 +27,7 @@ const s3 = new S3 ({
 
 //uploads a file to s3
 function uploadFile(file){ //Passing file object that came from multer that has the file path on the server
+    
     const fileStream = file.path
 
     const uploadParams = {
@@ -36,8 +37,24 @@ function uploadFile(file){ //Passing file object that came from multer that has 
     }
 
     return s3.upload(uploadParams).promise()
+    
 
 }
+function uploadFilePfp(file){ //Passing file object that came from multer that has the file path on the server
+    
+    const fileStream = fs.createReadStream(file.path)
+
+    const uploadParams = {
+        Bucket: bucketName,
+        Body: fileStream,
+        Key: file.filename
+    }
+
+    return s3.upload(uploadParams).promise()
+    
+
+}
+
 
 // function uploadFile(file){ //Passing file object that came from multer that has the file path on the server
 //     const fileStream = fs.createReadStream(file.path)
@@ -66,4 +83,4 @@ function getFileStream(fileKey){
     return s3.getObject(downloadParams).createReadStream()
 }
 
-module.exports = {uploadFile, getFileStream};
+module.exports = {uploadFile, uploadFilePfp, getFileStream};
