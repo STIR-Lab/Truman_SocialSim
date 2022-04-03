@@ -231,7 +231,7 @@ block content
                 if(chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
                      lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
                 else {
-                    lastMessage = "*sent media*"
+                    lastMessage = "Sent media"
                 }
                 
                 usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
@@ -517,7 +517,7 @@ block content
             if(msg.msg.type == "txt")
                 $('#' + partnerId + 'lastMessage').text(msg.msg.body);
             else   
-                $('#' + partnerId + 'lastMessage').text("*sent media*");
+                $('#' + partnerId + 'lastMessage').text("Sent media");
 
             partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
             partnerPFP = msg.from.username == username ? msg.to.userpfp : msg.from.userpfp;
