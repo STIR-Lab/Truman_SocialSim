@@ -144,18 +144,7 @@ const chatSocket = (server) => {
      *     mimeType?: "png" | "jpg", etc
      *     fileName?: string
      *   },
-     *  to: {
-     *     username: string
-     *     userId: string,
-     *     socketId: string
-     *   }
-     * }
-     * 
-     * Nudge
-     * 
-     * {
-        msg: {
-          type: "nudge"
+        nudge: {
           nudgeShown: Boolean, --> Nudge was shown/not shown, keep true for all for now, future research will only show the nudge to half of the teens
           riskyScenario: String, --> Risky Scenario type, "info_breach_1", "explicit_content_2", etc
           nudgeType: String, --> Nudge type, Pop up vs censored
@@ -169,11 +158,14 @@ const chatSocket = (server) => {
       }
      */
 
-    socket.on("send-message", async ({ msg, to }) => {
+    socket.on("send-message", async ({ msg, nudge, to }) => {
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
+
+      nudge = nudge == undefined ? {} : nudge;
 
       let formattedMsg = await formatMessage(
         msg,
+        nudge,
         { username: socket.username, userId: socket.userId }, // from
         to
       );
@@ -213,6 +205,30 @@ const chatSocket = (server) => {
       // io.to(to.userId) // to recipient
       io.to(socket.userId) // to sender room
         .emit("receive-message", formattedMsg);
+    });
+
+    socket.on("nudge-reaction", async ({ messageId, userAction, other }) => {
+      let convoInfo = await searchConvo(
+        socket.username,
+        socket.userId,
+        other.username,
+        other.userId
+      );
+
+      if (!convoInfo) {
+        return;
+      }
+
+      //Finding index of the content array where messageID is equal to an id within that array
+      let messageIndex = convoInfo.content.findIndex((message) => {
+        return message._id == messageId;
+      });
+
+      //Save userAction to db
+      convoInfo.content[messageIndex].nudge.userAction = userAction;
+
+      convoInfo.markModified("content");
+      await convoInfo.save();
     });
 
     socket.on("read-messages", async ({ messageIds, other }) => {
@@ -364,7 +380,7 @@ function leaveNotification(from) {
  * @param {object} to
  *
  */
-async function formatMessage(msg, from, to) {
+async function formatMessage(msg, nudge, from, to) {
   if (msg.type == "img" || msg.type == "vid") {
     //   for (var value of msg.body.values()) {
     //     console.log(value);
@@ -376,16 +392,8 @@ async function formatMessage(msg, from, to) {
     await uploadFile(msg.body);
 
     msg.body = msg.body.filename;
-  } else if (msg.type == "nudge") {
-    return new Message({
-      msg: {
-        ...msg,
-        time: moment().format("h:mm:ss a"),
-      },
-      from: from,
-      to: to,
-    });
   }
+
   return new Message({
     msg: {
       ...msg,
@@ -395,6 +403,10 @@ async function formatMessage(msg, from, to) {
         self: "none",
         other: "none",
       },
+    },
+    nudge: {
+      ...nudge,
+      userAction: "",
     },
     from: from,
     to: to,

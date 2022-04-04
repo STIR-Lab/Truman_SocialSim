@@ -48,6 +48,7 @@ const messageSchema = new Schema(
       userId: String,
     },
     msg: Object,
+    nudge: Object,
   },
   { versionKey: false }
 );
@@ -58,7 +59,7 @@ const conversationSchema = new Schema(
     userIdA: String,
     usernameB: String,
     userIdB: String,
-    content: [messageSchema | nudgeSchema],
+    content: [messageSchema],
   },
   { versionKey: false }
 );
