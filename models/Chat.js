@@ -52,22 +52,6 @@ const messageSchema = new Schema(
   { versionKey: false }
 );
 
-const nudgeSchema = new Schema({
-  from: {
-    username: String,
-    userId: String,
-  },
-  to: {
-    username: String,
-    userId: String,
-  },
-  type: String,
-  nudgeShown: Boolean,
-  riskyScenario: String,
-  nudgeType: String,
-  userAction: String,
-});
-
 const conversationSchema = new Schema(
   {
     usernameA: String,
@@ -79,7 +63,6 @@ const conversationSchema = new Schema(
   { versionKey: false }
 );
 
-const Nudge = mongoose.model("Nudge", nudgeSchema);
 const Message = mongoose.model("Message", messageSchema);
 const Conversation = mongoose.model("Conversation", conversationSchema);
 module.exports = { Conversation, Message };

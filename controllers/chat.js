@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const User = require("../models/User");
-const { ObjectId } = require("mongoose");
+
 const { uploadFile } = require("../s3");
 
 const sessionStore = new InMemorySessionStore();
@@ -377,8 +377,11 @@ async function formatMessage(msg, from, to) {
 
     msg.body = msg.body.filename;
   } else if (msg.type == "nudge") {
-    return new Nudge({
-      ...msg,
+    return new Message({
+      msg: {
+        ...msg,
+        time: moment().format("h:mm:ss a"),
+      },
       from: from,
       to: to,
     });
