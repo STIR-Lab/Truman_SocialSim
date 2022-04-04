@@ -52,7 +52,7 @@ block content
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
-                #userProfilePicture(userpfp= user.profile.picture ? user.profile.picture : "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg")
+                #userProfilePicture(userpfp= user.profile.picture ? user.profile.picture : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png")
  
     #newChatModal.ui.mini.modal
         .header
@@ -128,7 +128,7 @@ block content
                 if (!usersInUserList.includes(user.userId)) {
                     usersInUserList.push(user.userId);
 
-                    let userpfplink = user.userpfp == "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp;
+                    let userpfplink = user.userpfp == "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp;
                     var u = `   <div class="item"><img class="ui avatar image" src= "${userpfplink}"/>
                                     <div class="content">
                                         <div class="header">${user.username}</div>
@@ -191,7 +191,7 @@ block content
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
                 }
                 else if (userId == chatPartnerId) {
-                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg";
+                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
                 }
             })
 
@@ -231,7 +231,7 @@ block content
                 if(chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
                      lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
                 else {
-                    lastMessage = "*sent media*"
+                    lastMessage = "Sent media"
                 }
                 
                 usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
@@ -262,7 +262,7 @@ block content
                     prevRow = count;
                 }
 
-                const pfpSrc = user.userpfp == "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp; 
+                const pfpSrc = user.userpfp == "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp; 
 
                 var profile = ` <div class="eight wide column">
                                     <div class="ui card" style="margin-bottom:10px">
@@ -314,7 +314,7 @@ block content
         let chatPartnerSocketId = null;
         let chatPartnerUsername = null;
         let chatPartnerUserId = null;
-        let chatPartnerPFP = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg";
+        let chatPartnerPFP = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
 
         function onClickUsername(userId) {
             $('#' + userId + 'redBubble').hide();
@@ -517,7 +517,7 @@ block content
             if(msg.msg.type == "txt")
                 $('#' + partnerId + 'lastMessage').text(msg.msg.body);
             else   
-                $('#' + partnerId + 'lastMessage').text("*sent media*");
+                $('#' + partnerId + 'lastMessage').text("Sent media");
 
             partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
             partnerPFP = msg.from.username == username ? msg.to.userpfp : msg.from.userpfp;

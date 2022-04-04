@@ -5,7 +5,7 @@ const passport = require('passport');
 const moment = require('moment');
 const User = require('../models/User');
 const Notification = require('../models/Notification.js');
-const { uploadFile, getFileStream } = require('../s3');
+const { uploadFilePfp, getFileStream } = require('../s3');
 
 /**
  * GET /login
@@ -227,7 +227,7 @@ exports.postSignupInfo = (req, res, next) => {
     if (req.file) {
       console.log("Changeing Picture now to: " + req.file.filename);
       user.profile.picture = req.file.filename;
-      //uploadFile(req.file);
+      uploadFilePfp(req.file);
       //console.log(result);
       //res.send("good");
     }
@@ -330,8 +330,8 @@ exports.postUpdateProfile = (req, res, next) => {
       console.log("Changeing Picture now to: " + req.file.filename);
       user.profile.picture = req.file.filename;
       console.log(req.file)
-      uploadFile(req.file);
- 
+      uploadFilePfp(req.file);
+
     }
 
     user.save((err) => {
