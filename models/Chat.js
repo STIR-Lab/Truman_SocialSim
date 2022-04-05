@@ -1,10 +1,9 @@
+const { mongo } = require("mongoose");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-
-
 // const messageSchema = new Schema({
-  
+
 //   from: {
 //     username: String,
 //     userId: String,
@@ -38,30 +37,33 @@ const Schema = mongoose.Schema;
 //   },
 // });
 
-
-const messageSchema = new Schema({
-  
-  from: {
-    username: String,
-    userId: String,
+const messageSchema = new Schema(
+  {
+    from: {
+      username: String,
+      userId: String,
+    },
+    to: {
+      username: String,
+      userId: String,
+    },
+    msg: Object,
+    nudge: Object,
   },
-  to: {
-    username: String,
-    userId: String,
+  { versionKey: false }
+);
+
+const conversationSchema = new Schema(
+  {
+    usernameA: String,
+    userIdA: String,
+    usernameB: String,
+    userIdB: String,
+    content: [messageSchema],
   },
-  msg: Object
-});
-
-
-const conversationSchema = new Schema({
-  usernameA: String,
-  userIdA: String,
-  usernameB: String,
-  userIdB: String,
-  content: [messageSchema],
-});
-
+  { versionKey: false }
+);
 
 const Message = mongoose.model("Message", messageSchema);
 const Conversation = mongoose.model("Conversation", conversationSchema);
-module.exports = {Conversation, Message};
+module.exports = { Conversation, Message };

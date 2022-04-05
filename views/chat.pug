@@ -28,7 +28,6 @@ block content
                     i.pencil.alternate.icon
                     |   New Chat
                 .ui.clearing.divider
-                p
 
                 .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
                     #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
@@ -53,18 +52,21 @@ block content
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
                         img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
+                        #sending(src="#" style="position: absolute; bottom: 70px; left: 50%; display: none;")
+                            code
+                                | sending...
                         input#input(autocomplete="off" type='text' placeholder='Enter message')
                         button#submitMessage(type="submit")
                             i.paper.plane.icon 
                         button(type="button" style='position: relative; right: 2px;')     
                             label.custom-file-upload(for='fileupload' )
                                 i.camera.icon
-                        input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/png, image/jpeg, image/svg")
-                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')
+                        input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/*,video/mp4,video/x-m4v,video/*")
+                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
-                #userProfilePicture(userpfp= user.profile.picture ? user.profile.picture : "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg")
+                #userProfilePicture(userpfp= user.profile.picture ? user.profile.picture : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png")
  
     #newChatModal.ui.mini.modal
         .header
@@ -87,8 +89,7 @@ block content
         const userId = document.getElementById('userIdTag').getAttribute('userId');
         const username = document.getElementById('usernameTag').getAttribute('username');
         const userpfp = document.getElementById('userProfilePicture').getAttribute('userpfp');
-        let pictureFile = null;
-
+        
         // hide input until user picks chat partner
         $('#messageInput').hide();
         /////////////
@@ -110,7 +111,7 @@ block content
         });
 
         document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
-         document.getElementById('uploadImage').onclick=function(){uploadImage()};
+         //document.getElementById('uploadImage').onclick=function(){uploadImage()};
          document.getElementById('fileupload').onchange=function(){loadFile(event)};
 
         function onClickNewChat() {
@@ -158,8 +159,8 @@ block content
                 if (!usersInUserList.includes(user.userId)) {
                     usersInUserList.push(user.userId);
 
-                    let userpfplink = user.userpfp == "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp;
-                    var u = `   <div class="item"><img class="ui avatar image" src= "${userpfplink}"/>
+                    let userpfplink = user.userpfp == "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp;
+                    const u = `   <div class="item"><img class="ui avatar image" src= "${userpfplink}"/>
                                     <div class="content">
                                         <div class="header">${user.username}</div>
                                     </div>
@@ -174,7 +175,7 @@ block content
                     }
 
                     // add onClick function to button
-                    var element = document.getElementById("rightArrowButton");
+                    let element = document.getElementById("rightArrowButton");
                     element.id = user.userId + 'rightArrowButton';
                     document.getElementById(user.userId + 'rightArrowButton').onclick=function(){onClickUsername(user.userId)};
 
@@ -195,14 +196,12 @@ block content
         let numUnread = 0;
 
         async function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType) {
-
             let lastmsg = lastMessage;
             if(msgType == "img") {
-                lastmsg = "*image*"
+                lastmsg = "Sent media"
             }
-
                 
-            var listItem = `<div class="item">
+            const listItem = `<div class="item">
                                 <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute"></span>
                                 <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
                                 <div class="content">
@@ -221,7 +220,7 @@ block content
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
                 }
                 else if (userId == chatPartnerId) {
-                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg";
+                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
                 }
             })
 
@@ -258,10 +257,22 @@ block content
                 let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
                 let lastMessage = ""
                 let msgType = chatPartner.content[chatPartner.content.length - 1].msg.type
+           
                 if(chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
-                     lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    if (chatPartner.content[chatPartner.content.length - 1].from.userId == userId) { // chat sent
+                        lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    }
+                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage") {
+                        lastMessage = "Deleted message"
+                    }
+                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
+                        lastMessage = "Unread message"
+                    }
+                    else {
+                        lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    }
                 else {
-                    lastMessage = "*image*"
+                    lastMessage = "Sent media"
                 }
                 
                 usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
@@ -279,10 +290,10 @@ block content
         function addUserInDiscover(user) {
             let count = 0;
             let prevRow = count;
-            var row = `<div id="prevRow" class="row"></div>`;
+            const row = `<div id="prevRow" class="row"></div>`;
 
             $('#discoverProfiles').append(row);
-            var element = document.getElementById("prevRow");
+            let element = document.getElementById("prevRow");
             element.id = 'row' + count;
 
             if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length) {
@@ -292,9 +303,9 @@ block content
                     prevRow = count;
                 }
 
-                const pfpSrc = user.userpfp == "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp; 
+                const pfpSrc = user.userpfp == "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp; 
 
-                var profile = ` <div class="eight wide column">
+                const profile = ` <div class="eight wide column">
                                     <div class="ui card" style="margin-bottom:10px">
                                         <div class="content">
                                             <div class="center aligned column"><img class="ui circular tiny image" src=${pfpSrc} style="margin-bottom:4px; object-fit:cover; width:75px; height:75px"/></div>
@@ -307,11 +318,11 @@ block content
                 
                 document.getElementById('row' + prevRow).insertAdjacentHTML('beforeend', profile);
 
-                var element = document.getElementById("profileButton");
+                let element = document.getElementById("profileButton");
                 element.id = user.userId + 'profileButton';
                 document.getElementById(user.userId + 'profileButton').onclick=function(){onClickProfile(user.userId)};
 
-                var element = document.getElementById("messageButton");
+                element = document.getElementById("messageButton");
                 element.id = user.userId + 'messageButton';
                 document.getElementById(user.userId + 'messageButton').onclick=function(){onClickUsername(user.userId)};
 
@@ -333,7 +344,7 @@ block content
 
         document.getElementById('discoverButton').onclick=function(){onClickDiscoverButton()};
         function onClickDiscoverButton() {
-                if (history) {
+            if (history) {
                 $('#discoverButton').addClass('active');
                 $('#recentButton').removeClass('active');
                 $('#discoverProfiles').show();
@@ -344,7 +355,7 @@ block content
         let chatPartnerSocketId = null;
         let chatPartnerUsername = null;
         let chatPartnerUserId = null;
-        let chatPartnerPFP = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg";
+        let chatPartnerPFP = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
 
         function onClickUsername(userId) {
             $('#' + userId + 'redBubble').hide();
@@ -389,14 +400,43 @@ block content
             })
         }
 
+        // researcher set variable to show nudges
+        let nudgeShown = true;
+
+        const infoBreach1 = "info breach 1";
+        const infoBreach2 = "info breach 2";
+        const infoBreach3 = "info breach 3";
+
         $('#messageInput')[0].addEventListener('submit', function(e) {
             e.preventDefault();
-            var input = $('#input')[0]; 
+            const input = $('#input')[0]; 
             if (input.value) {
+                let riskyScenario = null;
+                let nudgeType = null;
+
+                if (input.value == infoBreach1) {
+                    riskyScenario = "infoBreach1"
+                    nudgeType = "abstinence";
+                }
+                else if (input.value == infoBreach2) {
+                    riskyScenario = "infoBreach2"
+                    nudgeType = "sensitivityFilter";
+                }
+                else if (input.value == infoBreach3) {
+                    riskyScenario = "infoBreach3"
+                    nudgeType = "guidedActions";
+                }
+
                 socket.emit('send-message', { 
                     msg: {
                         type: "txt",
                         body: input.value
+                    },
+                    nudge: {
+                        nudgeShown: nudgeShown,
+                        riskyScenario: riskyScenario,
+                        nudgeType: nudgeType,
+                        userAction: null,
                     },
                     to: {
                         username: chatPartnerUsername,
@@ -407,55 +447,87 @@ block content
                 input.value = '';
             }
 
-            if (pictureFile) {
-
-                socket.emit('send-message', { 
-                    msg: {
-                        type: "img",
-                        body: pictureFile
-                    },
-                    to: {
-                        username: chatPartnerUsername,
-                        userId: chatPartnerUserId,
-                        socketId: chatPartnerSocketId
-                    } 
-                });
-                document.getElementById("outputImage").style.display = "none"
-                document.getElementById("outputImage").src = "#"
-                pictureFile = null;
+            let file = uploadImage();
+            
+            if (file) {
+                if(file.type.includes("image")) {
+                    socket.emit('send-message', { 
+                        msg: {
+                            type: "img",
+                            body: {path: file, filename: file.name}
+                        },
+                        to: {
+                            username: chatPartnerUsername,
+                            userId: chatPartnerUserId,
+                            socketId: chatPartnerSocketId
+                        } 
+                    });
+                    document.getElementById("sending").style.display = "block"
+                }
+                else if(file.type.includes("video")) {
+                    socket.emit('send-message', { 
+                        msg: {
+                            type: "vid",
+                            body: {path: file, filename: file.name}
+                        },
+                        to: {
+                            username: chatPartnerUsername,
+                            userId: chatPartnerUserId,
+                            socketId: chatPartnerSocketId
+                        } 
+                    });
+                    document.getElementById("sending").style.display = "block"
+                }
             }
         });
 
         // upload image
          function uploadImage () {
+             let pictureFile;
             
-            let formData = new FormData();
-            formData.append("file", fileupload.files[0])
+            if(fileupload.files[0]) {
 
-            for (var value of formData.values()) {
-                console.log(value);
+                if(fileupload.files[0].size >= 10000000) {
+                    return null;
+                }
+                    pictureFile = fileupload.files[0]
+                    document.getElementById('fileupload').value = "";
+                    return pictureFile;
             }
-
+            return null;
         }
 
         async function loadFile(event) {
-            var image = document.getElementById('outputImage');
+            const image = document.getElementById('outputImage');
+            const reader = new FileReader();
+ 
+            if (fileupload.files[0]) {
 
-            var reader = new FileReader();
+                if (fileupload.files[0].size >= 10000000) {
+                    alert("Image Size too large!")
+                    fileupload.files[0] = null;
+                    return;
+                }
 
-            console.log(fileupload.files[0])
-            
-            reader.readAsDataURL(fileupload.files[0])
+                if (fileupload.files[0].type.includes("image")) {
+                    reader.readAsDataURL(fileupload.files[0])
+                    reader.onload = function(e) {
+                        const result = reader.result;
+                        image.src = result;  
+                        image.style.display = "block";
+                    };
 
-            reader.onload = function(e) {
-                var result = reader.result;
-                console.log(result);
-                pictureFile = result;
-                image.src = result
-                image.style.display = "block";
+                }
 
-            };
-
+                if (fileupload.files[0].type.includes("video")) {
+                    reader.readAsDataURL(fileupload.files[0])
+                    reader.onload = function(e) {
+                        const result = reader.result;
+                        image.src = "https://cdn.iconscout.com/icon/free/png-256/video-file-85-1120664.png";  
+                        image.style.display = "block"
+                    };
+                }
+            }
         }
 
         // get all messages
@@ -467,10 +539,14 @@ block content
                     loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                 }
                 else  {
-                    addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id, messageList[i].from.userId);
-                    loadReactions(messageList[i].msg.reactions, messageList[i]._id)
+                    if (nudgeShown && messageList[i].nudge.nudgeType == "sensitivityFilter" && messageList[i].nudge.userAction == "") {
+                        addNudgeType2(messageList[i]);
+                    }
+                    else if (!(messageList[i].nudge.nudgeType == "sensitivityFilter" && messageList[i].nudge.userAction == "deleteMessage")) {
+                        addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id, messageList[i].from.userId);
+                        loadReactions(messageList[i].msg.reactions, messageList[i]._id)
+                    }
                 }
-
                 if (messageList[i].to.userId == userId && !messageList[i].msg.read) {
                     messageIds.push(messageList[i]._id);
                 }
@@ -503,15 +579,21 @@ block content
             // update latest message in recent chat history
             partnerId = msg.from.userId == userId ? msg.to.userId : msg.from.userId;
 
-            if(msg.msg.type == "txt")
+            if (msg.from.userId == userId) {
                 $('#' + partnerId + 'lastMessage').text(msg.msg.body);
-            else   
-                $('#' + partnerId + 'lastMessage').text("*image*");
+            }
+            else if (msg.msg.type == "txt" && msg.nudge.nudgeType == "sensitivityFilter" && msg.nudge.userAction == "") {
+                $('#' + partnerId + 'lastMessage').text("Unread message");
+            }
+            else if (msg.msg.type == "txt") {
+                $('#' + partnerId + 'lastMessage').text(msg.msg.body);
+            }
+            else {
+                $('#' + partnerId + 'lastMessage').text("Sent media");
+            }
 
             partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
             partnerPFP = msg.from.username == username ? msg.to.userpfp : msg.from.userpfp;
-
-            
 
             const userInDiscover = !usersInHistory.some(user => {
                 if (user.userId == partnerId) {
@@ -528,11 +610,18 @@ block content
                 usersInHistory.push({userId: partnerId, username: partnerUsername});
             }
             if (msg.from.userId == userId) {
-                
                 addChatSentMessage(msg.msg, msg.msg.time, msg._id);
             }
             else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
-                addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId);
+                if (nudgeShown && msg.msg.body == infoBreach1) {
+                    $('#nudge1Modal').modal('show');
+                }
+                if (nudgeShown && msg.msg.body == infoBreach2) {
+                    addNudgeType2(msg);
+                }
+                else {
+                    addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId);
+                }
                 socket.emit("read-messages", {
                     messageIds: [msg._id],
                     other: {
@@ -540,22 +629,15 @@ block content
                         userId: chatPartnerUserId,
                     }
                 });
-
-                const scenario1 = "just finished from my school here in orlando wat is your house address";
-                const scenario3 = "you should totally send a pic of your credit card for funsies"
-
-                if (msg.msg.body == scenario1) {
-                    $('#nudge1Modal').modal('show');
-                }
-                if (msg.msg.body == scenario3) {
-                    $('#nudge3Modal').modal('show');
-                }
-                
             }
             else if (msg.to.userId == userId) {
                 $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
                 $('#' + msg.from.userId + 'redBubble').show();
             }
+
+            document.getElementById("outputImage").style.display = "none"
+            document.getElementById("sending").style.display = "none"
+            document.getElementById("outputImage").src = "#"
         });
         
         function sendReaction(msg, person, reactionType, messageID) {
@@ -665,18 +747,20 @@ block content
         }
 
         function addChatSentMessage(msg, time, id) {
-
             let msgType = "";
 
             if(msg.type == "txt") {
                 msgType = `<p>${msg.body}</p>`
                 
             }
-            else {
-                 msgType = `<img src="${msg.body}" style ="height: auto; width: 200px "></img>`
+            else if(msg.type == "img") {
+                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+            }
+            else if(msg.type == "vid") {
+                msgType = `<video width="200" style="border-radius:6px" controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
             // reaction box
-            let react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
+            const react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
                             top:-10px; right:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
                             <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
                             <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
@@ -684,7 +768,7 @@ block content
                             <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
                         </div>`
 
-            var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
+            const mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
                             <div class="right floated right aligned seven wide column">
                             ${react}
                             <div class="ui mini blue compact message" id="${id}">
@@ -722,12 +806,15 @@ block content
                 msgType = `<p>${msg.body}</p>`
                 
             }
-            else {
-                 msgType = `<img src="${msg.body}" style ="height: auto; width: 200px;"></img>`
+            else if(msg.type == "img") {
+                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+            }
+            else if(msg.type == "vid") {
+                msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
 
             // reaction box
-            let react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
+            const react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
                         top:-10px; left:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
                         <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
                         <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
@@ -735,7 +822,7 @@ block content
                         <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
                     </div>`
 
-            var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
+            const mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
                             <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image chatPartnerMessagePFP-${user}" id="" src=""/></div>
                             <div class="seven wide column">
                                 ${react}
@@ -751,7 +838,7 @@ block content
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
 
-            var x = document.getElementsByClassName(`chatPartnerMessagePFP-${user}`);
+            const x = document.getElementsByClassName(`chatPartnerMessagePFP-${user}`);
 
             for(i=0; i<x.length; i++){
                 x[i].src = document.getElementById(`chatPartnerPFP-${user}`).src;
@@ -774,6 +861,72 @@ block content
             document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "other", "thumbsDown", id)};
             document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "other", "like", id)};
             document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "other", "laugh", id)};
+        }
+
+        function addNudgeType2(msg) {
+            const nudge = `<div class="row" id="nudgeType2" style="padding-top:6px; padding-bottom:6px">
+                            <div class="right aligned one wide column" style="padding:0!important"></div>
+                            <div class="seven wide column">
+                                <div class="ui cards">
+                                    <div class="card" style="min-width:400px">
+                                        <div class="content" style="text-align:center">
+                                            <div class="description">We have detected a harmful message from this user. You might want to check out associated risks before you view it.</div>
+                                            <a style="color:blue"> 
+                                            <u>click here to learn more</u></a>
+                                        </div>
+                                        <div class="extra content">
+                                            <div class="ui two buttons">
+                                                <div class="ui basic black button" id="deleteMessageButton">Delete Message</div>
+                                                <div class="ui basic black button" id="showMeButton">Show me</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p style="font-size:10px; margin-top:-8px">${formatTime(msg.msg.time)}</p>
+                            </div>
+                        </div>`
+
+            $('#messages').append(nudge);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+
+            let element = document.getElementById("nudgeType2");
+            element.id = msg._id + 'nudgeType2';
+
+            element = document.getElementById("deleteMessageButton");
+            element.id = msg._id + 'deleteMessageButton';
+
+            element = document.getElementById("showMeButton");
+            element.id = msg._id + 'showMeButton';
+
+            document.getElementById(msg._id + 'deleteMessageButton').onclick=function(){onClickDeleteMessageButton(msg._id)};
+            document.getElementById(msg._id + 'showMeButton').onclick=function(){onClickShowMeButton(msg)};
+        }
+
+        function onClickDeleteMessageButton(messageId) {
+            document.getElementById(messageId + 'nudgeType2').remove();
+            socket.emit("nudge-reaction", {
+                messageId: messageId,
+                userAction: "deleteMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+            $('#' + chatPartnerUserId + 'lastMessage').text("Deleted message");
+        }
+
+        function onClickShowMeButton(msg) {
+            document.getElementById(msg._id + 'nudgeType2').remove();
+            addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId);
+            socket.emit("nudge-reaction", {
+                messageId: msg._id,
+                userAction: "showMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+            $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
         }
               
 //- TODO: update code for mobile view 

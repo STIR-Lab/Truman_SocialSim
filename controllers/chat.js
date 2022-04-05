@@ -6,31 +6,35 @@ const mongoose = require("mongoose");
 const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const User = require("../models/User");
-const { ObjectId } = require("mongoose");
+
+const { uploadFile } = require("../s3");
 
 const sessionStore = new InMemorySessionStore();
 
 const chatSocket = (server) => {
-  const io = new Server(server);
+  const io = new Server(server, {
+    maxHttpBufferSize: 1e7,
+    pingTimeout: 30000,
+  });
 
   // TODO: Receive pfp from the frontend
   // middleware: check username & userId, allows connection
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     const sessionId = socket.handshake.auth.sessionId;
-    
+
     if (sessionId) {
       const session = sessionStore.findSession(sessionId);
       if (session) {
-        // attach user pfp to session 
-        session.userpfp = socket.handshake.auth.userpfp;
+        // attach user pfp to session
+        session.userpfp = await getChatPartnerPFP(session.userId); //socket.handshake.auth.userpfp;
 
         socket.sessionId = sessionId;
         socket.userId = session.userId;
         socket.username = session.username;
         socket.userpfp = session.userpfp;
 
-        console.log("HERE 1")
-        //console.log(socket)
+        console.log("HERE 1");
+        console.log(session);
 
         return next();
       }
@@ -46,7 +50,7 @@ const chatSocket = (server) => {
       socket.userId = userId;
       socket.userpfp = userpfp;
 
-      console.log("HERE 2")
+      console.log("HERE 2");
       //console.log(socket.userpfp)
 
       next();
@@ -79,15 +83,16 @@ const chatSocket = (server) => {
       sessionId: socket.sessionId,
     });
 
-    socket.on("find-partner", async ( userId )=> {
+    socket.on("find-partner", async (userId) => {
+      let pfp = await getChatPartnerPFP(userId.userId);
 
-      let pfp =  await getChatPartnerPFP(userId.userId)
+      //console.log(pfp)
 
-      console.log(pfp)
-
-      io.to(socket.userId).emit("partner-pfp", {pfp: pfp, userId: userId.userId});
-    })
-    
+      io.to(socket.userId).emit("partner-pfp", {
+        pfp: pfp,
+        userId: userId.userId,
+      });
+    });
 
     // Fetch existing users
     socket.emit("userList", getCurrentUsers());
@@ -139,20 +144,29 @@ const chatSocket = (server) => {
      *     mimeType?: "png" | "jpg", etc
      *     fileName?: string
      *   },
-     *  to: {
-     *     username: string
-     *     userId: string,
-     *     socketId: string
-     *   }
-     * }
+        nudge: {
+          nudgeShown: Boolean, --> Nudge was shown/not shown, keep true for all for now, future research will only show the nudge to half of the teens
+          riskyScenario: String, --> Risky Scenario type, "info_breach_1", "explicit_content_2", etc
+          nudgeType: String, --> Nudge type, Pop up vs censored
+          userAction: String, --> Action taken by the user 
+        },
+        to: {
+          username: string,
+          userId: string,
+          socketId: string
+        }
+      }
      */
 
-    socket.on("send-message", async ({ msg, to }) => {
+    socket.on("send-message", async ({ msg, nudge, to }) => {
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
 
-      let formattedMsg = formatMessage(
+      nudge = nudge == undefined ? {} : nudge;
+
+      let formattedMsg = await formatMessage(
         msg,
-        { username: socket.username, userId: socket.userId },
+        nudge,
+        { username: socket.username, userId: socket.userId }, // from
         to
       );
 
@@ -191,6 +205,30 @@ const chatSocket = (server) => {
       // io.to(to.userId) // to recipient
       io.to(socket.userId) // to sender room
         .emit("receive-message", formattedMsg);
+    });
+
+    socket.on("nudge-reaction", async ({ messageId, userAction, other }) => {
+      let convoInfo = await searchConvo(
+        socket.username,
+        socket.userId,
+        other.username,
+        other.userId
+      );
+
+      if (!convoInfo) {
+        return;
+      }
+
+      //Finding index of the content array where messageID is equal to an id within that array
+      let messageIndex = convoInfo.content.findIndex((message) => {
+        return message._id == messageId;
+      });
+
+      //Save userAction to db
+      convoInfo.content[messageIndex].nudge.userAction = userAction;
+
+      convoInfo.markModified("content");
+      await convoInfo.save();
     });
 
     socket.on("read-messages", async ({ messageIds, other }) => {
@@ -288,12 +326,16 @@ const chatSocket = (server) => {
           );
           */
         // FIXME: Name of the event subject to change for FE's convenience
-        socket.rooms.forEach((roomId) => {
+        socket.rooms.forEach(async (roomId) => {
           socket.broadcast
             .to(roomId)
             .emit(
               "disconneted",
-              formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+              await formatMessage(
+                leaveNotification(socket.username),
+                chatBot,
+                "ALL"
+              )
             );
         });
         // refresh current users
@@ -338,11 +380,20 @@ function leaveNotification(from) {
  * @param {object} to
  *
  */
-function formatMessage(msg, from, to) {
+async function formatMessage(msg, nudge, from, to) {
+  if (msg.type == "img" || msg.type == "vid") {
+    //   for (var value of msg.body.values()) {
+    //     console.log(value);
+    //  }
 
-  if(msg.type == "img") {
+    let prefix = from.userId + Math.random().toString(36).slice(2, 10);
+    msg.body.filename = prefix + msg.body.filename.replace(/[^A-Z0-9]+/gi, "_");
+    console.log(msg.body);
+    await uploadFile(msg.body);
 
+    msg.body = msg.body.filename;
   }
+
   return new Message({
     msg: {
       ...msg,
@@ -353,7 +404,11 @@ function formatMessage(msg, from, to) {
         other: "none",
       },
     },
-    from: from, // NOTE: string | object
+    nudge: {
+      ...nudge,
+      userAction: "",
+    },
+    from: from,
     to: to,
   });
 }
@@ -381,7 +436,7 @@ function getCurrentUsers() {
       userList.push({
         userId: session.userId,
         username: session.username,
-        userpfp: session.userpfp
+        userpfp: session.userpfp,
       });
     }
   });
@@ -410,27 +465,26 @@ async function getChatHistory(username, userId) {
     ],
   });
 
-
-
-
-
   return allConvo;
 }
 
 async function getChatPartnerPFP(userId) {
+  let chatPartner;
 
-  let chatPartner = await User.find(
-    {
+  try {
+    chatPartner = await User.find({
       _id: userId,
-    }
-  );
+    });
 
-  console.log(chatPartner[0].profile.picture)
+    console.log("GOT " + userId + " PFP");
+    return chatPartner[0].profile.picture;
+  } catch (error) {
+    console.log(error);
+    return "";
+  }
 
-  return chatPartner[0].profile.picture;
-
+  // console.log(chatPartner[0].profile.picture)
 }
-
 
 /**
  * Find a specific conversation history between two users
