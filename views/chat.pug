@@ -125,7 +125,7 @@ block content
                     usersInUserList.push(user.userId);
 
                     let userpfplink = user.userpfp == "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp;
-                    var u = `   <div class="item"><img class="ui avatar image" src= "${userpfplink}"/>
+                    const u = `   <div class="item"><img class="ui avatar image" src= "${userpfplink}"/>
                                     <div class="content">
                                         <div class="header">${user.username}</div>
                                     </div>
@@ -140,7 +140,7 @@ block content
                     }
 
                     // add onClick function to button
-                    var element = document.getElementById("rightArrowButton");
+                    let element = document.getElementById("rightArrowButton");
                     element.id = user.userId + 'rightArrowButton';
                     document.getElementById(user.userId + 'rightArrowButton').onclick=function(){onClickUsername(user.userId)};
 
@@ -166,7 +166,7 @@ block content
                 lastmsg = "Sent media"
             }
                 
-            var listItem = `<div class="item">
+            const listItem = `<div class="item">
                                 <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute"></span>
                                 <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
                                 <div class="content">
@@ -222,8 +222,20 @@ block content
                 let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
                 let lastMessage = ""
                 let msgType = chatPartner.content[chatPartner.content.length - 1].msg.type
+           
                 if(chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
-                     lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    if (chatPartner.content[chatPartner.content.length - 1].from.userId == userId) { // chat sent
+                        lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    }
+                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage") {
+                        lastMessage = "Deleted message"
+                    }
+                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
+                        lastMessage = "Unread message"
+                    }
+                    else {
+                        lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    }
                 else {
                     lastMessage = "Sent media"
                 }
@@ -243,10 +255,10 @@ block content
         function addUserInDiscover(user) {
             let count = 0;
             let prevRow = count;
-            var row = `<div id="prevRow" class="row"></div>`;
+            const row = `<div id="prevRow" class="row"></div>`;
 
             $('#discoverProfiles').append(row);
-            var element = document.getElementById("prevRow");
+            let element = document.getElementById("prevRow");
             element.id = 'row' + count;
 
             if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length) {
@@ -258,7 +270,7 @@ block content
 
                 const pfpSrc = user.userpfp == "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp; 
 
-                var profile = ` <div class="eight wide column">
+                const profile = ` <div class="eight wide column">
                                     <div class="ui card" style="margin-bottom:10px">
                                         <div class="content">
                                             <div class="center aligned column"><img class="ui circular tiny image" src=${pfpSrc} style="margin-bottom:4px; object-fit:cover; width:75px; height:75px"/></div>
@@ -271,11 +283,11 @@ block content
                 
                 document.getElementById('row' + prevRow).insertAdjacentHTML('beforeend', profile);
 
-                var element = document.getElementById("profileButton");
+                let element = document.getElementById("profileButton");
                 element.id = user.userId + 'profileButton';
                 document.getElementById(user.userId + 'profileButton').onclick=function(){onClickProfile(user.userId)};
 
-                var element = document.getElementById("messageButton");
+                element = document.getElementById("messageButton");
                 element.id = user.userId + 'messageButton';
                 document.getElementById(user.userId + 'messageButton').onclick=function(){onClickUsername(user.userId)};
 
@@ -353,14 +365,43 @@ block content
             })
         }
 
+        // researcher set variable to show nudges
+        let nudgeShown = true;
+
+        const infoBreach1 = "info breach 1";
+        const infoBreach2 = "info breach 2";
+        const infoBreach3 = "info breach 3";
+
         $('#messageInput')[0].addEventListener('submit', function(e) {
             e.preventDefault();
-            var input = $('#input')[0]; 
+            const input = $('#input')[0]; 
             if (input.value) {
+                let riskyScenario = null;
+                let nudgeType = null;
+
+                if (input.value == infoBreach1) {
+                    riskyScenario = "infoBreach1"
+                    nudgeType = "abstinence";
+                }
+                else if (input.value == infoBreach2) {
+                    riskyScenario = "infoBreach2"
+                    nudgeType = "sensitivityFilter";
+                }
+                else if (input.value == infoBreach3) {
+                    riskyScenario = "infoBreach3"
+                    nudgeType = "guidedActions";
+                }
+
                 socket.emit('send-message', { 
                     msg: {
                         type: "txt",
                         body: input.value
+                    },
+                    nudge: {
+                        nudgeShown: nudgeShown,
+                        riskyScenario: riskyScenario,
+                        nudgeType: nudgeType,
+                        userAction: null,
                     },
                     to: {
                         username: chatPartnerUsername,
@@ -422,8 +463,8 @@ block content
         }
 
         async function loadFile(event) {
-            var image = document.getElementById('outputImage');
-            var reader = new FileReader();
+            const image = document.getElementById('outputImage');
+            const reader = new FileReader();
  
             if (fileupload.files[0]) {
 
@@ -436,7 +477,7 @@ block content
                 if (fileupload.files[0].type.includes("image")) {
                     reader.readAsDataURL(fileupload.files[0])
                     reader.onload = function(e) {
-                        var result = reader.result;
+                        const result = reader.result;
                         image.src = result;  
                         image.style.display = "block";
                     };
@@ -446,7 +487,7 @@ block content
                 if (fileupload.files[0].type.includes("video")) {
                     reader.readAsDataURL(fileupload.files[0])
                     reader.onload = function(e) {
-                        var result = reader.result;
+                        const result = reader.result;
                         image.src = "https://cdn.iconscout.com/icon/free/png-256/video-file-85-1120664.png";  
                         image.style.display = "block"
                     };
@@ -463,10 +504,14 @@ block content
                     loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                 }
                 else  {
-                    addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id, messageList[i].from.userId);
-                    loadReactions(messageList[i].msg.reactions, messageList[i]._id)
+                    if (nudgeShown && messageList[i].nudge.nudgeType == "sensitivityFilter" && messageList[i].nudge.userAction == "") {
+                        addNudgeType2(messageList[i]);
+                    }
+                    else if (!(messageList[i].nudge.nudgeType == "sensitivityFilter" && messageList[i].nudge.userAction == "deleteMessage")) {
+                        addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id, messageList[i].from.userId);
+                        loadReactions(messageList[i].msg.reactions, messageList[i]._id)
+                    }
                 }
-
                 if (messageList[i].to.userId == userId && !messageList[i].msg.read) {
                     messageIds.push(messageList[i]._id);
                 }
@@ -489,10 +534,18 @@ block content
             // update latest message in recent chat history
             partnerId = msg.from.userId == userId ? msg.to.userId : msg.from.userId;
 
-            if(msg.msg.type == "txt")
+            if (msg.from.userId == userId) {
                 $('#' + partnerId + 'lastMessage').text(msg.msg.body);
-            else   
+            }
+            else if (msg.msg.type == "txt" && msg.nudge.nudgeType == "sensitivityFilter" && msg.nudge.userAction == "") {
+                $('#' + partnerId + 'lastMessage').text("Unread message");
+            }
+            else if (msg.msg.type == "txt") {
+                $('#' + partnerId + 'lastMessage').text(msg.msg.body);
+            }
+            else {
                 $('#' + partnerId + 'lastMessage').text("Sent media");
+            }
 
             partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
             partnerPFP = msg.from.username == username ? msg.to.userpfp : msg.from.userpfp;
@@ -515,29 +568,22 @@ block content
                 addChatSentMessage(msg.msg, msg.msg.time, msg._id);
             }
             else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
-                const scenario1 = "just finished from my school here in orlando wat is your house address";
-
-                if (msg.msg.body == scenario1) {
+                if (nudgeShown && msg.msg.body == infoBreach1) {
                     $('#nudge1Modal').modal('show');
                 }
-
-                const scenario2 = "nudge 2";
-
-                if (msg.msg.body == scenario2) {
+                if (nudgeShown && msg.msg.body == infoBreach2) {
                     addNudgeType2(msg);
                 }
-
                 else {
                     addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId);
-                    socket.emit("read-messages", {
-                        messageIds: [msg._id],
-                        other: {
-                            username: chatPartnerUsername,
-                            userId: chatPartnerUserId,
-                        }
-                    });
                 }
-
+                socket.emit("read-messages", {
+                    messageIds: [msg._id],
+                    other: {
+                        username: chatPartnerUsername,
+                        userId: chatPartnerUserId,
+                    }
+                });
             }
             else if (msg.to.userId == userId) {
                 $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
@@ -669,7 +715,7 @@ block content
                 msgType = `<video width="200" style="border-radius:6px" controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
             // reaction box
-            let react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
+            const react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
                             top:-10px; right:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
                             <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
                             <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
@@ -677,7 +723,7 @@ block content
                             <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
                         </div>`
 
-            var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
+            const mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
                             <div class="right floated right aligned seven wide column">
                             ${react}
                             <div class="ui mini blue compact message" id="${id}">
@@ -723,7 +769,7 @@ block content
             }
 
             // reaction box
-            let react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
+            const react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:50%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
                         top:-10px; left:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
                         <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
                         <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
@@ -731,7 +777,7 @@ block content
                         <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
                     </div>`
 
-            var mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
+            const mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
                             <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image chatPartnerMessagePFP-${user}" id="" src=""/></div>
                             <div class="seven wide column">
                                 ${react}
@@ -747,7 +793,7 @@ block content
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
 
-            var x = document.getElementsByClassName(`chatPartnerMessagePFP-${user}`);
+            const x = document.getElementsByClassName(`chatPartnerMessagePFP-${user}`);
 
             for(i=0; i<x.length; i++){
                 x[i].src = document.getElementById(`chatPartnerPFP-${user}`).src;
@@ -773,7 +819,7 @@ block content
         }
 
         function addNudgeType2(msg) {
-            var nudge = `<div class="row" id="nudgeType2" style="padding-top:6px; padding-bottom:6px">
+            const nudge = `<div class="row" id="nudgeType2" style="padding-top:6px; padding-bottom:6px">
                             <div class="right aligned one wide column" style="padding:0!important"></div>
                             <div class="seven wide column">
                                 <div class="ui cards">
@@ -798,24 +844,44 @@ block content
             $('#messages').append(nudge);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
 
-            document.getElementById('deleteMessageButton').onclick=function(){onClickDeleteMessageButton()};
-            document.getElementById('showMeButton').onclick=function(){onClickShowMeButton(msg)};
+            let element = document.getElementById("nudgeType2");
+            element.id = msg._id + 'nudgeType2';
+
+            element = document.getElementById("deleteMessageButton");
+            element.id = msg._id + 'deleteMessageButton';
+
+            element = document.getElementById("showMeButton");
+            element.id = msg._id + 'showMeButton';
+
+            document.getElementById(msg._id + 'deleteMessageButton').onclick=function(){onClickDeleteMessageButton(msg._id)};
+            document.getElementById(msg._id + 'showMeButton').onclick=function(){onClickShowMeButton(msg)};
         }
 
-        function onClickDeleteMessageButton() {
-            $("#nudgeType2").remove();
-        }
-
-        function onClickShowMeButton(msg) {
-            $("#nudgeType2").remove();
-            addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId);
-            socket.emit("read-messages", {
-                messageIds: [msg._id],
+        function onClickDeleteMessageButton(messageId) {
+            document.getElementById(messageId + 'nudgeType2').remove();
+            socket.emit("nudge-reaction", {
+                messageId: messageId,
+                userAction: "deleteMessage",
                 other: {
                     username: chatPartnerUsername,
                     userId: chatPartnerUserId,
                 }
             });
+            $('#' + chatPartnerUserId + 'lastMessage').text("Deleted message");
+        }
+
+        function onClickShowMeButton(msg) {
+            document.getElementById(msg._id + 'nudgeType2').remove();
+            addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId);
+            socket.emit("nudge-reaction", {
+                messageId: msg._id,
+                userAction: "showMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+            $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
         }
               
 //- TODO: update code for mobile view 
