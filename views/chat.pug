@@ -2,7 +2,7 @@ extends ui_layout
 
 block content
     link(rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css')
-    .computer.only.tablet.only.row
+    .row
         .five.wide.column
             .ui.segment(style='height:90vh')
                 .ui.basic.buttons.fluid(style="margin-bottom:12px") 
@@ -170,7 +170,7 @@ block content
                                 <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute"></span>
                                 <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
                                 <div class="content">
-                                    <a class="header">${chatPartnerUsername}</a>
+                                    <a class="header" href="http://localhost:3000/user/${chatPartnerId}">${chatPartnerUsername}</a>
                                     <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
                                 </div>
                                 <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
@@ -448,7 +448,7 @@ block content
         });
 
         // upload image
-         function uploadImage () {
+        function uploadImage () {
              let pictureFile;
             
             if(fileupload.files[0]) {
@@ -827,8 +827,9 @@ block content
                                     <div class="card" style="min-width:400px">
                                         <div class="content" style="text-align:center">
                                             <div class="description">We have detected a harmful message from this user. You might want to check out associated risks before you view it.</div>
-                                            <a style="color:blue"> 
-                                            <u>click here to learn more</u></a>
+                                            <a style="color:blue" href="http://localhost:3000/risk_information"> 
+                                                <u>click here to learn more</u>
+                                            </a>
                                         </div>
                                         <div class="extra content">
                                             <div class="ui two buttons">
@@ -884,6 +885,3 @@ block content
             });
             $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
         }
-              
-//- TODO: update code for mobile view 
-    .mobile.only.row

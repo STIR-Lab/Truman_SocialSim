@@ -547,4 +547,8 @@ getChat = (req, res) => {
   res.render("chat", {});
 };
 
-module.exports = { chatSocket, getChat };
+getRiskInformation = (req, res) => {
+  res.render("risk_information", {});
+};
+
+module.exports = { chatSocket, getChat, getRiskInformation };
