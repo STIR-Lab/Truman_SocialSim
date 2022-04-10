@@ -32,23 +32,6 @@ block content
                 .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
                     #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
                 
-                //- Guided Actions Nudge styling
-                #nudge3Modal.ui.mini.modal(style='position: absolute; bottom: 225px; left: 50%; transform: translate(-50%, -50%); width:450px;')
-                    .content
-                        .ui.center.aligned.container
-                                .ui.top.attached.label(style = 'text: center;')
-                                    | Risky message detected, here are some ways you can respond
-                                    .ui.vertical.menu(style='overflow: hidden; width:425px; display: flex; position: relative;')
-                                        a.item(id = "button3")
-                                            | No, thank you
-                                        a.item(id = "button2")
-                                            | Please leave me alone
-                                        a.item(id = "button3")
-                                            | I am not going to
-                                        a.item(style = 'background-color: rgba(255,0,0,0.3);' id = "button4")
-                                            | Block and Report Contact
-                                
-
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
                         img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
@@ -82,6 +65,25 @@ block content
         .actions
             #dismissModalButton.button.ui.button
                 | Dismiss
+    //- Guided Actions Nudge styling
+    #nudge3Modal.ui.mini.modal(style='position: absolute; bottom: -50px; left: 62%; transform: translate(-50%, -50%); width:450px;')
+        .content              
+            .ui.top.attached.label(style = "text-align: center;")
+                | Risky message detected, here are some ways you can respond
+            .ui.center.aligned.container(style='overflow: hidden; width:425px; position: relative; display: flex; "text-align: center;')
+                .ui.vertical.menu(style='overflow: hidden; width:425px; position: relative; display: flex; "text-align: center;')
+                    a.item(id = "button1")
+                        | No, thank you
+                    a.item(id = "button2")
+                        | Please leave me alone
+                    a.item(id = "button3")
+                        | I am not going to
+                    a.item(style = 'background-color: rgba(255,0,0,0.3);' id = "button4")
+                        | Block and Report Contact
+        .actions
+            #exit.button.ui.button
+                | Dismiss
+
     
 
     script(src='/socket.io/socket.io.js')
@@ -95,7 +97,7 @@ block content
         /////////////
         $('#nudge3Modal').hide();
 
-        // nudge button functionality 
+        // guided actions button functionality 
 
         $('#button1').on('click', function () {
             $('#input').val($('#nudge3Modal').val()+$(this).html());    
@@ -272,7 +274,7 @@ block content
                         lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
                     }
                 else {
-                    lastMessage = "Sent media"
+                    lastMessage = "Sent media" 
                 }
                 
                 usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
@@ -564,16 +566,11 @@ block content
         function onClickDismissButton() {
             $('#nudge1Modal').modal('hide');
         }
-        
-        //- // close nudge 3 modal
-        //- var modal = document.getElementById("nudge3Modal");
-        //- window.onclick = function(event) {
-        //-     if (event.target == modal) {
-        //-         modal.style.display = "none";
-        //-     }
-        //- }
 
-
+        document.getElementById('exit').onclick=function(){onClickDismiss()};
+        function onClickDismiss() {
+            $('#nudge3Modal').hide();
+        } 
         
         socket.on("receive-message", (msg) => {
             // update latest message in recent chat history
@@ -619,6 +616,9 @@ block content
                 if (nudgeShown && msg.msg.body == infoBreach2) {
                     addNudgeType2(msg);
                 }
+                if (nudgeShown && msg.msg.body == infoBreach3) {
+                    $('#nudge3Modal').show();
+                }
                 else {
                     addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId);
                 }
@@ -639,6 +639,8 @@ block content
             document.getElementById("sending").style.display = "none"
             document.getElementById("outputImage").src = "#"
         });
+
+
         
         function sendReaction(msg, person, reactionType, messageID) {
             let currentReaction;
@@ -928,6 +930,8 @@ block content
             });
             $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
         }
-              
+
+
+        
 //- TODO: update code for mobile view 
     .mobile.only.row
