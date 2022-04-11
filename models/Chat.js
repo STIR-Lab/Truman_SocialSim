@@ -59,6 +59,7 @@ const conversationSchema = new Schema(
     userIdA: String,
     usernameB: String,
     userIdB: String,
+    blocked: String, // userId of the person that's been blocked
     content: [messageSchema],
   },
   { versionKey: false }

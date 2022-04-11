@@ -226,9 +226,25 @@ const chatSocket = (server) => {
 
       //Save userAction to db
       convoInfo.content[messageIndex].nudge.userAction = userAction;
-
       convoInfo.markModified("content");
+
+      if (userAction === "blockUser") {
+        convoInfo.blocked = other;
+        convoInfo.markModified("blocked");
+      }
+
       await convoInfo.save();
+
+      if (userAction === "blockUser") {
+        // console.log(formattedMsg);
+        io.to(other.userId) // to recipient
+          // .to(socket.userId) // to sender room
+          .emit("blocked", "You've been blocked.");
+
+        // io.to(to.userId) // to recipient
+        io.to(socket.userId) // to sender room
+          .emit("block-success", "Successfully blocked.");
+      }
     });
 
     socket.on("read-messages", async ({ messageIds, other }) => {
