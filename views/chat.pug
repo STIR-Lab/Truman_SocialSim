@@ -49,7 +49,7 @@ block content
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
-                #userProfilePicture(userpfp= user.profile.picture ? user.profile.picture : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png")
+                #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png")
  
     #newChatModal.ui.mini.modal
         .header
@@ -305,12 +305,13 @@ block content
                     prevRow = count;
                 }
 
-                const pfpSrc = user.userpfp == "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp; 
+                
+                const userpfpsrc = user.userpfp ? "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png"; 
 
                 const profile = ` <div class="eight wide column">
                                     <div class="ui card" style="margin-bottom:10px">
                                         <div class="content">
-                                            <div class="center aligned column"><img class="ui circular tiny image" src=${pfpSrc} style="margin-bottom:4px; object-fit:cover; width:75px; height:75px"/></div>
+                                            <div class="center aligned column"><img class="ui circular tiny image" src=${userpfpsrc} style="margin-bottom:4px; object-fit:cover; width:75px; height:75px"/></div>
                                             <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username}</div>
                                             <button id="profileButton" class="ui button tiny fluid fluid" style="margin-bottom:4px">Profile </button>
                                             <button id="messageButton" class="ui positive button tiny fluid">Message </button>
