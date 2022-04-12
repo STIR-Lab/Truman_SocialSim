@@ -31,7 +31,18 @@ block content
 
                 .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
                     #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
-               
+
+                #nudge3Card.ui.card(style='position: absolute; bottom: -60px; left: 50%; transform: translate(-50%, -50%); width:450px;')
+                    .content
+                        #closeNudge3.button.ui.circular.basic.icon.mini.right.floated.button
+                            i.close.icon
+                        p Risky message detected, here are some ways you can respond
+                    .ui.vertical.buttons
+                        #nudge3Button1.button.fluid.ui.button(style="margin-bottom:4px") No, thank you
+                        #nudge3Button2.button.fluid.ui.button(style="margin-bottom:4px") Please leave me alone
+                        #nudge3Button3.button.fluid.ui.button(style="margin-bottom:4px") I am not going to
+                        #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Block and Report Contact
+                                
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
                         img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
@@ -63,7 +74,15 @@ block content
             .ui.center.aligned.container
                 | This user is asking for sensitive information. We strongly recommend you not give out personal information to strangers.
         .actions
-            #dismissModalButton.button.ui.button
+            #dismissModal1Button.button.ui.button
+                | Dismiss
+
+    #nudge2Modal.ui.mini.modal
+        .content
+            .ui.center.aligned.container
+                | We detected that this user just sent you explicit content. We recommend you exercise care with the user
+        .actions
+            #dismissModal2Button.button.ui.button
                 | Dismiss
 
     script(src='/socket.io/socket.io.js')
@@ -74,10 +93,10 @@ block content
         
         // hide input until user picks chat partner
         $('#messageInput').hide();
+        $('#nudge3Card').hide();
 
         document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
-         //document.getElementById('uploadImage').onclick=function(){uploadImage()};
-         document.getElementById('fileupload').onchange=function(){loadFile(event)};
+        document.getElementById('fileupload').onchange=function(){loadFile(event)};
 
         function onClickNewChat() {
             $('#newChatModal').modal('show');
@@ -124,12 +143,11 @@ block content
                 if (!usersInUserList.includes(user.userId)) {
                     usersInUserList.push(user.userId);
 
-                    let userpfplink = user.userpfp == "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png" ? user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp;
-                    const u = `   <div class="item"><img class="ui avatar image" src= "${userpfplink}"/>
+                    const u = ` <div class="item">
                                     <div class="content">
                                         <div class="header">${user.username}</div>
                                     </div>
-                                    <button id="rightArrowButton" class="ui icon right floated mini button""><i class="right arrow icon"></i></button>
+                                    <button id="rightArrowButton" class="ui icon right floated mini button" style="margin-top:-20px"><i class="right arrow icon"></i></button>
                                 </div>`
 
                     if (user.userId == userId) { // add user to top of user list
@@ -206,6 +224,9 @@ block content
             }
         }
 
+        let blocked = [];
+        let isBlocked = [];
+
         socket.on("receive-chat-history", (allConvo) => {
             if (allConvo.length == 0) {
                 $('#recentButton').hide();
@@ -223,6 +244,14 @@ block content
                 let lastMessage = ""
                 let msgType = chatPartner.content[chatPartner.content.length - 1].msg.type
            
+                if (chatPartner.blocked == chatPartnerId) {
+                    blocked.push(chatPartnerId);
+                }
+                
+                if (chatPartner.blocked == userId) {
+                    isBlocked.push(chatPartnerId);
+                }
+
                 if (chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
                     if (chatPartner.content[chatPartner.content.length - 1].from.userId == userId) { // chat sent
                         lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
@@ -268,7 +297,6 @@ block content
                     prevRow = count;
                 }
 
-                
                 const userpfpsrc = user.userpfp ? "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png"; 
 
                 const profile = ` <div class="eight wide column">
@@ -369,17 +397,110 @@ block content
         // researcher set variable to show nudges
         let nudgeShown = true;
 
+        let nudge3MessageId = null;
+
+        document.getElementById('nudge3Button1').onclick=function(){onClickNudge3Button1()};
+        function onClickNudge3Button1() {
+            $('#nudge3Card').hide();
+            sendMessage("No, thank you");
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "sendMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+        document.getElementById('nudge3Button2').onclick=function(){onClickNudge3Button2()};
+        function onClickNudge3Button2() {
+            $('#nudge3Card').hide();
+            sendMessage("Please leave me alone");
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "sendMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+        document.getElementById('nudge3Button3').onclick=function(){onClickNudge3Button3()};
+        function onClickNudge3Button3() {
+            $('#nudge3Card').hide();
+            sendMessage("I am not going to");
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "sendMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+        document.getElementById('nudge3Button4').onclick=function(){onClickNudge3Button4()};
+        function onClickNudge3Button4() {
+            $('#nudge3Card').hide();
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "blockUser",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+
+        socket.on("blocked", (msg) => { // this user blocked
+            const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
+                            <p><b>${chatPartnerUsername} has blocked you</b></p>
+                        </div>`
+            $('#messages').append(mes);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            $('#messageInput').hide();
+        });
+
+        socket.on("block-success", (msg) => { // blocked chat partner
+            const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
+                            <p><b>${chatPartnerUsername} has been blocked</b></p>
+                        </div>`
+            $('#messages').append(mes);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            $('#messageInput').hide();
+        });
+
+        function sendMessage(msg) {
+            socket.emit('send-message', { 
+                msg: {
+                    type: "txt",
+                    body: msg
+                },
+                nudge: {
+                    nudgeShown: nudgeShown,
+                    riskyScenario: null,
+                    nudgeType: null,
+                    userAction: null,
+                },
+                to: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                    socketId: chatPartnerSocketId
+                } 
+            });
+        }
+
         const infoBreach1 = "info breach 1";
         const infoBreach2 = "info breach 2";
         const infoBreach3 = "info breach 3";
 
+        const explicitContent1 = "explicitContent1.png";
+
         $('#messageInput')[0].addEventListener('submit', function(e) {
             e.preventDefault();
             const input = $('#input')[0]; 
+            let riskyScenario = null;
+            let nudgeType = null;
             if (input.value) {
-                let riskyScenario = null;
-                let nudgeType = null;
-
                 if (input.value == infoBreach1) {
                     riskyScenario = "infoBreach1"
                     nudgeType = "abstinence";
@@ -392,6 +513,8 @@ block content
                     riskyScenario = "infoBreach3"
                     nudgeType = "guidedActions";
                 }
+
+                $('#nudge3Card').hide();
 
                 socket.emit('send-message', { 
                     msg: {
@@ -417,10 +540,21 @@ block content
             
             if (file) {
                 if (file.type.includes("image")) {
+                    if (file.name == explicitContent1) {
+                        riskyScenario = "explicitContent1"
+                        nudgeType = "abstinence";
+                    }
+                    console.log("filessss", file, " ", file.name)
                     socket.emit('send-message', { 
                         msg: {
                             type: "img",
                             body: {path: file, filename: file.name}
+                        },
+                        nudge: {
+                            nudgeShown: nudgeShown,
+                            riskyScenario: riskyScenario,
+                            nudgeType: nudgeType,
+                            userAction: null,
                         },
                         to: {
                             username: chatPartnerUsername,
@@ -449,7 +583,7 @@ block content
 
         // upload image
         function uploadImage () {
-             let pictureFile;
+            let pictureFile;
             
             if (fileupload.files[0]) {
 
@@ -500,8 +634,8 @@ block content
         socket.on("message-list", (messageList) => {
             let messageIds = [];
             for (let i = 0; i < messageList.length; i++) {
-                if (messageList[i].from.userId == userId) {
                     addChatSentMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id );
+                if (messageList[i].from.userId == userId) {
                     loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                 }
                 else  {
@@ -524,19 +658,50 @@ block content
                     userId: chatPartnerUserId,
                 }
             });
+
+            if (blocked.includes(chatPartnerUserId)) {
+                const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
+                            <p><b>${chatPartnerUsername} has been blocked</b></p>
+                        </div>`
+                $('#messages').append(mes);
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                $('#messageInput').hide();
+            }
+
+            if (isBlocked.includes(chatPartnerUserId)) {
+                const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
+                            <p><b>${chatPartnerUsername} has blocked you</b></p>
+                        </div>`
+                $('#messages').append(mes);
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                $('#messageInput').hide();
+            }
         });
 
-        document.getElementById('dismissModalButton').onclick=function(){onClickDismissButton()};
+        document.getElementById('dismissModal1Button').onclick=function(){onClickDismissButton()};
         function onClickDismissButton() {
             $('#nudge1Modal').modal('hide');
+            $('#nudge2Modal').modal('hide');
         }
+
+        document.getElementById('dismissModal2Button').onclick=function(){onClickDismissButton()};
+
+        document.getElementById('closeNudge3').onclick=function(){onClickCloseNudge3Button()};
+        function onClickCloseNudge3Button() {
+            $('#nudge3Card').hide();
+        } 
         
         socket.on("receive-message", (msg) => {
             // update latest message in recent chat history
             partnerId = msg.from.userId == userId ? msg.to.userId : msg.from.userId;
 
             if (msg.from.userId == userId) {
-                $('#' + partnerId + 'lastMessage').text(msg.msg.body);
+                if (msg.msg.type == "img") {
+                    $('#' + partnerId + 'lastMessage').text("Sent media");
+                }
+                else {
+                    $('#' + partnerId + 'lastMessage').text(msg.msg.body);
+                }
             }
             else if (msg.msg.type == "txt" && msg.nudge.nudgeType == "sensitivityFilter" && msg.nudge.userAction == "") {
                 $('#' + partnerId + 'lastMessage').text("Unread message");
@@ -571,6 +736,13 @@ block content
             else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
                 if (nudgeShown && msg.msg.body == infoBreach1) {
                     $('#nudge1Modal').modal('show');
+                }
+                if (nudgeShown && msg.nudge.riskyScenario == "explicitContent1") {
+                    $('#nudge2Modal').modal('show');
+                }
+                if (nudgeShown && msg.msg.body == infoBreach3) {
+                    $('#nudge3Card').show();
+                    nudge3MessageId = msg._id;
                 }
                 if (nudgeShown && msg.msg.body == infoBreach2) {
                     addNudgeType2(msg);
@@ -701,8 +873,8 @@ block content
             }
             return time.slice(0, idx) + time.slice(idx + 3);
         }
-
         function addChatSentMessage(msg, time, id) {
+
             let msgType = "";
 
             if (msg.type == "txt") {
@@ -758,11 +930,10 @@ block content
             let msgType = "";
 
             if (msg.type == "txt") {
-                let msgBody = msg.body;
+                msgType = `<p>${msg.body}</p>`
                 if (messageDeleted || nudge.nudgeType == "sensitivityFilter" && nudge.userAction == "deleteMessage") {
-                    msgBody = "deleted message";
+                    msgType = `<p><b>deleted message</b></p>`
                 }
-                msgType = `<p>${msgBody}</p>`
             }
             else if (msg.type == "img") {
                  msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`

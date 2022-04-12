@@ -229,13 +229,14 @@ const chatSocket = (server) => {
       convoInfo.markModified("content");
 
       if (userAction === "blockUser") {
-        convoInfo.blocked = other;
+        convoInfo.blocked = other.userId;
         convoInfo.markModified("blocked");
       }
 
       await convoInfo.save();
 
       if (userAction === "blockUser") {
+        console.log("=============emmitting block===============");
         // console.log(formattedMsg);
         io.to(other.userId) // to recipient
           // .to(socket.userId) // to sender room
