@@ -634,8 +634,8 @@ block content
         socket.on("message-list", (messageList) => {
             let messageIds = [];
             for (let i = 0; i < messageList.length; i++) {
-                    addChatSentMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id );
                 if (messageList[i].from.userId == userId) {
+                    addChatSentMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id );
                     loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                 }
                 else  {
