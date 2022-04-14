@@ -136,6 +136,9 @@ block content
 
         let loadedHistory = false;
 
+        let usersInDiscover = [];
+        let usersInRecent = [];
+
         socket.on("userList", (userList) => {
             copiedUserList = JSON.parse(JSON.stringify(userList));
 
@@ -183,6 +186,11 @@ block content
             if (msgType == "img") {
                 lastmsg = "Sent media"
             }
+
+            if (usersInRecent.includes(chatPartnerId)) {
+                return;
+            }
+            usersInRecent.push(chatPartnerId);
                 
             const listItem = `<div class="item">
                                 <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute"></span>
@@ -290,7 +298,8 @@ block content
             let element = document.getElementById("prevRow");
             element.id = 'row' + count;
 
-            if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length) {
+            if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length && !usersInDiscover.includes(user.userId)) {
+                usersInDiscover.push(user.userId);
                 count++;
                 if (count > 0 && count % 2 == 0) {
                     $('#discoverProfiles').append(row);
