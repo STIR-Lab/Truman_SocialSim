@@ -38,10 +38,10 @@ block content
                             i.close.icon
                         p Risky message detected, here are some ways you can respond
                     .ui.vertical.buttons
-                        #nudge3Button1.button.fluid.ui.button(style="margin-bottom:4px") No, thank you
-                        #nudge3Button2.button.fluid.ui.button(style="margin-bottom:4px") Please leave me alone
-                        #nudge3Button3.button.fluid.ui.button(style="margin-bottom:4px") I am not going to
-                        #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Block and Report Contact
+                        #nudge3Button1.button.fluid.ui.button(style="margin-bottom:4px") I don't feel comfortable sharing that info
+                        #nudge3Button2.button.fluid.ui.button(style="margin-bottom:4px") Sorry, I don't know you
+                        #nudge3Button3.button.fluid.ui.button(style="margin-bottom:4px") I don't think it's appropriate to ask that
+                        #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Block and Report
                                 
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
@@ -402,7 +402,7 @@ block content
         document.getElementById('nudge3Button1').onclick=function(){onClickNudge3Button1()};
         function onClickNudge3Button1() {
             $('#nudge3Card').hide();
-            sendMessage("No, thank you");
+            sendMessage("I don't feel comfortable sharing that info");
             socket.emit("nudge-reaction", {
                 messageId: nudge3MessageId,
                 userAction: "sendMessage",
@@ -415,7 +415,7 @@ block content
         document.getElementById('nudge3Button2').onclick=function(){onClickNudge3Button2()};
         function onClickNudge3Button2() {
             $('#nudge3Card').hide();
-            sendMessage("Please leave me alone");
+            sendMessage("Sorry, I don't know you");
             socket.emit("nudge-reaction", {
                 messageId: nudge3MessageId,
                 userAction: "sendMessage",
@@ -428,7 +428,7 @@ block content
         document.getElementById('nudge3Button3').onclick=function(){onClickNudge3Button3()};
         function onClickNudge3Button3() {
             $('#nudge3Card').hide();
-            sendMessage("I am not going to");
+            sendMessage("I don't think it's appropriate to ask that");
             socket.emit("nudge-reaction", {
                 messageId: nudge3MessageId,
                 userAction: "sendMessage",
@@ -462,7 +462,7 @@ block content
 
         socket.on("block-success", (msg) => { // blocked chat partner
             const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has been blocked</b></p>
+                            <p><b>${chatPartnerUsername} has been blocked and reported</b></p>
                         </div>`
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
@@ -489,9 +489,9 @@ block content
             });
         }
 
-        const infoBreach1 = "info breach 1";
-        const infoBreach2 = "info breach 2";
-        const infoBreach3 = "info breach 3";
+        const infoBreach1 = "Ahhh okay, which school you go to?";
+        const infoBreach2 = "http://www.hahpics.xyz/4034-349i/";
+        const infoBreach3 = "oh no way? Same. We should hang out sometime! What neighborhood do you live in?";
 
         const explicitContent1 = "explicitContent1.png";
 
@@ -544,7 +544,6 @@ block content
                         riskyScenario = "explicitContent1"
                         nudgeType = "abstinence";
                     }
-                    console.log("filessss", file, " ", file.name)
                     socket.emit('send-message', { 
                         msg: {
                             type: "img",
@@ -639,6 +638,16 @@ block content
                     loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                 }
                 else  {
+                    if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach1) {
+                        $('#nudge1Modal').modal('show');
+                    }
+                    if (nudgeShown && !messageList[i].msg.read && messageList[i].nudge.riskyScenario == "explicitContent1") {
+                        $('#nudge2Modal').modal('show');
+                    }
+                    if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach3) {
+                        $('#nudge3Card').show();
+                        nudge3MessageId = messageList[i]._id;
+                    }
                     if (nudgeShown && messageList[i].nudge.nudgeType == "sensitivityFilter" && messageList[i].nudge.userAction == "") {
                         addNudgeType2(messageList[i]);
                     }
@@ -661,7 +670,7 @@ block content
 
             if (blocked.includes(chatPartnerUserId)) {
                 const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has been blocked</b></p>
+                            <p><b>${chatPartnerUsername} has been blocked and reported</b></p>
                         </div>`
                 $('#messages').append(mes);
                 $('#messages').scrollTop($('#messages')[0].scrollHeight);
