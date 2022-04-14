@@ -28,7 +28,7 @@
               .divider
               a.item(href='/me') My Profile
               .divider
-              a.item(href='/logout') Logout
+              a#logoutButton.item(href='/logout') Logout
 .mobile.only.row
   .ui.fluid.top.fixed.four.item.menu
     a.item(href='/')
@@ -54,7 +54,14 @@
           .divider
           a.item(href='/me') My Profile
           .divider
-          a.item(href='/logout') Logout
+          a#logoutButton.item(href='/logout') Logout
+
+script.
+  const logoutButton = document.getElementById('logoutButton').onclick=function(){onClickLogout()};
+
+  function onClickLogout() {
+    localStorage.removeItem("sessionId");
+  }
 
 
 
