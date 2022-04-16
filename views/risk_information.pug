@@ -8,57 +8,140 @@ block content
                 i.right.chevron.icon.divider
             span Information Breaching
 
-    .row(style="margin-top:20px")
-        p(style='font-size: 24px')
-            strong Hey, 
-                span= user.profile.name || user.username || user.id
-    .row
-        .col
-            p(style='font-size: 18px') We detected &nbsp;in your conversation risky behavior that is categorized under 
-                strong Information Breaching
-                | .
-            p(style='font-size: 18px') Information breaching is when personal information like your 
-                em password, address, phone number, location, etc.
-                |  are given or asked online. 
-                strong This&nbsp;
-                strong information is very important to keep safe and it can be dangerous&nbsp;
-                strong for you to give it out.
-            p(style='font-size: 18px')
-                span(style='color: rgb(125, 125, 125);') The following section will quickly inform you on examples, potential risks, and what you can do moving forward.
-        .col
-            //- add image here
+    .container#info1
 
+        .row(style="margin-top:20px")
+            p(style='font-size: 24px')
+                strong Hey, 
+                    span= user.profile.name || user.username || user.id
+        .row
+            .col
+                p(style='font-size: 18px') We detected &nbsp;in your conversation risky behavior that is categorized under 
+                    strong Information Breaching
+                    | .
+                p(style='font-size: 18px') Information breaching is when personal information like your 
+                    em password, address, phone number, location, etc.
+                    |  are given or asked online. 
+                    strong This&nbsp;
+                    strong information is very important to keep safe and it can be dangerous&nbsp;
+                    strong for you to give it out.
+                p(style='font-size: 18px')
+                    span(style='color: rgb(125, 125, 125);') The following section will quickly inform you on examples, potential risks, and what you can do moving forward.
+            .col
+                //- add image here
 
-    .row(style="margin-top:20px")
-        p(style='font-size: 24px')
-            strong Examples & Risks
-    .row
-        .col
-            p(style='font-size: 18px')
-                strong Examples
-            ul
-                li
-                    p(style='font-size: 18px') Location / Address
-                    p(style='font-size: 18px') Your location is one of the most important pieces of information to keep secure. Your location is where you should feel safe and comfortable. If malicious users know your location there are risks such as 
-                        strong personal harassment, threats, predation, abduction, etc.
-                    p(style='font-size: 18px')
-                        u Never reveal information such as your school, street address, zip code, IP-address with strangers.
-                li(style="margin-top:30px")
-                    p(style='font-size: 18px') Password
-                    p(style='font-size: 18px') Your password is the main defense against someone trying to access your account. If you share your password or accidentally reveal it, malicious users may use it to 
-                        strong steal your identity, expose your information to the public, harass you, etc.
-                    p(style='font-size: 18px')
-                        u Be cautious of suspicious links, emails, or messages from users asking directly or indirectly to see or change your password. Most passwords are compromised based on phishing links (fake links).
-        .col
-            //- add image here
+    .container#info2
 
-    .row(style="margin-top:20px")
-        p(style='font-size: 24px')
-            strong What you can do
-    .row
-        .col
-            p(style='font-size: 18px') One of the most effective things you can do with information breaching is 
-                strong identifying language that is prompting you to reveal personal information. 
-                | Sometimes this is easy to spot, other times people can be crafty at getting you to take your focus off what is being discussed. 
-            p(style='font-size: 18px') Malicious users may try to pretend to be someone you know, or identify as a mutual friend. 
-            p(style='font-size: 18px') Malicious users may try to find something in common.
+        .row(style="margin-top:20px")
+            p(style='font-size: 24px')
+                strong Examples & Risks
+        .row
+            .col
+                p(style='font-size: 18px')
+                    strong Examples
+                ul
+                    li
+                        p(style='font-size: 18px') Location / Address
+                        p(style='font-size: 18px') Your location is one of the most important pieces of information to keep secure. Your location is where you should feel safe and comfortable. If malicious users know your location there are risks such as 
+                            strong personal harassment, threats, predation, abduction, etc.
+                        p(style='font-size: 18px')
+                            u Never reveal information such as your school, street address, zip code, IP-address with strangers.
+                    li(style="margin-top:30px")
+                        p(style='font-size: 18px') Password
+                        p(style='font-size: 18px') Your password is the main defense against someone trying to access your account. If you share your password or accidentally reveal it, malicious users may use it to 
+                            strong steal your identity, expose your information to the public, harass you, etc.
+                        p(style='font-size: 18px')
+                            u Be cautious of suspicious links, emails, or messages from users asking directly or indirectly to see or change your password. Most passwords are compromised based on phishing links (fake links).
+            .col
+                //- add image here
+
+    .container#info3
+
+        .row(style="margin-top:20px")
+            p(style='font-size: 24px')
+                strong What you can do
+        .row
+            .col
+                p(style='font-size: 18px') One of the most effective things you can do with information breaching is 
+                    strong identifying language that is prompting you to reveal personal information. 
+                    | Sometimes this is easy to spot, other times people can be crafty at getting you to take your focus off what is being discussed. 
+                p(style='font-size: 18px') Malicious users may try to pretend to be someone you know, or identify as a mutual friend. 
+                p(style='font-size: 18px') Malicious users may try to find something in common.
+
+    .row(style="margin-top:30px")
+        button#goBack.ui.button Go Back
+        button#next.ui.positive.button Next
+
+    .centered.row(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%)')
+        i#dot1.dot.circle.outline.icon
+        i#dot2.dot.circle.outline.icon
+        i#dot3.dot.circle.outline.icon
+
+    script.
+        $('#dot1').removeClass('outline');
+        $('#info1').show();
+        $('#info2').hide();
+        $('#info3').hide();
+        $('#goBack').hide();
+
+        let curPage = 0;
+
+        document.getElementById('next').onclick=function(){onClickNext()};
+        function onClickNext() {
+            console.log("clicked");
+            curPage = curPage + 1 > 2 ? 2 : curPage + 1;
+            update(curPage);
+        }
+
+        document.getElementById('goBack').onclick=function(){onClickGoBack()};
+        function onClickGoBack() {
+            console.log("clicked");
+            curPage = curPage - 1 < 0 ? 0 : curPage - 1;
+            update(curPage);
+        }
+
+        function update(page) {
+            curPage = page;
+
+            if (page == 0) {
+                $('#dot1').removeClass('outline');
+                $('#dot2').addClass('outline');
+                $('#dot3').addClass('outline');
+
+                $('#info1').show();
+                $('#info2').hide();
+                $('#info3').hide();
+
+                $('#goBack').hide();
+                $('#next').show();
+            } 
+            else if (page == 1) {
+                $('#dot1').addClass('outline');
+                $('#dot2').removeClass('outline');
+                $('#dot3').addClass('outline');
+
+                $('#info1').hide();
+                $('#info2').show();
+                $('#info3').hide();
+
+                $('#goBack').show();
+                $('#next').show();
+            }
+            else if (page == 2) {
+                $('#dot1').addClass('outline');
+                $('#dot2').addClass('outline');
+                $('#dot3').removeClass('outline');
+
+                $('#info1').hide();
+                $('#info2').hide();
+                $('#info3').show();
+
+                $('#goBack').show();
+                $('#next').hide();
+            }
+        }
+
+        document.getElementById('dot1').onclick=function(){update(0)};
+        document.getElementById('dot2').onclick=function(){update(1)};
+        document.getElementById('dot3').onclick=function(){update(2)};
+        
