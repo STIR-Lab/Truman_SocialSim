@@ -46,7 +46,7 @@ block content
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
                         img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
-                        #sending(src="#" style="position: absolute; bottom: 70px; left: 50%; display: none;")
+                        #sending(src="#" style="position: absolute; bottom: 50px; left: 50%; display: none;")
                             code
                                 | sending...
                         input#input(autocomplete="off" type='text' placeholder='Enter message')
@@ -183,7 +183,7 @@ block content
 
         async function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType) {
             let lastmsg = lastMessage;
-            if (msgType == "img") {
+            if (msgType == "img" || msgType == "vid") {
                 lastmsg = "Sent media"
             }
 
@@ -221,6 +221,7 @@ block content
             element = document.getElementById("redBubble");
             element.id = chatPartnerId + 'redBubble';
             $('#' + chatPartnerId + 'redBubble').hide();
+            $('#' + chatPartnerId + 'redBubble').text(0);
 
             element = document.getElementById("rightChevronButton");
             element.id = chatPartnerId + 'rightChevronButton';
@@ -714,7 +715,7 @@ block content
             partnerId = msg.from.userId == userId ? msg.to.userId : msg.from.userId;
 
             if (msg.from.userId == userId) {
-                if (msg.msg.type == "img") {
+                if (msg.msg.type == "img" || msg.msg.type == "vid") {
                     $('#' + partnerId + 'lastMessage').text("Sent media");
                 }
                 else {
@@ -741,7 +742,12 @@ block content
             });
 
             if (userInDiscover) {
-                addUserInHistory(partnerUsername, msg.msg.body, partnerId, 0, msg.msg.type);
+                if (msg.to.userId == userId) {
+                    addUserInHistory(partnerUsername, msg.msg.body, partnerId, 1, msg.msg.type);
+                }
+                else {
+                    addUserInHistory(partnerUsername, msg.msg.body, partnerId, 0, msg.msg.type);
+                }
                 
                 $('#recentButton').show();
                 onClickRecentButton();
@@ -777,6 +783,7 @@ block content
                 });
             }
             else if (msg.to.userId == userId) {
+                console.log("updating", Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
                 $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
                 $('#' + msg.from.userId + 'redBubble').show();
             }
