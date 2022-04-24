@@ -11,6 +11,8 @@
         else
           //-a.item.newpost
             i.big.write.square.icon
+          a.item(href='/chat') 
+            i.big.comment.icon
           a.item(href='/notifications') 
             i.big.alarm.icon
           .ui.simple.dropdown.item
@@ -26,7 +28,7 @@
               .divider
               a.item(href='/me') My Profile
               .divider
-              a.item(href='/logout') Logout
+              a#logoutButton.item(href='/logout') Logout
 .mobile.only.row
   .ui.fluid.top.fixed.four.item.menu
     a.item(href='/')
@@ -35,8 +37,10 @@
       a.item(href='/login') Login
       a.item(href='/signup') Create Account
     else
-      a.item.newpost
-        i.big.write.square.icon
+      //- a.item.newpost
+      //-   i.big.write.square.icon
+      a.item(href='/chat') 
+            i.big.comment.icon
       a.item(href='/notifications') 
         i.big.alarm.icon
       .ui.simple.dropdown.item
@@ -50,7 +54,14 @@
           .divider
           a.item(href='/me') My Profile
           .divider
-          a.item(href='/logout') Logout
+          a#logoutButton.item(href='/logout') Logout
+
+script.
+  const logoutButton = document.getElementById('logoutButton').onclick=function(){onClickLogout()};
+
+  function onClickLogout() {
+    localStorage.removeItem("sessionId");
+  }
 
 
 
