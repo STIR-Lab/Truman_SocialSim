@@ -12,11 +12,11 @@ This project and software development was supported by the National Science Foun
 Also special thanks to Sahat Yalkabov and his [Hackathon Starter](https://github.com/sahat/hackathon-starter) project, which provided the basic organization for this project. 
 
 
-Project Overview
+## Project Overview
 
-According to research done by Dr. Pamela Wisniewski based at the Socio-Technical Interaction Research Lab (STIR) at the University of Central Florida there have been no formal studies done on applying and evaluating real time interventions where teens were coached about identifying and responding to potentially unsafe online interactions.
+According to research done by Dr. Pamela Wisniewski based at the Socio-Technical Interaction Research Lab (STIR) at the University of Central Florida (UCF) there have been no formal studies done on applying and evaluating real time interventions where teens were coached about identifying and responding to potentially unsafe online interactions.
 
-The senior design team on behalf of the STIR lab was tasked to implement a chat UI into Truman that will allow researchers to interact with teens on the platform and to add real time interventions known as nudges in the chat UI when specific risky content is sent.
+The senior design team at UCF on behalf of the STIR lab was tasked to implement a chat UI into Truman that will allow researchers to interact with teens on the platform and to add real time interventions known as nudges in the chat UI when specific risky content is sent.
 
 Researchers will then be able to evaluate the effectiveness of online safety nudges with teens by acting as fellow teen users in the platform and injecting low level risks to evaluate the nudges.
 
