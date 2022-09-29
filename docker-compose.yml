@@ -9,7 +9,7 @@ services:
   web:
     build: .
     ports:
-     - "3000:3000"
+     - "3100:3100"
     environment:
      - MONGODB_URI=mongodb://mongo:27017/test 
     links:

@@ -39,6 +39,11 @@ $(window).on("load", function () {
     $(" .ui.tiny.post.modal").modal("show");
   });
 
+
+  $("btn_NextPage").click(function () {
+    console.log("Inside next page click");
+  })
+
   //new post validator (picture and text can not be empty)
   $(".ui.feed.form").form({
     on: "blur",

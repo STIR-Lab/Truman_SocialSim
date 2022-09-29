@@ -4,23 +4,67 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const userSchema = new mongoose.Schema({
-  email: { type: String, unique: true },
-  password: String,
-  passwordResetToken: String,
-  passwordResetExpires: Date,
-  username: String,
-  active: {type: Boolean, default: true},
-  isAdmin: {type: Boolean, default: false},
+    email: {
+        type: String,
+        unique: true
+    },
+    password: String,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    username: String,
 
-  completed: {type: Boolean, default: false},
+    isResearcher: {
+        type: Boolean,
+        default: false
+    },
 
-  numPosts: { type: Number, default: -1 }, //not including replys
-  numReplies: { type: Number, default: -1 }, //not including posts
-  numComments: { type: Number, default: -1 }, //not including posts
-  numActorReplies: { type: Number, default: -1 }, //not including posts
+    aliasTagged: {
+        type: Array,
+    },
+    // The 'firstTimeLogin' field has been added for displaying the STIR Labs introductory message 
+    IsfirstTimeLogin: {
+        type: Boolean,
+        default: false
+    },
+    active: {
+        type: Boolean,
+        default: true
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false
+    },
 
-  numPostLikes: { type: Number, default: 0 }, 
-  numCommentLikes: { type: Number, default: 0 }, 
+    completed: {
+        type: Boolean,
+        default: false
+    },
+
+    numPosts: {
+        type: Number,
+        default: -1
+    }, //not including replys
+    numReplies: {
+        type: Number,
+        default: -1
+    }, //not including posts
+    numComments: {
+        type: Number,
+        default: -1
+    }, //not including posts
+    numActorReplies: {
+        type: Number,
+        default: -1
+    }, //not including posts
+
+    numPostLikes: {
+        type: Number,
+        default: 0
+    },
+    numCommentLikes: {
+        type: Number,
+        default: 0
+    },
 
   lastNotifyVisit: Date,
 
@@ -49,37 +93,73 @@ const userSchema = new mongoose.Schema({
   posts: [new Schema({
     type: String, //post, reply, actorReply
 
-    postID: Number,  //number for this post (1,2,3...) reply get -1 maybe should change to a String ID system
-    body: {type: String, default: '', trim: true}, //body of post or reply
-    picture: String, //picture for post
-    liked: {type: Boolean, default: false}, //has the user liked it?
+        postID: Number, //number for this post (1,2,3...) reply get -1 maybe should change to a String ID system
+        body: {
+            type: String,
+            default: '',
+            trim: true
+        }, //body of post or reply
+        picture: String, //picture for post
+        liked: {
+            type: Boolean,
+            default: false
+        }, //has the user liked it?
 
-    //Actor Comments for User Made Posts
-    comments: [new Schema({
-      //class: String, //Bully, Marginal, normal, etc
-      actor: {type: Schema.ObjectId, ref: 'Actor'},
-      body: {type: String, default: '', trim: true}, //body of post or reply
-      commentID: Number, //ID of the comment
-      time: Number,//millisecons
-      absTime: Number,//millisecons
-      new_comment: {type: Boolean, default: false}, //is new comment
-      isUser: {type: Boolean, default: false}, //is this a comment on own post
-      liked: {type: Boolean, default: false}, //has the user liked it? 
-      flagged: {type: Boolean, default: false},//is Flagged?
-      likes: Number
-      }, { versionKey: false })],
+        //Actor Comments for User Made Posts
+        comments: [new Schema({
+            //class: String, //Bully, Marginal, normal, etc
+            actor: {
+                type: Schema.ObjectId,
+                ref: 'Actor'
+            },
+            body: {
+                type: String,
+                default: '',
+                trim: true
+            }, //body of post or reply
+            commentID: Number, //ID of the comment
+            time: Number, //millisecons
+            absTime: Number, //millisecons
+            new_comment: {
+                type: Boolean,
+                default: false
+            }, //is new comment
+            isUser: {
+                type: Boolean,
+                default: false
+            }, //is this a comment on own post
+            liked: {
+                type: Boolean,
+                default: false
+            }, //has the user liked it? 
+            flagged: {
+                type: Boolean,
+                default: false
+            }, //is Flagged?
+            likes: Number
+        }, {
+            versionKey: false
+        })],
 
-    replyID: Number, //use this for User Replies
-    reply: {type: Schema.ObjectId, ref: 'Script'}, //Actor Post reply is to =>
+        replyID: Number, //use this for User Replies
+        reply: {
+            type: Schema.ObjectId,
+            ref: 'Script'
+        }, //Actor Post reply is to =>
 
-    actorReplyID: Number, //An Actor reply to a User Post
-    actorReplyOBody: String, //Original Body of User Post
-    actorReplyOPicture: String, //Original Picture of User Post
-    actorReplyORelativeTime: Number,
-    actorAuthor: {type: Schema.ObjectId, ref: 'Actor'},
+        actorReplyID: Number, //An Actor reply to a User Post
+        actorReplyOBody: String, //Original Body of User Post
+        actorReplyOPicture: String, //Original Picture of User Post
+        actorReplyORelativeTime: Number,
+        actorAuthor: {
+            type: Schema.ObjectId,
+            ref: 'Actor'
+        },
 
-    absTime: Date,
-    relativeTime: {type: Number}
+        absTime: Date,
+        relativeTime: {
+            type: Number
+        }
     })],
 
   log: [new Schema({
@@ -123,58 +203,97 @@ const userSchema = new mongoose.Schema({
     picture_clicks : [Number],
     })],
 
-  feedAction: [new Schema({
-        post: {type: Schema.ObjectId, ref: 'Script'},
+    feedAction: [new Schema({
+        post: {
+            type: Schema.ObjectId,
+            ref: 'Script'
+        },
         //add in object to see which comments were linked and flagged
         postClass: String,
         rereadTimes: Number, //number of times post has been viewed by user
-        startTime: {type: Number, default: 0}, //always the newest startTime (full date in ms)
-        liked: {type: Boolean, default: false},
-        readTime : [Number],
-        flagTime  : [Number],
-        likeTime  : [Number],
-        replyTime  : [Number],
-        
+        startTime: {
+            type: Number,
+            default: 0
+        }, //always the newest startTime (full date in ms)
+        liked: {
+            type: Boolean,
+            default: false
+        },
+        readTime: [Number],
+        flagTime: [Number],
+        likeTime: [Number],
+        replyTime: [Number],
+
         comments: [new Schema({
-          comment: {type: Schema.ObjectId},//ID Reference for Script post comment
-          liked: {type: Boolean, default: false}, //is liked?
-          flagged: {type: Boolean, default: false},//is Flagged?
-          flagTime  : [Number], //array of flag times
-          likeTime  : [Number], //array of like times
+            comment: {
+                type: Schema.ObjectId
+            }, //ID Reference for Script post comment
+            liked: {
+                type: Boolean,
+                default: false
+            }, //is liked?
+            flagged: {
+                type: Boolean,
+                default: false
+            }, //is Flagged?
+            flagTime: [Number], //array of flag times
+            likeTime: [Number], //array of like times
 
-          new_comment: {type: Boolean, default: false}, //is new comment
-          new_comment_id: Number,//ID for comment
-          comment_body: String, //Original Body of User Post
-          absTime: Date,
-          commentTime: {type: Number},
-          time: {type: Number}
-          },{_id: true, versionKey: false })]
-    }, {_id: true, versionKey: false })],
+            new_comment: {
+                type: Boolean,
+                default: false
+            }, //is new comment
+            new_comment_id: Number, //ID for comment
+            comment_body: String, //Original Body of User Post
+            absTime: Date,
+            commentTime: {
+                type: Number
+            },
+            time: {
+                type: Number
+            }
+        }, {
+            _id: true,
+            versionKey: false
+        })]
+    }, {
+        _id: true,
+        versionKey: false
+    })],
 
-  profile: {
-    name: String,
-    gender: String,
-    location: String,
-    bio: String,
-    website: String,
-    picture: String
-  }
-}, { timestamps: true, versionKey: false });
+    profile: {
+        name: String,
+        gender: String,
+        location: String,
+        bio: String,
+        website: String,
+        picture: String
+    }
+}, {
+    timestamps: true,
+    versionKey: false
+});
 
 /**
  * Password hash middleware.
  */
 userSchema.pre('save', function save(next) {
-  const user = this;
-  if (!user.isModified('password')) { return next(); }
-  bcrypt.genSalt(10, (err, salt) => {
-    if (err) { return next(err); }
-    bcrypt.hash(user.password, salt, (err, hash) => {
-      if (err) { return next(err); }
-      user.password = hash;
-      next();
+    const user = this;
+    if (!user.isModified('password')) {
+        return next();
+    }
+    bcrypt.genSalt(10, (err, salt) => {
+        if (err) {
+            return next(err);
+        }
+        bcrypt.hash(user.password, salt, (err, hash) => {
+            if (err) {
+                return next(err);
+            }
+            user.password = hash;
+            next();
+        });
     });
-  });
 });
 
 /**
@@ -190,28 +309,24 @@ userSchema.methods.comparePassword = function comparePassword(candidatePassword,
  * Add Log to User if access is 1 hour from last use.
  */
 userSchema.methods.logUser = function logUser(time, agent, ip) {
-  
-  if(this.log.length > 0)
-  {
-    var log_time = new Date(this.log[this.log.length -1].time);
 
-    if(time >= (log_time.getTime() + 3600000))
-    {
-      var log = {};
-      log.time = time;
-      log.userAgent = agent;
-      log.ipAddress = ip;
-      this.log.push(log);
+    if (this.log.length > 0) {
+        var log_time = new Date(this.log[this.log.length - 1].time);
+
+        if (time >= (log_time.getTime() + 3600000)) {
+            var log = {};
+            log.time = time;
+            log.userAgent = agent;
+            log.ipAddress = ip;
+            this.log.push(log);
+        }
+    } else if (this.log.length == 0) {
+        var log = {};
+        log.time = time;
+        log.userAgent = agent;
+        log.ipAddress = ip;
+        this.log.push(log);
     }
-  }
-  else if(this.log.length == 0)
-  {
-    var log = {};
-    log.time = time;
-    log.userAgent = agent;
-    log.ipAddress = ip;
-    this.log.push(log);
-  }
 
 };
 
@@ -230,12 +345,11 @@ userSchema.methods.logPostStats = function logPage(postID) {
     log.citevisits = this.log.length;
     log.generalpagevisit = this.pageLog.length;
 
-    if (this.study_days.length > 0)
-        {
-          log.DayOneVists = this.study_days[0];
-          log.DayTwoVists = this.study_days[1];
-          log.DayThreeVists = this.study_days[2];
-        }
+    if (this.study_days.length > 0) {
+        log.DayOneVists = this.study_days[0];
+        log.DayTwoVists = this.study_days[1];
+        log.DayThreeVists = this.study_days[2];
+    }
 
     log.GeneralLikeNumber = this.numPostLikes + this.numCommentLikes;
     log.GeneralPostLikes = this.numPostLikes;
@@ -243,20 +357,16 @@ userSchema.methods.logPostStats = function logPage(postID) {
     log.GeneralFlagNumber = 0;
 
 
-    for (var k = this.feedAction.length - 1; k >= 0; k--) 
-    {    
-      if(this.feedAction[k].post != null)
-      {
-        if(this.feedAction[k].liked)
-        {
-          //log.GeneralLikeNumber++;
+    for (var k = this.feedAction.length - 1; k >= 0; k--) {
+        if (this.feedAction[k].post != null) {
+            if (this.feedAction[k].liked) {
+                //log.GeneralLikeNumber++;
+            }
+            //total number of flags
+            if (this.feedAction[k].flagTime[0]) {
+                log.GeneralFlagNumber++;
+            }
         }
-        //total number of flags
-        if(this.feedAction[k].flagTime[0])
-        {
-          log.GeneralFlagNumber++;
-        }
-      }
     }
 
     log.GeneralPostNumber = this.numPosts + 1;

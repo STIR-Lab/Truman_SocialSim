@@ -187,7 +187,8 @@ exports.postSignup = (req, res, next) => {
     group: result,
     active: true,
     lastNotifyVisit: (Date.now()),
-    createdAt: (Date.now())
+    createdAt: (Date.now()),
+    IsfirstTimeLogin: true
   });
 
   User.findOne({ email: req.body.email }, (err, existingUser) => {

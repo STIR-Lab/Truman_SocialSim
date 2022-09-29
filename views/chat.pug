@@ -2,16 +2,19 @@ extends ui_layout
 
 block content
     link(rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css')
+    .row(style="padding-left:1rem;")
+        #aliasChoice.ui.relaxed.divided.list(style="display:none;")
+        .ui.clearing.divider
     .row
         .five.wide.column
             .ui.segment(style='height:90vh')
                 .ui.basic.buttons.fluid(style="margin-bottom:12px") 
-                    #recentButton.ui.button
-                        h3.ui.header(style="margin-top:2px") 
-                            i.clock.outline.icon(style="margin-right:-4px") 
+                    #recentButton.ui.button(style="width:46%")
+                        h3.ui.header(style="margin-top:2px;font-size:1.1vw;") 
+                            i.clock.outline.icon(style="margin-right:-4px;") 
                             |   Recent
-                    #discoverButton.ui.button
-                        h3.ui.header(style="margin-top:2px") 
+                    #discoverButton.ui.button(style="width:51%")
+                        h3.ui.header(style="margin-top:2px;font-size:1.1vw;") 
                             i.globe.icon(style="margin-right:-4px") 
                             |   Discover
                 
@@ -42,26 +45,33 @@ block content
                         #nudge3Button2.button.fluid.ui.button(style="margin-bottom:4px") Sorry, I don't know you
                         #nudge3Button3.button.fluid.ui.button(style="margin-bottom:4px") I don't think it's appropriate to ask that
                         #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Block and Report
-                                
-                form#messageInput(action='')
-                    .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
-                        img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
-                        #sending(src="#" style="position: absolute; bottom: 50px; left: 50%; display: none;")
-                            code
-                                | sending...
-                        input#input(autocomplete="off" type='text' placeholder='Enter message')
-                        button#submitMessage(type="submit")
-                            i.paper.plane.icon 
-                        button(type="button" style='position: relative; right: 2px;')     
-                            label.custom-file-upload(for='fileupload' )
-                                i.camera.icon
-                        input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/*,video/mp4,video/x-m4v,video/*")
-                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
+
+                table
+                    tr
+                        td
+                            form#messageInput(action='')
+                                .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -10%); width:450px;')
+                                    img#outputImage(src="#" style=" height:100px; position: absolute; bottom: 70px; left: 33%; display: none;border:1px solid #000000")
+                                    button#btn_imgcancel(style="position:absolute;bottom:150px;left:82%;width:30px; display: none;")
+                                        i.close.icon
+                                    #sending(src="#" style="position: absolute; bottom: 50px; left: 50%; display: none;")
+                                        code
+                                            | sending...
+                                    input#input(autocomplete="off" type='text' placeholder='Enter message')
+                                    button#submitMessage(type="submit")
+                                        i.paper.plane.icon 
+
+                                    button#Imgupload(type="button" style='position: relative; right: 2px;')     
+                                        label.custom-file-upload(for='fileupload' )
+                                            i.camera.icon
+                                    input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/*,video/mp4,video/x-m4v,video/*")
+                                    button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
-                #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png")
- 
+                #awsBucketName(awsBucketName = user.awsBucketName)
+                #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://stirlabspictureupload.s3.amazonaws.com/default-pfp.png")
+                
     #newChatModal.ui.mini.modal
         .header
             .ui.center.aligned.container
@@ -87,6 +97,7 @@ block content
 
     script(src='/socket.io/socket.io.js')
     script.
+        debugger;
         const userId = document.getElementById('userIdTag').getAttribute('userId');
         const username = document.getElementById('usernameTag').getAttribute('username');
         const userpfp = document.getElementById('userProfilePicture').getAttribute('userpfp');
@@ -97,12 +108,41 @@ block content
 
         document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
         document.getElementById('fileupload').onchange=function(){loadFile(event)};
+        document.getElementById('Imgupload').onclick=function(){onClickFileUploader()};
+        document.getElementById('btn_imgcancel').onclick=function(){onClickImgCancel()};
+
+        function onClickFileUploader(){
+            if (document.getElementById('fileupload').visible != true){
+                document.getElementById('fileupload').click();
+            }
+        }
+
+        function onClickImgCancel(){
+            try{
+                if (fileupload.files[0]) {
+                fileupload.files[0] = null;
+                document.getElementById('fileupload').value = "";
+            }
+            
+            if(document.getElementById("outputImage").style.display == "block"){
+                document.getElementById("outputImage").style.display = "none";
+            }
+            document.getElementById("btn_imgcancel").style.display = "none";
+            $('#messages').css({"margin-bottom":""});
+            $('#messages').css({"border-bottom":""});
+            }
+            catch(err){
+                console.log("error in onClickImgCancel, "+err.Message)
+            }
+        }
+
+
 
         function onClickNewChat() {
             $('#newChatModal').modal('show');
         }
         
-        const URL = "http://localhost:3000";
+        const URL = "http://localhost:3100";
         const socket = io(URL, { autoConnect: false, transports: ['websocket'], upgrade: false });
         
         socket.onAny((event, ...args) => {
@@ -138,8 +178,66 @@ block content
 
         let usersInDiscover = [];
         let usersInRecent = [];
+        let userinResearcherList = []; //This list will help keep track of users who are researchers.
+
+        socket.on("allowAlias",(aliasData) =>{
+            
+            if(aliasData){
+                console.log("Enter the data, "+aliasData);
+            }
+
+            //- let aliasDetails = [];
+            //-     aliasDetails = {
+            //-     "isResearcher": true ,
+            //-     "aliasTagged": ["Bob", "Alice"]
+            //- };
+
+            //sessionStorage.setItem("isResearcher":"True");
+            //sessionStorage.setItem('isResearcher','True');
+            //- p Alias Names
+            //- div 
+            //-     input#contactChoice1(type='radio' name='contact' value='email')
+            //-     label(for='contactChoice1') Email
+            //-     input#contactChoice2(type='radio' name='contact' value='phone')
+            //-     label(for='contactChoice2') Phone
+
+            
+            
+            console.log("inside alias data");
+            console.log(aliasData);
+            if(aliasData.isResearcher){
+
+                
+                aliasNames = aliasData.aliasTagged;
+                //console.log(aliasNames);
+                let aliasTag = `<p> Alias Name </p><div>`;
+
+                aliasNames.forEach(function(item,index){
+                    console.log(item,index);
+                    if(index == 0){
+                        aliasTag += `<input type="radio" id="aliasChoice${index}" checked="checked" name="aliasName" value="alias_${item}">`;
+                    }else{
+                        aliasTag += `<input type="radio" id="aliasChoice${index}" name="aliasName" value="alias_${item}">`;
+                    }
+                    aliasTag += `<label for="aliasChoice${index}">${item}</label>`;
+                    
+                });
+                
+                aliasTag+=`</div>`;
+                //aliasTag+=`<div class="ui clearing divider"></div>`;
+
+                console.log(aliasTag);
+                $('#aliasChoice').css({"display":"block"});
+                $('#aliasChoice').prepend(aliasTag);
+            }
+            else{
+                console.log("Not researcher");
+            }
+        });
 
         socket.on("userList", (userList) => {
+            
+            console.log("user ---> "+userList);
             copiedUserList = JSON.parse(JSON.stringify(userList));
 
             userList.forEach((user) => {
@@ -196,8 +294,8 @@ block content
                                 <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute"></span>
                                 <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
                                 <div class="content">
-                                    <a class="header" href="http://localhost:3000/user/${chatPartnerId}">${chatPartnerUsername}</a>
-                                    <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
+                                    <a class="header" href="http://localhost:3100/user/${chatPartnerId}">${chatPartnerUsername}</a>
+                                    <div class="description" style="max-width: 100px; overflow-wrap: break-word;" id="lastMessage">${lastmsg}</div>
                                 </div>
                                 <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
                             </div>`;
@@ -207,11 +305,11 @@ block content
             await socket.emit("find-partner",{userId: chatPartnerId})
             await socket.on("partner-pfp",({pfp , userId})=>{
                 if (pfp != null && userId == chatPartnerId) {
-                    let pic = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
+                    let pic = `https://stirlabspictureupload.s3.amazonaws.com/${pfp}`;
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
                 }
                 else if (userId == chatPartnerId) {
-                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
+                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://stirlabspictureupload.s3.amazonaws.com/default-pfp.png";
                 }
             })
 
@@ -307,7 +405,7 @@ block content
                     prevRow = count;
                 }
 
-                const userpfpsrc = user.userpfp ? "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png"; 
+                const userpfpsrc = user.userpfp ? "https://stirlabspictureupload.s3.amazonaws.com/" + user.userpfp : "https://stirlabspictureupload.s3.amazonaws.com/default-pfp.png"; 
 
                 const profile = ` <div class="eight wide column">
                                     <div class="ui card" style="margin-bottom:10px">
@@ -359,7 +457,7 @@ block content
         let chatPartnerSocketId = null;
         let chatPartnerUsername = null;
         let chatPartnerUserId = null;
-        let chatPartnerPFP = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
+        let chatPartnerPFP = "https://stirlabspictureupload.s3.amazonaws.com/default-pfp.png";
 
         function onClickUsername(userId) {
             $('#' + userId + 'redBubble').hide();
@@ -386,7 +484,7 @@ block content
 
             socket.on("partner-pfp",({ pfp, userId})=>{
                 if (pfp != null && userId == chatPartnerUserId) {
-                    chatPartnerPFP = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
+                    chatPartnerPFP = `https://stirlabspictureupload.s3.amazonaws.com/${pfp}`;
                 }
             })
             
@@ -411,42 +509,61 @@ block content
 
         document.getElementById('nudge3Button1').onclick=function(){onClickNudge3Button1()};
         function onClickNudge3Button1() {
-            $('#nudge3Card').hide();
-            sendMessage("I don't feel comfortable sharing that info");
-            socket.emit("nudge-reaction", {
-                messageId: nudge3MessageId,
-                userAction: "sendMessage",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
+            $("#nudge3Card").hide();
+            sendMessage("I don't feel comfortable sharing that info")
+                .then((message) => {
+                    console.log("Completed the sendMessage Call. " + message);
+                    socket.emit("nudge-reaction", {
+                        messageId: nudge3MessageId,
+                        userAction: "sendMessage",
+                        other: {
+                            username: chatPartnerUsername,
+                            userId: chatPartnerUserId,
+                        },
+                    });
+                })
+                .catch((error) => {
+                    console.log("Error in onClickNudge3Button1, " + error.Message);
+                });
         }
         document.getElementById('nudge3Button2').onclick=function(){onClickNudge3Button2()};
         function onClickNudge3Button2() {
-            $('#nudge3Card').hide();
-            sendMessage("Sorry, I don't know you");
-            socket.emit("nudge-reaction", {
-                messageId: nudge3MessageId,
-                userAction: "sendMessage",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
+            $("#nudge3Card").hide();
+            sendMessage("Sorry, I don't know you")
+                .then((message) => {
+                    console.log("Completed the sendMessage Call. " + message);
+                    socket.emit("nudge-reaction", {
+                        messageId: nudge3MessageId,
+                        userAction: "sendMessage",
+                        other: {
+                            username: chatPartnerUsername,
+                            userId: chatPartnerUserId,
+                        },
+                    });
+                })
+                .catch((error) => {
+                    console.log("Error in onClickNudge3Button2, " + error.Message);
+                });
         }
-        document.getElementById('nudge3Button3').onclick=function(){onClickNudge3Button3()};
+        document.getElementById("nudge3Button3").onclick = function () {
+            onClickNudge3Button3();
+        };
         function onClickNudge3Button3() {
-            $('#nudge3Card').hide();
-            sendMessage("I don't think it's appropriate to ask that");
-            socket.emit("nudge-reaction", {
-                messageId: nudge3MessageId,
-                userAction: "sendMessage",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
+            $("#nudge3Card").hide();
+            sendMessage("I don't think it's appropriate to ask that")
+                .then((message) => {
+                    socket.emit("nudge-reaction", {
+                        messageId: nudge3MessageId,
+                        userAction: "sendMessage",
+                        other: {
+                            username: chatPartnerUsername,
+                            userId: chatPartnerUserId,
+                        },
+                    });
+                })
+                .catch((error) => {
+                    console.log("Error in onClickNudge3Button3, " + error.Message);
+                });
         }
         document.getElementById('nudge3Button4').onclick=function(){onClickNudge3Button4()};
         function onClickNudge3Button4() {
@@ -480,23 +597,41 @@ block content
         });
 
         function sendMessage(msg) {
-            socket.emit('send-message', { 
-                msg: {
-                    type: "txt",
-                    body: msg
-                },
-                nudge: {
-                    nudgeShown: nudgeShown,
-                    riskyScenario: null,
-                    nudgeType: null,
-                    userAction: null,
-                },
-                to: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                    socketId: chatPartnerSocketId
-                } 
-            });
+            try {
+                console.log("Inside sendMessage --> " + msg);
+                return new Promise((resolve, reject) => {
+                    socket.emit(
+                        "send-message",
+                        {
+                            msg: {
+                                type: "txt",
+                                body: msg,
+                            },
+                            nudge: {
+                                nudgeShown: nudgeShown,
+                                riskyScenario: null,
+                                nudgeType: null,
+                                userAction: null,
+                            },
+                            to: {
+                                username: chatPartnerUsername,
+                                userId: chatPartnerUserId,
+                                socketId: chatPartnerSocketId,
+                            },
+                        },
+                        (response) => {
+                            if (response.error) {
+                                console.log("Error in Send Message, " + response.error);
+                                reject(response.error);
+                            } else {
+                                resolve();
+                            }
+                        }
+                    );
+                });
+            } catch (err) {
+                console.log("Error in sendMEssage, " + err.message);
+            }
         }
 
         const infoBreach1 = "Ahhh okay, which school you go to?";
@@ -506,12 +641,15 @@ block content
         const explicitContent1 = "explicitContent1.png";
 
         $('#messageInput')[0].addEventListener('submit', function(e) {
+            console.log('Inside submit');
             e.preventDefault();
             const input = $('#input')[0]; 
             let riskyScenario = null;
             let nudgeType = null;
             if (input.value) {
-                if (input.value == infoBreach1) {
+                console.log(input.value);
+                if (input.value.replace(/\s/g,'').includes(infoBreach1.replace(/\s/g,''))) {
+                    console.log("Breach detected");
                     riskyScenario = "infoBreach1"
                     nudgeType = "abstinence";
                 }
@@ -615,6 +753,8 @@ block content
                 if (fileupload.files[0].size >= 10000000) {
                     alert("Image Size too large!")
                     fileupload.files[0] = null;
+                    $('#messages').css({"margin-bottom":""});
+                    $('#messages').css({"border-bottom":""});
                     return;
                 }
 
@@ -624,6 +764,9 @@ block content
                         const result = reader.result;
                         image.src = result;  
                         image.style.display = "block";
+                        document.getElementById("btn_imgcancel").style.display = "block";
+                        $('#messages').css({"margin-bottom":"150px"});
+                        $('#messages').css({"border-bottom":"1px solid #b1b0ac"});
                     };
 
                 }
@@ -633,7 +776,10 @@ block content
                     reader.onload = function(e) {
                         const result = reader.result;
                         image.src = "https://cdn.iconscout.com/icon/free/png-256/video-file-85-1120664.png";  
-                        image.style.display = "block"
+                        image.style.display = "block";
+                        document.getElementById("btn_imgcancel").style.display = "block";
+                        $('#messages').css({"margin-bottom":"150px"});
+                        $('#messages').css({"border-bottom":"1px solid #b1b0ac"});
                     };
                 }
             }
@@ -758,7 +904,7 @@ block content
                 addChatSentMessage(msg.msg, msg.msg.time, msg._id);
             }
             else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
-                if (nudgeShown && msg.msg.body == infoBreach1) {
+                if (nudgeShown && msg.msg.body.replace(/\s/g,'').includes(infoBreach1.replace(/\s/g,''))) {
                     $('#nudge1Modal').modal('show');
                 }
                 if (nudgeShown && msg.nudge.riskyScenario == "explicitContent1") {
@@ -789,6 +935,9 @@ block content
             }
 
             document.getElementById("outputImage").style.display = "none"
+            $('#messages').css({"margin-bottom":""});
+            $('#messages').css({"border-bottom":""});
+            document.getElementById("btn_imgcancel").style.display = "none"
             document.getElementById("sending").style.display = "none"
             document.getElementById("outputImage").src = "#"
         });
@@ -907,10 +1056,10 @@ block content
                 
             }
             else if (msg.type == "img") {
-                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+                msgType = `<img src="https://stirlabspictureupload.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
             }
             else if (msg.type == "vid") {
-                msgType = `<video width="200" style="border-radius:6px" controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
+                msgType = `<video width="200" style="border-radius:6px" controls><source src="https://stirlabspictureupload.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
             // reaction box
             const react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:20%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
@@ -929,10 +1078,11 @@ block content
                                 <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; left:2px;"></div> 
                                     <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; left:14px;"></div>
                             </div>
-                            <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
+                            <p style="font-size:10px; margin-top:-8px;margin-bottom:10px;">${formatTime(time)}</p>
                             </div>
                         </div>`
             $('#messages').append(mes);
+            console.log("Messages -> "+$('#messages')[0]);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
 
             // on click actions for showing reaction box
@@ -961,10 +1111,10 @@ block content
                 }
             }
             else if (msg.type == "img") {
-                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+                msgType = `<img src="https://stirlabspictureupload.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
             }
             else if (msg.type == "vid") {
-                msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
+                msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://stirlabspictureupload.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
 
             // reaction box
@@ -986,10 +1136,12 @@ block content
                                 <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; right:14px;"></div> 
                             </div>
 
-                            <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
+                            <p style="font-size:10px; margin-top:;margin-bottom:10px;">${formatTime(time)}</p>
                             </div>
                         </div>`
             $('#messages').append(mes);
+            console.log("Messages -> "+$('#messages')[0]);
+
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
 
             const x = document.getElementsByClassName(`chatPartnerMessagePFP-${user}`);
@@ -1025,7 +1177,7 @@ block content
                                     <div class="card" style="min-width:400px">
                                         <div class="content" style="text-align:center">
                                             <div class="description">We have detected a harmful message from this user. You might want to check out associated risks before you view it.</div>
-                                            <a style="color:blue" href="http://localhost:3000/risk_information"> 
+                                            <a style="color:blue" href="http://localhost:3100/risk_information"> 
                                                 <u>click here to learn more</u>
                                             </a>
                                         </div>

@@ -65,6 +65,16 @@ const conversationSchema = new Schema(
   { versionKey: false }
 );
 
+
+const aliasSchema = new Schema({
+
+  aliasName: String,
+  createAt: { type: Date, default: Date.now },
+  createdBy: String, //userId of the researcher who create it
+
+});
+
 const Message = mongoose.model("Message", messageSchema);
 const Conversation = mongoose.model("Conversation", conversationSchema);
-module.exports = { Conversation, Message };
+const Alias = mongoose.model("Alias", aliasSchema);
+module.exports = { Conversation, Message, Alias };

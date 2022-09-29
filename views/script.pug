@@ -257,6 +257,11 @@ block content
                   img.ui.avatar.image(src=user.gravatar(60), name=user.profile.name || user.username || user.id)            
               input.newcomment(type='text', placeholder='Write a Comment')
               i.big.send.link.icon
+    if user.IsfirstTimeLogin
+      script.
+        $( document ).ready(function() {
+          $(".ui.tiny.info.modal").modal("show");
+        })
 
     .ui.fluid.card
       .content
@@ -315,3 +320,64 @@ block content
           .ui.error.message
       .actions
         input.ui.green.button(type='submit', name="foo", value='Submit', form='postform')
+    
+
+    br
+    br
+    br
+    br
+    #infoModal.ui.tiny.info.modal()
+      .image.content 
+        img#UCFLogo.ui.fuild.image(src='/public/UCFLogo.png' style="width:40px;height:40px;")
+        img#STIRLogo.ui.fuild.image(src='/public/STIRLogo.png' style="width:75px;height:40px;")
+      i.close.icon 
+      
+      .header#HeaderPage1(style="font-size:2rem;display:block;") Welcome, to Truman
+        .p(style="font-size:1rem;font-weight:normal;line-height: 1.5em;padding-top: 10px") A simulated social media network to connect with others online. Let's get you started!!!
+      
+      .header#HeaderPage2(style="font-size:2rem;display:none") Your Task
+        .p(style="font-size:1rem;font-weight:normal;line-height: 1.5em;padding-top: 10px") Your task on this platform is as you are connecting with others, identifying users 
+          strong that you deem as safe.
+        .image.content 
+          img#STIRGroup.ui.fuild.image(src='/public/STIRGroup.png' style="width:90px;height:90px;")
+      
+      .header#HeaderPage3(style="font-size:2rem;display:none") Guidelines 
+        .p(style="font-size:1rem;font-weight:normal;line-height: 1.5em;padding-top: 10px") 1) Be friendly and have fun! 
+        .p(style="font-size:1rem;font-weight:normal;line-height: 1.5em;padding-top: 10px") 2) No hate speech, discrimination, or bullying/harassment. The researchers reserve the right to kick/ban those who violate any rules. 
+        .p(style="font-size:1rem;font-weight:normal;line-height: 1.5em;padding-top: 10px") 3) No NSFW content or discussion. 
+    
+      .header#HeaderPage4(style="font-size:2rem;display:none") Help and Context 
+        .p(style="font-size:1rem;font-weight:normal;line-height: 1.5em;padding-top: 10px") In case you need assistance, you can contact a researcher at xyz@ucf.com.
+        .p(style="font-size:1rem;font-weight:normal;line-height: 1.5em;padding-top: 10px") It might be smart to write it down just in case!
+      .actions
+        //-input.ui.green.button(type='submit' id="btn_NextPage" value="Next")
+        button#btn_Nextpage(style="background-color: #16ab39; color: #fff;text-shadow: none;font-weight: 700;min-height: 1em;padding: 0.78571429em 1.5em 0.78571429em;border: none;border-radius: 0.28571429rem;") Next
+      script.
+        //- document.getElementById("btn_Nextpage").addClass("ui green button");
+        document.getElementById('btn_Nextpage').onclick=function(){onNextPageClick()};
+
+        function displayModal(){
+          console.log("Hello inside displayModal");
+        }
+
+        function onNextPageClick(){
+          console.log("Indside onNextPageClick func");
+          debugger;
+          if(document.getElementById('HeaderPage1').style.display == "block"){
+            document.getElementById('HeaderPage1').style.display = "none";
+            document.getElementById('HeaderPage2').style.display = "block";
+          }
+          else if( document.getElementById('HeaderPage2').style.display == "block"){
+            document.getElementById('HeaderPage2').style.display = "none";
+            document.getElementById('HeaderPage3').style.display = "block";
+          }
+          else if(document.getElementById('HeaderPage3').style.display == "block"){
+            document.getElementById('HeaderPage3').style.display = "none";
+            document.getElementById('HeaderPage4').style.display = "block";
+          }
+          else if(document.getElementById('HeaderPage4').style.display == "block"){
+            document.getElementById('HeaderPage4').style.display = "none";
+            $('#infoModal').modal('hide');
+          }
+        }
+

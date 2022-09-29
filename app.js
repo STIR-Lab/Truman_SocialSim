@@ -170,7 +170,7 @@ var j3 = schedule.scheduleJob(rule3, function () {
 /**
  * Express configuration.
  */
-const PORT = 3000 || process.env.PORT;
+const PORT = 3100 || process.env.PORT;
 // app.set("port", process.env.PORT || 3000);
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");

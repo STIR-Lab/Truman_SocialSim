@@ -20,7 +20,8 @@ const chatSocket = (server) => {
   // TODO: Receive pfp from the frontend
   // middleware: check username & userId, allows connection
   io.use(async (socket, next) => {
-    const sessionId = socket.handshake.auth.sessionId;
+    try {
+      const sessionId = socket.handshake.auth.sessionId;
 
     if (sessionId) {
       const session = sessionStore.findSession(sessionId);
@@ -53,19 +54,22 @@ const chatSocket = (server) => {
       console.log("HERE 2");
       //console.log(socket.userpfp)
 
+        next();
+      }
+      const username = socket.handshake.auth.username;
+      const userId = socket.handshake.auth.userId;
+      const userpfp = socket.handshake.auth.userpfp;
+      if (!username || !userId) {
+        return next(new Error("Invalid username/userId"));
+      }
+      socket.sessionId = randomId();
+      socket.username = username;
+      socket.userId = userId;
+      socket.userpfp = userpfp;
       next();
+    } catch (error) {
+      console.log("error in io.use, " + error.message);
     }
-    const username = socket.handshake.auth.username;
-    const userId = socket.handshake.auth.userId;
-    const userpfp = socket.handshake.auth.userpfp;
-    if (!username || !userId) {
-      return next(new Error("Invalid username/userId"));
-    }
-    socket.sessionId = randomId();
-    socket.username = username;
-    socket.userId = userId;
-    socket.userpfp = userpfp;
-    next();
   });
 
   io.on("connection", async (socket) => {
@@ -93,6 +97,10 @@ const chatSocket = (server) => {
         userId: userId.userId,
       });
     });
+
+
+    socket.emit("allowAlias", await getAliasdetails(socket.userId));
+
 
     // Fetch existing users
     socket.emit("userList", getCurrentUsers());
@@ -160,51 +168,44 @@ const chatSocket = (server) => {
 
     socket.on("send-message", async ({ msg, nudge, to }) => {
       // NOTE: io.to(socket.io) || socket.to(socket.io)?
+      try {
+        nudge = nudge == undefined ? {} : nudge;
+        let formattedMsg = await formatMessage(
+          msg,
+          nudge,
+          { username: socket.username, userId: socket.userId }, // from
+          to
+        );
+        let convoInfo = await searchConvo(
+          socket.username,
+          socket.userId,
+          to.username,
+          to.userId
+        );
+        if (convoInfo) {
+          console.log("Before Store Message");
+          await storeMessage(formattedMsg, convoInfo);
+          console.log("After store message");
+        } else {
+          console.log("no ongoing convo found, creating a new one.");
 
-      nudge = nudge == undefined ? {} : nudge;
-
-      let formattedMsg = await formatMessage(
-        msg,
-        nudge,
-        { username: socket.username, userId: socket.userId }, // from
-        to
-      );
-
-      let convoInfo = await searchConvo(
-        socket.username,
-        socket.userId,
-        to.username,
-        to.userId
-      );
-
-      if (convoInfo) {
-        await storeMessage(formattedMsg, convoInfo);
+          let newConvo = new Conversation({
+            usernameA: to.username,
+            userIdA: to.userId,
+            //userpfpA: to.userpfp,
+            usernameB: socket.username,
+            //userpfpB: socket.userpfp,
+            userIdB: socket.userId,
+          });
+          await newConvo.save();
+          console.log("saved a new Conversation.");
+          await storeMessage(formattedMsg, newConvo);
+        }
+        io.to(to.userId).emit("receive-message", formattedMsg);
+        io.to(socket.userId).emit("receive-message", formattedMsg);
+      } catch (err) {
+        console.log("Error in send-message, " + err.message);
       }
-      // ok new convo
-      else {
-        console.log("no ongoing convo found, creating a new one.");
-
-        let newConvo = new Conversation({
-          usernameA: to.username,
-          userIdA: to.userId,
-          //userpfpA: to.userpfp,
-          usernameB: socket.username,
-          //userpfpB: socket.userpfp,
-          userIdB: socket.userId,
-        });
-        await newConvo.save();
-
-        await storeMessage(formattedMsg, newConvo);
-      }
-
-      // console.log(formattedMsg);
-      io.to(to.userId) // to recipient
-        // .to(socket.userId) // to sender room
-        .emit("receive-message", formattedMsg);
-
-      // io.to(to.userId) // to recipient
-      io.to(socket.userId) // to sender room
-        .emit("receive-message", formattedMsg);
     });
 
     socket.on("nudge-reaction", async ({ messageId, userAction, other }) => {
@@ -220,7 +221,7 @@ const chatSocket = (server) => {
       }
 
       //Finding index of the content array where messageID is equal to an id within that array
-      let messageIndex = convoInfo.content.findIndex((message) => {
+      let messageIndex = await convoInfo.content.findIndex((message) => {
         return message._id == messageId;
       });
 
@@ -398,36 +399,45 @@ function leaveNotification(from) {
  *
  */
 async function formatMessage(msg, nudge, from, to) {
-  if (msg.type == "img" || msg.type == "vid") {
-    //   for (var value of msg.body.values()) {
-    //     console.log(value);
-    //  }
+  try {
+    if (msg.type == "img" || msg.type == "vid") {
+      //   for (var value of msg.body.values()) {
+      //     console.log(value);
+      //  }
 
-    let prefix = from.userId + Math.random().toString(36).slice(2, 10);
-    msg.body.filename = prefix + msg.body.filename.replace(/[^A-Z0-9]+/gi, "_");
+      let prefix = from.userId + Math.random().toString(36).slice(2, 10);
+      msg.body.filename =
+        prefix + msg.body.filename.replace(/[^A-Z0-9]+/gi, "_");
+      console.log(msg.body);
+      await uploadFile(msg.body);
+
+      msg.body = msg.body.filename;
+    }
+    msg.body = String(msg.body);
+
     console.log(msg.body);
-    await uploadFile(msg.body);
-
-    msg.body = msg.body.filename;
-  }
-
-  return new Message({
-    msg: {
-      ...msg,
-      read: false,
-      time: moment().format("h:mm:ss a"),
-      reactions: {
-        self: "none",
-        other: "none",
+    return new Message({
+      msg: {
+        type: msg.type,
+        body: msg.body,
+        read: false,
+        //time: moment().format("h:mm:ss a"), //Can we add date along with the time??
+        time: moment().format("MMMM Do YYYY, h:mm:ss a"),
+        reactions: {
+          self: "none",
+          other: "none",
+        },
       },
-    },
-    nudge: {
-      ...nudge,
-      userAction: "",
-    },
-    from: from,
-    to: to,
-  });
+      nudge: {
+        ...nudge,
+        userAction: "",
+      },
+      from: from,
+      to: to,
+    });
+  } catch (err) {
+    console.log("Error in formatMessage, " + err.Message);
+  }
 }
 
 /**
@@ -437,28 +447,72 @@ async function formatMessage(msg, nudge, from, to) {
  * @param {object} convoInfo
  */
 async function storeMessage(msg, convoInfo) {
-  convoInfo.content.push(msg);
-
-  await convoInfo.save();
+  try {
+    await convoInfo.content.push(msg);
+    console.log("Before chat saved ");
+    let chatSaved = await convoInfo.save();
+    if (chatSaved) {
+      console.log("Message Saved, " + chatSaved);
+    } else {
+      console.log("Message not Saved, " + chatSaved);
+    }
+    console.log("After chat saved ");
+  } catch (err) {
+    console.log("Error in Store Message, " + err.message);
+  }
 }
+
+async function getAliasdetails(userId) {
+  try {
+    let aliasDetails = [];
+    let aliasdata = [];
+    // aliasDetails = {
+    //   "isResearcher": "True",
+    //   "aliasTagged": ["Bob", "Alice"]
+    // };
+
+
+
+
+    //aliasDetails = await Users.find({ _id: userId }, { "aliasTagged": 1, "isResearcher": 1 })
+    //return aliasDetails;
+
+    aliasdata = await User.find({ _id: userId })
+
+    aliasDetails = {
+      "userId": aliasdata[0]._id,
+      "isResearcher": aliasdata[0].isResearcher,
+      "aliasTagged": aliasdata[0].aliasTagged
+    }
+    console.log(aliasDetails);
+    return aliasDetails;
+  }
+  catch (err) {
+    console.log("Error in getAliasdetails")
+  }
+}
+
 
 /**
  * Fetch a list of current active users
  *
  */
 function getCurrentUsers() {
-  const userList = [];
-  sessionStore.findAllSessions().forEach((session) => {
-    if (session.connected) {
-      userList.push({
-        userId: session.userId,
-        username: session.username,
-        userpfp: session.userpfp,
-      });
-    }
-  });
-
-  return userList;
+  try {
+    const userList = [];
+    sessionStore.findAllSessions().forEach((session) => {
+      if (session.connected) {
+        userList.push({
+          userId: session.userId,
+          username: session.username,
+          userpfp: session.userpfp,
+        });
+      }
+    });
+    return userList;
+  } catch (err) {
+    console.log("Error in getCurrentUsers, " + err);
+  }
 }
 
 /**
@@ -469,26 +523,28 @@ function getCurrentUsers() {
  *
  */
 async function getChatHistory(username, userId) {
-  let allConvo = await Conversation.find({
-    $or: [
-      {
-        usernameA: username,
-        userIdA: userId,
-      },
-      {
-        usernameB: username,
-        userIdB: userId,
-      },
-    ],
-  });
-
-  return allConvo;
+  try {
+    let allConvo = await Conversation.find({
+      $or: [
+        {
+          usernameA: username,
+          userIdA: userId,
+        },
+        {
+          usernameB: username,
+          userIdB: userId,
+        },
+      ],
+    });
+    return allConvo;
+  } catch (err) {
+    console.log("Error in getChatHistory, " + err.message);
+  }
 }
 
 async function getChatPartnerPFP(userId) {
-  let chatPartner;
-
   try {
+    let chatPartner;
     chatPartner = await User.find({
       _id: userId,
     });
@@ -496,7 +552,7 @@ async function getChatPartnerPFP(userId) {
     console.log("GOT " + userId + " PFP");
     return chatPartner[0].profile.picture;
   } catch (error) {
-    console.log(error);
+    console.log("Error in getChatPartnerPFP, " + error);
     return "";
   }
 
@@ -513,46 +569,49 @@ async function getChatPartnerPFP(userId) {
  *
  */
 async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
-  let curConvo = await Conversation.findOne({
-    usernameA: usernameA,
-    userIdA: userIdA,
-    usernameB: usernameB,
-    userIdB: userIdB,
-  });
-
-  if (curConvo) {
-    // console.log("found existing convo", curConvo);
-    return curConvo;
-
-    // {
-    //   curConvo: curConvo,
-    //   usernameA: usernameA,
-    //   userIdA: userIdA,
-    //   usernameB: usernameB,
-    //   userIdB: userIdB,
-    // };
-  } else {
-    curConvo = await Conversation.findOne({
-      usernameA: usernameB,
-      userIdA: userIdB,
-      usernameB: usernameA,
-      userIdB: userIdA,
+  try {
+    let curConvo = await Conversation.findOne({
+      usernameA: usernameA,
+      userIdA: userIdA,
+      usernameB: usernameB,
+      userIdB: userIdB,
     });
+
     if (curConvo) {
       // console.log("found existing convo", curConvo);
       return curConvo;
 
       // {
       //   curConvo: curConvo,
-      //   usernameA: usernameB,
-      //   userIdA: userIdB,
-      //   usernameB: usernameA,
-      //   userIdB: userIdA,
+      //   usernameA: usernameA,
+      //   userIdA: userIdA,
+      //   usernameB: usernameB,
+      //   userIdB: userIdB,
       // };
-    }
-  }
+    } else {
+      curConvo = await Conversation.findOne({
+        usernameA: usernameB,
+        userIdA: userIdB,
+        usernameB: usernameA,
+        userIdB: userIdA,
+      });
+      if (curConvo) {
+        // console.log("found existing convo", curConvo);
+        return curConvo;
 
-  return null;
+        // {
+        //   curConvo: curConvo,
+        //   usernameA: usernameB,
+        //   userIdA: userIdB,
+        //   usernameB: usernameA,
+        //   userIdB: userIdA,
+        // };
+      }
+    }
+    return null;
+  } catch (err) {
+    console.log("Error in searchConvo, " + err.message);
+  }
 }
 
 /**
