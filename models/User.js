@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
+
 const Schema = mongoose.Schema;
 
 const userSchema = new mongoose.Schema({
@@ -9,32 +10,32 @@ const userSchema = new mongoose.Schema({
   passwordResetToken: String,
   passwordResetExpires: Date,
   username: String,
-  active: {type: Boolean, default: true},
-  isAdmin: {type: Boolean, default: false},
+  active: { type: Boolean, default: true },
+  isAdmin: { type: Boolean, default: false },
 
-  completed: {type: Boolean, default: false},
+  completed: { type: Boolean, default: false },
 
-  numPosts: { type: Number, default: -1 }, //not including replys
-  numReplies: { type: Number, default: -1 }, //not including posts
-  numComments: { type: Number, default: -1 }, //not including posts
-  numActorReplies: { type: Number, default: -1 }, //not including posts
+  numPosts: { type: Number, default: -1 }, // not including replys
+  numReplies: { type: Number, default: -1 }, // not including posts
+  numComments: { type: Number, default: -1 }, // not including posts
+  numActorReplies: { type: Number, default: -1 }, // not including posts
 
-  numPostLikes: { type: Number, default: 0 }, 
-  numCommentLikes: { type: Number, default: 0 }, 
+  numPostLikes: { type: Number, default: 0 },
+  numCommentLikes: { type: Number, default: 0 },
 
   lastNotifyVisit: Date,
 
   mturkID: String,
 
-  group: String, //full group type
-  ui: String,    //just UI type (no or ui)
-  notify: String, //notification type (no, low or high)
-  script_type: String, //type of script they are running in
-  post_nudge: String, //yes/no on post nudge
+  group: String, // full group type
+  ui: String, // just UI type (no or ui)
+  notify: String, // notification type (no, low or high)
+  script_type: String, // type of script they are running in
+  post_nudge: String, // yes/no on post nudge
 
-  transparency: String,    //just UI type (no or yes)
-  profile_perspective: String, //notification type (no, low or high)
-  comment_prompt: String, //notification type (no or yes)
+  transparency: String, // just UI type (no or yes)
+  profile_perspective: String, // notification type (no, low or high)
+  comment_prompt: String, // notification type (no or yes)
 
   tokens: Array,
 
@@ -42,32 +43,33 @@ const userSchema = new mongoose.Schema({
   reported: [String],
 
   study_days: {
-      type: [Number],
-      default: [0, 0, 0]
-    },
+    type: [Number],
+    default: [0, 0, 0]
+  },
 
   posts: [new Schema({
-    type: String, //post, reply, actorReply
+    type: String, // post, reply, actorReply
 
-    postID: Number,  //number for this post (1,2,3...) reply get -1 maybe should change to a String ID system
-    body: {type: String, default: '', trim: true}, //body of post or reply
-    picture: String, //picture for post
-    liked: {type: Boolean, default: false}, //has the user liked it?
+    // number for this post (1,2,3...) reply get -1 maybe should change to a String ID system
+    postID: Number,
+    body: { type: String, default: '', trim: true }, // body of post or reply
+    picture: String, // picture for post
+    liked: { type: Boolean, default: false }, // has the user liked it?
 
-    //Actor Comments for User Made Posts
+    // Actor Comments for User Made Posts
     comments: [new Schema({
-      //class: String, //Bully, Marginal, normal, etc
-      actor: {type: Schema.ObjectId, ref: 'Actor'},
-      body: {type: String, default: '', trim: true}, //body of post or reply
-      commentID: Number, //ID of the comment
-      time: Number,//millisecons
-      absTime: Number,//millisecons
-      new_comment: {type: Boolean, default: false}, //is new comment
-      isUser: {type: Boolean, default: false}, //is this a comment on own post
-      liked: {type: Boolean, default: false}, //has the user liked it? 
-      flagged: {type: Boolean, default: false},//is Flagged?
+      // class: String, //Bully, Marginal, normal, etc
+      actor: { type: Schema.ObjectId, ref: 'Actor'},
+      body: { type: String, default: '', trim: true}, // body of post or reply
+      commentID: Number, // ID of the comment
+      time: Number, // millisecons
+      absTime: Number, // millisecons
+      new_comment: { type: Boolean, default: false }, // is new comment
+      isUser: { type: Boolean, default: false }, // is this a comment on own post
+      liked: { type: Boolean, default: false }, // has the user liked it?
+      flagged: { type: Boolean, default: false },// is Flagged?
       likes: Number
-      }, { versionKey: false })],
+    }, { versionKey: false })],
 
     replyID: Number, //use this for User Replies
     reply: {type: Schema.ObjectId, ref: 'Script'}, //Actor Post reply is to =>

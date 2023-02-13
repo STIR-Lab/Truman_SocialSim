@@ -26,14 +26,14 @@ const chatSocket = (server) => {
       const session = sessionStore.findSession(sessionId);
       if (session) {
         // attach user pfp to session
-        session.userpfp = await getChatPartnerPFP(session.userId); //socket.handshake.auth.userpfp;
+        session.userpfp = await getChatPartnerPFP(session.userId); // socket.handshake.auth.userpfp;
 
         socket.sessionId = sessionId;
         socket.userId = session.userId;
         socket.username = session.username;
         socket.userpfp = session.userpfp;
 
-        console.log("HERE 1");
+        console.log('HERE 1');
         console.log(session);
 
         return next();
@@ -43,15 +43,15 @@ const chatSocket = (server) => {
       const userId = socket.handshake.auth.userId;
       const userpfp = socket.handshake.auth.userpfp;
       if (!username || !userId) {
-        return next(new Error("Invalid username/userId"));
+        return next(new Error('Invalid username/userId'));
       }
       socket.sessionId = randomId();
       socket.username = username;
       socket.userId = userId;
       socket.userpfp = userpfp;
 
-      console.log("HERE 2");
-      //console.log(socket.userpfp)
+      console.log('HERE 2');
+      // console.log(socket.userpfp)
 
       next();
     }
@@ -182,14 +182,14 @@ const chatSocket = (server) => {
       }
       // ok new convo
       else {
-        console.log("no ongoing convo found, creating a new one.");
+        console.log('no ongoing convo found, creating a new one.');
 
         let newConvo = new Conversation({
           usernameA: to.username,
           userIdA: to.userId,
-          //userpfpA: to.userpfp,
+          // userpfpA: to.userpfp,
           usernameB: socket.username,
-          //userpfpB: socket.userpfp,
+          // userpfpB: socket.userpfp,
           userIdB: socket.userId,
         });
         await newConvo.save();
@@ -560,12 +560,12 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
  *
  */
 
-getChat = (req, res) => {
-  res.render("chat", {});
+const getChat = (req, res) => {
+  res.render('chat', {});
 };
 
-getRiskInformation = (req, res) => {
-  res.render("risk_information", {});
+const getRiskInformation = (req, res) => {
+  res.render('risk_information', {});
 };
 
 module.exports = { chatSocket, getChat, getRiskInformation };
