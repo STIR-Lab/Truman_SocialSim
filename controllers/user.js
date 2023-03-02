@@ -20,74 +20,56 @@ exports.getLogin = (req, res) => {
   });
 };
 
-/*************
+/** ***********
 Get Notifcation Bell signal
-**************/
+************* */
 exports.checkBell = (req, res) => {
   if (req.user) {
-
-    var user = req.user;
+    const user = req.user;
 
     Notification.find({ $or: [{ userPost: user.numPosts }, { actorReply: user.numActorReplies }] })
-      //Notification.find({ $or: [ { userPost: { $lte: user.numPosts } }, { actorReply: { $lte: user.numActorReplies } } ] })
+      // Notification.find({ $or: [ { userPost: { $lte: user.numPosts } }, { actorReply: { $lte: user.numActorReplies } } ] })
       .populate('actor')
-      .exec(function (err, notification_feed) {
-
+      .exec((err, notification_feed) => {
         if (err) { return next(err); }
 
         if (notification_feed.length == 0) {
-          //peace out - send empty page - 
-          //or deal with replys or something IDK
-          console.log("No User Posts yet. Bell is black");
+          // peace out - send empty page -
+          // or deal with replys or something IDK
+          console.log('No User Posts yet. Bell is black');
           return res.send({ result: false });
         }
 
-        //We have values we need to check
-        //When this happens
-        else {
-
-          for (var i = 0, len = notification_feed.length; i < len; i++) {
-
-            //Do all things that reference userPost (read,like, actual copy of ActorReply)
-            if (notification_feed[i].userPost >= 0) {
-
-              var userPostID = notification_feed[i].userPost;
-              //this can cause issues if not found - should check on later
-              var user_post = user.getUserPostByID(userPostID);
-              var time_diff = Date.now() - user_post.absTime;
-              if (user.lastNotifyVisit) {
-                var past_diff = user.lastNotifyVisit - user_post.absTime;
-              }
-
-              else {
-                var past_diff = 0;
-              }
-
-              if (notification_feed[i].time <= time_diff && notification_feed[i].time > past_diff) {
-
-                if ((notification_feed[i].notificationType == "read") && (user.transparency != "no"))
-                  return res.send({ result: true });
-                if (notification_feed[i].notificationType != "read")
-                  return res.send({ result: true });
-              }
-
-            }//UserPost
-
-          }//for loop
-
-          //end of for loop and no results, so no new stuff
-          console.log("&&Bell Check&& End of For Loop, no Results")
-          res.send({ result: false });
-        }
+        // We have values we need to check
+        // When this happens
 
 
-      });//Notification exec
+        for (let i = 0, len = notification_feed.length; i < len; i++) {
+          // Do all things that reference userPost (read,like, actual copy of ActorReply)
+          if (notification_feed[i].userPost >= 0) {
+            const userPostID = notification_feed[i].userPost;
+            // this can cause issues if not found - should check on later
+            const user_post = user.getUserPostByID(userPostID);
+            const time_diff = Date.now() - user_post.absTime;
+            if (user.lastNotifyVisit) {
+              var past_diff = user.lastNotifyVisit - user_post.absTime;
+            } else {
+              var past_diff = 0;
+            }
 
+            if (notification_feed[i].time <= time_diff && notification_feed[i].time > past_diff) {
+              if ((notification_feed[i].notificationType == 'read') && (user.transparency != 'no')) { return res.send({ result: true }); }
+              if (notification_feed[i].notificationType != 'read') { return res.send({ result: true }); }
+            }
+          }// UserPost
+        }// for loop
 
-  }
-
-  else {
-    console.log("No req.user")
+        // end of for loop and no results, so no new stuff
+        console.log('&&Bell Check&& End of For Loop, no Results');
+        res.send({ result: false });
+      });// Notification exec
+  } else {
+    console.log('No req.user');
     return res.send({ result: false });
   }
 };
@@ -116,16 +98,16 @@ exports.postLogin = (req, res, next) => {
       return res.redirect('/login');
     }
     if (!(user.active)) {
-      console.log("FINAL");
-      //Need to capture this in a var
-      var post_url = process.env.POST_SURVEY + user.mturkID;
-      console.log("last url is " + post_url)
+      console.log('FINAL');
+      // Need to capture this in a var
+      const post_url = process.env.POST_SURVEY + user.mturkID;
+      console.log(`last url is ${post_url}`);
       req.flash('final', { msg: post_url });
       return res.redirect('/login');
     }
     req.logIn(user, (err) => {
       if (err) { return next(err); }
-      //req.flash('success', { msg: 'Success! You are logged in.' });
+      // req.flash('success', { msg: 'Success! You are logged in.' });
       res.redirect('/');
     });
   })(req, res, next);
@@ -171,14 +153,14 @@ exports.postSignup = (req, res, next) => {
     return res.redirect('/signup');
   }
 
-  /*###############################
+  /* ###############################
   Place Experimental Varibles Here!
-  ###############################*/
-  var var_num = 4;
-  var result = ['var1', 'var2', 'var3', 'var4'][Math.floor(Math.random() * var_num)]
+  ############################### */
+  const var_num = 4;
+  const result = ['var1', 'var2', 'var3', 'var4'][Math.floor(Math.random() * var_num)];
 
-  var resultArray = result.split(':');
-  //[0] is script_type, [1] is post_nudge
+  const resultArray = result.split(':');
+  // [0] is script_type, [1] is post_nudge
   const user = new User({
     email: req.body.email,
     password: req.body.password,
@@ -209,27 +191,24 @@ exports.postSignup = (req, res, next) => {
 };
 
 
-
 /**
  * POST /account/profile
  * Update profile information.
  */
 exports.postSignupInfo = (req, res, next) => {
-
-
   User.findById(req.user.id, (err, user) => {
     if (err) { return next(err); }
-    //user.email = req.body.email || '';
+    // user.email = req.body.email || '';
     user.profile.name = req.body.name || '';
     user.profile.location = req.body.location || '';
     user.profile.bio = req.body.bio || '';
 
     if (req.file) {
-      console.log("Changeing Picture now to: " + req.file.filename);
+      console.log(`Changeing Picture now to: ${req.file.filename}`);
       user.profile.picture = req.file.filename;
       uploadFilePfp(req.file);
-      //console.log(result);
-      //res.send("good");
+      // console.log(result);
+      // res.send("good");
     }
 
     user.save((err) => {
@@ -261,7 +240,6 @@ exports.getAccount = (req, res) => {
  * Signup Info page.
  */
 exports.getSignupInfo = (req, res) => {
-
   res.render('account/signup_info', {
     title: 'Add Information'
   });
@@ -272,7 +250,6 @@ exports.getSignupInfo = (req, res) => {
  * Profile page.
  */
 exports.getMe = (req, res) => {
-
   User.findById(req.user.id)
     .populate({
       path: 'posts.reply',
@@ -290,16 +267,13 @@ exports.getMe = (req, res) => {
       path: 'posts.comments.actor',
       model: 'Actor'
     })
-    .exec(function (err, user) {
+    .exec((err, user) => {
       if (err) { return next(err); }
 
-      var allPosts = user.getPostsAndReplies();
+      const allPosts = user.getPostsAndReplies();
 
       res.render('me', { posts: allPosts.reverse() });
-
     });
-
-
 };
 
 /**
@@ -327,11 +301,10 @@ exports.postUpdateProfile = (req, res, next) => {
     user.profile.bio = req.body.bio || '';
 
     if (req.file) {
-      console.log("Changeing Picture now to: " + req.file.filename);
+      console.log(`Changeing Picture now to: ${req.file.filename}`);
       user.profile.picture = req.file.filename;
-      console.log(req.file)
+      console.log(req.file);
       uploadFilePfp(req.file);
-
     }
 
     user.save((err) => {
@@ -506,11 +479,11 @@ exports.getForgot = (req, res) => {
 
 /**
  * Mail A user a Reminder
- * 
+ *
  */
-var sendReminderEmail = function (user) {
+const sendReminderEmail = function (user) {
   if (!user) { return; }
-  var u_name = user.profile.name || user.email || 'buddy';
+  const u_name = user.profile.name || user.email || 'buddy';
   const transporter = nodemailer.createTransport({
     service: '"Mailgun"',
     auth: {
@@ -545,17 +518,16 @@ var sendReminderEmail = function (user) {
     console.log('Server responded with "%s"', info.response);
     transporter.close();
   });
-
 };
 
 /**
  * Mail A user a Reminder
- * 
+ *
  */
-var sendFinalEmail = function (user) {
+const sendFinalEmail = function (user) {
   if (!user) { return; }
-  console.log("!!!!!!SENDING FINAL E_MAIL!!!!")
-  var u_name = user.profile.name || user.email || 'buddy';
+  console.log('!!!!!!SENDING FINAL E_MAIL!!!!');
+  const u_name = user.profile.name || user.email || 'buddy';
   const transporter = nodemailer.createTransport({
     service: '"Mailgun"',
     auth: {
@@ -572,7 +544,7 @@ var sendFinalEmail = function (user) {
     text: `Hey ${u_name},\n\n
       Thank you so much for participating in our study!\n
       Your participation has been a huge help in beta testing our app.
-      You have one last task to finish the study, and that is to take the final survey here at  `+ process.env.POST_SURVEY + user.mturkID + `\n\n
+      You have one last task to finish the study, and that is to take the final survey here at  ${process.env.POST_SURVEY}${user.mturkID}\n\n
       Thanks again for all your help and participation!\n
       Keep Eating, Snapping and Loving!\n 
       🍴📷.❤️ Team
@@ -588,7 +560,6 @@ var sendFinalEmail = function (user) {
     console.log('Server responded with "%s"', info.response);
     transporter.close();
   });
-
 };
 
 /**
@@ -598,15 +569,14 @@ var sendFinalEmail = function (user) {
 exports.mailAllActiveUsers = () => {
   console.log('$%^$%$#%$#$%%&^%&^%^&%&^$^%$%$^% MAILING ALL USERS NOW!!!!!!!!!!!!!!!');
   User.find().where('active').equals(true).exec(
-    function (err, users) {
-
+    (err, users) => {
       // handle error
       if (err) {
-        console.log('failed: ' + err);
+        console.log(`failed: ${err}`);
       } else {
         // E-mail all active users
-        for (var i = users.length - 1; i >= 0; i--) {
-          //e-mail all non-Admins
+        for (let i = users.length - 1; i >= 0; i--) {
+          // e-mail all non-Admins
           if (!users[i].isAdmin) {
             sendReminderEmail(users[i]);
           }
@@ -621,41 +591,39 @@ exports.mailAllActiveUsers = () => {
  */
 exports.stillActive = () => {
   User.find().where('active').equals(true).exec(
-    function (err, users) {
-
+    (err, users) => {
       // handle error
       if (err) {
-        console.log('failed: ' + err);
+        console.log(`failed: ${err}`);
       } else {
         // E-mail all active users
-        for (var i = users.length - 1; i >= 0; i--) {
-          console.log("Looking at user " + users[i].email);
-          var time_diff = Date.now() - users[i].createdAt;
-          var three_days = 259200000;
+        for (let i = users.length - 1; i >= 0; i--) {
+          console.log(`Looking at user ${users[i].email}`);
+          const time_diff = Date.now() - users[i].createdAt;
+          const three_days = 259200000;
 
-          console.log("Time period is  " + time_diff);
-          console.log("Three days is  " + three_days);
+          console.log(`Time period is  ${time_diff}`);
+          console.log(`Three days is  ${three_days}`);
           if (time_diff >= three_days) {
             if (users[i].isAdmin) {
               users[i].createdAt = Date.now();
               users[i].save((err) => {
                 if (err) { return next(err); }
-                console.log("Switch over to new day");
+                console.log('Switch over to new day');
               });
             }
 
-            //normal user, turn off
+            // normal user, turn off
             else {
               users[i].active = false;
-              console.log("turning off user " + users[i].email);
+              console.log(`turning off user ${users[i].email}`);
               sendFinalEmail(users[i]);
               users[i].save((err) => {
                 if (err) { return next(err); }
-                console.log("Success in turning off");
+                console.log('Success in turning off');
               });
             }
           }
-
         }
       }
     });
@@ -665,39 +633,36 @@ exports.stillActive = () => {
  * Basic information on Users that Finished the study
  */
 exports.userTestResults = (req, res) => {
-  //only admin can do this
+  // only admin can do this
   if (!req.user.isAdmin) {
     res.redirect('/');
   }
-  //we are admin
+  // we are admin
   else {
-
     User.find().where('active').equals(false).exec(
-      function (err, users) {
-
+      (err, users) => {
         // handle error
         if (err) {
-          console.log('failed: ' + err);
+          console.log(`failed: ${err}`);
         } else {
           // E-mail all active users
-          for (var i = users.length - 1; i >= 0; i--) {
-            console.log("@@@@@@@@@@Looking at user " + users[i].email);
-            var time_diff = Date.now() - users[i].createdAt;
-            var three_days = 259200000;
-            var one_day = 86400000;
+          for (let i = users.length - 1; i >= 0; i--) {
+            console.log(`@@@@@@@@@@Looking at user ${users[i].email}`);
+            const time_diff = Date.now() - users[i].createdAt;
+            const three_days = 259200000;
+            const one_day = 86400000;
 
-            //check if completed or not yet 
+            // check if completed or not yet
             if (!users[i].completed) {
-
               /*
               //check logs
               var day = [0,0,0];
               for (var j = users[i].log.length - 1; j >= 0; j--) {
-  
+
                 var logtime = users[i].log[j].time - users[i].createdAt;
                 //console.log("logtime is "+logtime);
-                
-  
+
+
                 //day one
                 if (logtime <= one_day)
                 {
@@ -705,7 +670,7 @@ exports.userTestResults = (req, res) => {
                   //console.log("!!!DAY1");
                 }
                 //day two
-                else if ((logtime >=one_day) && (logtime <= (one_day *2))) 
+                else if ((logtime >=one_day) && (logtime <= (one_day *2)))
                 {
                   day[1]++;
                   //console.log("!!!DAY2");
@@ -716,9 +681,9 @@ exports.userTestResults = (req, res) => {
                   day[2]++;
                   //console.log("!!!DAY3");
                 }
-  
+
               }//end of LOG for loop
-            
+
               console.log("@@@@@@@@days are d1:"+day[0]+" d2:"+day[1]+" d3:"+day[2]);
               //Logged in at least twice a day, and posted at least 3 times
               */
@@ -729,14 +694,12 @@ exports.userTestResults = (req, res) => {
                   console.log("I'm Finished!!!!");
                 });
               }
-            }//if User.completed
+            }// if User.completed
+          }// for loop for all users!
 
-          }//for loop for all users!  
-
-          res.render('completed', { users: users });
-
-        }///else no error    
-      });//User.Find()
+          res.render('completed', { users });
+        }// /else no error
+      });// User.Find()
   }
 };
 

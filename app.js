@@ -34,22 +34,22 @@ const m_options = multer.diskStorage({
   },
 });
 
-var userpost_options = multer.diskStorage({
-  destination: path.join(__dirname, "uploads/user_post"),
-  filename: function (req, file, cb) {
-    var lastsix = req.user.id.substr(req.user.id.length - 6);
-    var prefix = lastsix + Math.random().toString(36).slice(2, 10);
-    cb(null, prefix + file.originalname.replace(/[^A-Z0-9]+/gi, "_"));
+const userpost_options = multer.diskStorage({
+  destination: path.join(__dirname, 'uploads/user_post'),
+  filename (req, file, cb) {
+    const lastsix = req.user.id.substr(req.user.id.length - 6);
+    const prefix = lastsix + Math.random().toString(36).slice(2, 10);
+    cb(null, prefix + file.originalname.replace(/[^A-Z0-9]+/gi, '_'));
   },
 });
 
-var useravatar_options = multer.diskStorage({
-  destination: path.join(__dirname, "uploads/user_post"),
-  filename: async function (req, file, cb) {
-    var prefix = req.user.id + Math.random().toString(36).slice(2, 10);
-    cb(null, prefix + file.originalname.replace(/[^A-Z0-9]+/gi, "_"));
-    //const result = uploadFile(file);
-    //console.log(result)
+const useravatar_options = multer.diskStorage({
+  destination: path.join(__dirname, 'uploads/user_post'),
+  async filename (req, file, cb) {
+    const prefix = req.user.id + Math.random().toString(36).slice(2, 10);
+    cb(null, prefix + file.originalname.replace(/[^A-Z0-9]+/gi, '_'));
+    // const result = uploadFile(file);
+    // console.log(result)
   },
 });
 
@@ -98,10 +98,10 @@ try {
   mongoose.connect(
     process.env.MONGODB_URI,
     { useNewUrlParser: true, useUnifiedTopology: true },
-    () => console.log(" Mongoose is connected"),
+    () => console.log(' Mongoose is connected'),
   );
 } catch (e) {
-  console.log("could not connect");
+  console.log('could not connect');
 }
 
 mongoose.connection.on('error', (err) => {
@@ -122,25 +122,25 @@ const rule = new schedule.RecurrenceRule();
 rule.hour = 4;
 rule.minute = 55;
 
-var j = schedule.scheduleJob(rule, function () {
-  console.log("@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########");
-  console.log("@@@@@@######@@@@@@@@Sending Mail to All ACTIVE USERS!!!!!");
-  console.log("@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########");
+var j = schedule.scheduleJob(rule, () => {
+  console.log('@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########');
+  console.log('@@@@@@######@@@@@@@@Sending Mail to All ACTIVE USERS!!!!!');
+  console.log('@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########');
   userController.mailAllActiveUsers();
 });
 
-/****
+/** **
  **CRON JOBS
  **Check if users are still active 12 and 20
  */
-var rule1 = new schedule.RecurrenceRule();
+const rule1 = new schedule.RecurrenceRule();
 rule1.hour = 4;
 rule1.minute = 30;
 
-var j = schedule.scheduleJob(rule1, function () {
-  console.log("@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########");
-  console.log("@@@@@@######@@@@@@@@Checking if Users are active!!!!!");
-  console.log("@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########");
+var j = schedule.scheduleJob(rule1, () => {
+  console.log('@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########');
+  console.log('@@@@@@######@@@@@@@@Checking if Users are active!!!!!');
+  console.log('@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########');
   userController.stillActive();
 });
 
@@ -148,16 +148,16 @@ var j = schedule.scheduleJob(rule1, function () {
  ** CRON JOBS
  ** Check if users are still active 12 and 20
  */
-var rule2 = new schedule.RecurrenceRule();
+const rule2 = new schedule.RecurrenceRule();
 rule2.hour = 12;
 rule2.minute = 30;
 
-const j2 = schedule.scheduleJob(rule2, function () {
-  console.log("@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########");
+const j2 = schedule.scheduleJob(rule2, () => {
+  console.log('@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########');
   console.log(
-    "@@@@@@######@@@@@@@@2222 Checking if Users are active 2222!!!!!"
+    '@@@@@@######@@@@@@@@2222 Checking if Users are active 2222!!!!!'
   );
-  console.log("@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########");
+  console.log('@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########');
   userController.stillActive();
 });
 
@@ -169,12 +169,12 @@ const rule3 = new schedule.RecurrenceRule();
 rule3.hour = 20;
 rule3.minute = 30;
 
-var j3 = schedule.scheduleJob(rule3, function () {
-  console.log("@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########");
+const j3 = schedule.scheduleJob(rule3, () => {
+  console.log('@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########');
   console.log(
-    "@@@@@@######@@@@@@@@3333 Checking if Users are active 3333!!!!!"
+    '@@@@@@######@@@@@@@@3333 Checking if Users are active 3333!!!!!'
   );
-  console.log("@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########");
+  console.log('@@@@@@######@@@@@@@@#########@@@@@@@@@@@@########');
   userController.stillActive();
 });
 
@@ -264,7 +264,7 @@ app.use((req, res, next) => {
 
 const csrf = lusca({ csrf: true });
 
-function check(req, res, next) {
+function check (req, res, next) {
   console.log('@@@@@@@@@@@@Body is now ');
   console.log(req.body);
   next();
@@ -310,7 +310,7 @@ app.post(
 app.post(
   '/account/profile',
   passportConfig.isAuthenticated,
-  useravatarupload.single("picinput"),
+  useravatarupload.single('picinput'),
   check,
   csrf,
 
