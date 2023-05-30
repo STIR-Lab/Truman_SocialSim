@@ -8,7 +8,7 @@ const compression = require("compression");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const logger = require("morgan");
-const chalk = require("chalk");
+//const chalk = require("chalk");
 const errorHandler = require("errorhandler");
 const lusca = require("lusca");
 const dotenv = require("dotenv");
@@ -97,10 +97,22 @@ mongoose.connection.on("error", (err) => {
   console.error(err);
   console.log(
     "%s MongoDB connection error. Please make sure MongoDB is running.",
+    
+  );
+  process.exit();
+});
+
+/*
+mongoose.connection.on("error", (err) => {
+  console.error(err);
+  console.log(
+    "%s MongoDB connection error. Please make sure MongoDB is running.",
     chalk.red("✗")
   );
   process.exit();
 });
+
+*/
 
 //userController.mailAllActiveUsers()
 /****
@@ -467,11 +479,23 @@ chatSocket(server);
 server.listen(PORT, () => {
   console.log(
     "%s App is running at http://localhost:%d in %s mode",
+    
+    PORT,
+    app.get("env")
+  );
+  console.log("  Press CTRL-C to stop\n");
+});
+
+/*
+server.listen(PORT, () => {
+  console.log(
+    "%s App is running at http://localhost:%d in %s mode",
     chalk.green("✓"),
     PORT,
     app.get("env")
   );
   console.log("  Press CTRL-C to stop\n");
 });
+*/
 
 module.exports = { app, server };

@@ -32,6 +32,9 @@ var MongoClient = require('mongodb').MongoClient
 
 //var connection = mongo.connect('mongodb://127.0.0.1/test');
 
+
+
+
 mongoose.connect(process.env.MONGODB_URI || process.env.MONGOLAB_URI, { useNewUrlParser: true });
 var db = mongoose.connection;
 mongoose.connection.on('error', (err) => {
@@ -39,6 +42,7 @@ mongoose.connection.on('error', (err) => {
     console.log('%s MongoDB connection error. Please make sure MongoDB is running.');
     process.exit(1);
 });
+
 
 /*
 This is a huge function of chained promises, done to achieve serial completion of asynchronous actions.
