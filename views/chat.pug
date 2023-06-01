@@ -1022,19 +1022,23 @@ block content
                             <div class="right aligned one wide column" style="padding:0!important"></div>
                             <div class="seven wide column">
                                 <div class="ui cards">
-                                    <div class="card" style="min-width:400px">
+                                    <div class="card" style="min-width:400px;  position: relative;">
+                                        
                                         <div class="content" style="text-align:center">
-                                            <div class="description">We have detected a harmful message from this user. You might want to check out associated risks before you view it.</div>
+                                            <div class="description">The last message you received is censored due to potentially harmful content.</div>
                                             <a style="color:blue" href="http://localhost:3000/risk_information"> 
                                                 <u>click here to learn more</u>
                                             </a>
+                                            <div class="description">Are you sure you want to view this message?</div>
                                         </div>
                                         <div class="extra content">
-                                            <div class="ui two buttons">
-                                                <div class="ui basic black button" id="deleteMessageButton">Delete Message</div>
-                                                <div class="ui basic black button" id="showMeButton">Show me</div>
+                                            <div class="ui three buttons">
+                                                <div class="ui basic black button" id="showMeButton">View</div>
+                                                <div class="ui basic black button" id="deleteMessageButton">Delete</div>
+                                                <div class="ui basic black button" id="blockUserButton">Block User</div>
                                             </div>
                                         </div>
+                                        <div id="exitNudgeButton" style="position: absolute; top: 1px; right: 1px; padding: 1px; font-size: 16px; color: #ffffff; background-color: #888; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; cursor: pointer;">x</div>
                                     </div>
                                 </div>
                                 <p style="font-size:10px; margin-top:-8px">${formatTime(msg.msg.time)}</p>
@@ -1053,9 +1057,24 @@ block content
             element = document.getElementById("showMeButton");
             element.id = msg._id + 'showMeButton';
 
+            element = document.getElementById("blockUserButton");
+            element.id = msg._id + 'blockUserButton';
+
+            element = document.getElementById("exitNudgeButton");
+            element.id = msg._id + 'exitNudgeButton';
+
+
             document.getElementById(msg._id + 'deleteMessageButton').onclick=function(){onClickDeleteMessageButton(msg)};
             document.getElementById(msg._id + 'showMeButton').onclick=function(){onClickShowMeButton(msg)};
+            document.getElementById(msg._id + 'blockUserButton').onclick=function(){onClickBlockUserButton(msg)};
+            document.getElementById(msg._id + 'exitNudgeButton').onclick=function(){onClickExitNudgeButton(msg)};
         }
+
+        function onClickExitNudgeButton(msg) {
+            document.getElementById(msg._id + 'nudgeType2').remove();
+            // No need to emit an event to the server here, since this action doesn't change the state of the users or messages.
+        }
+
 
         function onClickDeleteMessageButton(msg) {
             document.getElementById(msg._id + 'nudgeType2').remove();
@@ -1071,6 +1090,18 @@ block content
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, true);
         }
 
+        function onClickBlockUserButton(msg) {
+            socket.emit("nudge-reaction", {
+                messageId: msg._id,
+                userAction: "blockUser",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+
+
         function onClickShowMeButton(msg) {
             document.getElementById(msg._id + 'nudgeType2').remove();
             socket.emit("nudge-reaction", {
@@ -1084,3 +1115,5 @@ block content
             $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
         }
+
+        
