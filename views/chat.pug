@@ -5,15 +5,9 @@ block content
     .row
         .five.wide.column
             .ui.segment(style='height:90vh')
-                .ui.basic.buttons.fluid(style="margin-bottom:12px") 
-                    #recentButton.ui.button
+                .ui.basic.fluid(style="margin-bottom:18px") 
                         h3.ui.header(style="margin-top:2px") 
-                            i.clock.outline.icon(style="margin-right:-4px") 
-                            |   Recent
-                    #discoverButton.ui.button
-                        h3.ui.header(style="margin-top:2px") 
-                            i.globe.icon(style="margin-right:-4px") 
-                            |   Discover
+                            |   Messages
                 
                 #recentChatHistory(style="margin-top:4px") 
                     #chatHistory.ui.relaxed.divided.list
@@ -138,14 +132,20 @@ block content
 
         let usersInDiscover = [];
         let usersInRecent = [];
+        
+        let allConversations = null;
 
         socket.on("userList", (userList) => {
+            console.log("CURR userList")
+            console.log(userList)
             copiedUserList = JSON.parse(JSON.stringify(userList));
+            
+
 
             userList.forEach((user) => {
                 if (!usersInUserList.includes(user.userId)) {
                     usersInUserList.push(user.userId);
-
+                    // New Chat Button
                     const u = ` <div class="item">
                                     <div class="content">
                                         <div class="header">${user.username}</div>
@@ -169,19 +169,206 @@ block content
                         document.getElementById(user.userId + 'rightArrowButton').remove();
                     }
 
-                    if (loadedHistory) {
-                        addUserInDiscover(user);
-                    }
                 }
             });
+
+            copiedUserList.forEach((user) => {
+                console.log('addRestOfUsers')
+                console.log('active user' + user.userId + ' ' + user.username)
+                addRestOfUsers(user)
+                //addUserInDiscover(user);
+            });
+
+            console.log('copiedUserList')
+            console.log(copiedUserList)
+
+            console.log('usersInRecentList')
+            console.log(usersInRecentList)
+
+            console.log('usersInHistory')
+            console.log(usersInHistory)
+
+            // deal with any status changes in the copiedUserList
+            // if you are in the copiedUserList, that means you are active, so change their status
+            let activeIDs = [];
+            for(let i = 0; i < copiedUserList.length; i++){
+                 if(copiedUserList[i].userId != userId){
+                     console.log(copiedUserList[i].userId)
+                     console.log('active: activeIcon-'+ copiedUserList[i].userId )
+                     console.log(document.getElementById("activeIcon-" + copiedUserList[i].userId))
+                     $('#activeIcon-' + copiedUserList[i].userId).removeClass().addClass("green circle icon")
+                     activeIDs.push(copiedUserList[i].userId)
+                 }
+            }
+            
+            // the rest of the users are not active, so change their status
+            for(let i = 0; i < usersInHistory.length; i++){
+                // check if copiedUserList contains user
+                let contains = false;
+                
+                for(let j = 0; j < copiedUserList.length; j++){
+                    if(copiedUserList[j].userId == usersInHistory[i].userId){
+                        contains = true;
+                    }
+                }
+
+                if(!contains && usersInHistory[i].userId != userId){
+                    console.log(usersInHistory[i].userId)
+                    console.log('inactive: activeIcon-'+ usersInHistory[i].userId)
+                    console.log(document.getElementById("activeIcon-" + usersInHistory[i].userId))
+                    $('#activeIcon-' + usersInHistory[i].userId).removeClass().addClass("orange moon icon")
+                }
+            }
+            for(let i = 0; i < usersInRecentList.length; i++){
+                // check if copiedUserList contains user
+                let contains = false;
+                
+                for(let j = 0; j < copiedUserList.length; j++){
+                    if(copiedUserList[j].userId == usersInRecentList[i].userId){
+                        contains = true;
+                    }
+                }
+
+                if(!contains && usersInRecentList[i].userId != userId){
+                    console.log(usersInRecentList[i].userId)
+                    console.log('inactive: activeIcon-'+ usersInRecentList[i].userId)
+                    console.log(document.getElementById("activeIcon-" + usersInRecentList[i].userId))
+                    $('#activeIcon-' + usersInRecentList[i].userId).removeClass().addClass("orange moon icon")
+                }
+            }
+        
+        
+            // if you are not in copiedUserList and are in usersInRecentList 
+            console.log('usersInRecentList')
+            console.log(usersInRecentList)
+            console.log('copiedUserList')
+            console.log(copiedUserList)
+             for(let i = 0; i < usersInRecentList.length; i++){
+                let contains = false;
+                
+                for(let j = 0; j < copiedUserList.length; j++){
+                    if(copiedUserList[j].userId == usersInRecentList[i].userId){
+                        contains = true;
+                    }
+                }
+
+                if(!contains){
+                    console.log('remove: ' + usersInRecentList[i])
+                    $(`#listItemChatPartener-${usersInRecentList[i].userId}`).remove();
+                }
+            }
+        
+            
+
+            /*
+            copiedUserList.forEach((user) => {
+                console.log('users_inHistory')
+                console.log('active user' + user.userId + ' ' + user.username)
+                addRestOfUsers(user)
+                //addUserInDiscover(user);
+            });
+            console.log(usersInHistory)
+        
+            // if you are in the copiedUserList, that means you are active, so change their status
+            for(let i = 0; i < copiedUserList.length; i++){
+                if(copiedUserList[i].userId != userId){
+                    console.log(copiedUserList[i].userId)
+                    console.log('active: activeIcon-'+ copiedUserList[i].userId )
+                    console.log(document.getElementById("activeIcon-" + copiedUserList[i].userId))
+                    document.getElementById("activeIcon-" + copiedUserList[i].userId).class = "green circle icon"
+                }
+            }
+            // the rest of the users are not active, so change their status
+            for(let i = 0; i < usersInHistory.length; i++){
+                // check if copiedUserList contains user
+                let contains = false;
+                
+                for(copiedUserList.length; i < copiedUserList.length; i++){
+                    if(copiedUserList[i].userId == usersInHistory[i].userId){
+                        contains = true;
+                    }
+                }
+
+                if(!contains && usersInHistory[i].userId != userId){
+                    console.log(usersInHistory[i].userId)
+                    console.log('inactive: activeIcon-'+ usersInHistory[i].userId)
+                    console.log(document.getElementById("activeIcon-" + usersInHistory[i].userId))
+                    document.getElementById("activeIcon-" + usersInHistory[i].userId).class = "orange moon icon"
+                }}
+            
+            copiedUserList.forEach((user) => {
+                console.log('users_inHistory')
+                console.log('active user' + user.userId + ' ' + user.username)
+                addRestOfUsers(user)
+                //addUserInDiscover(user);
+            });
+            console.log(usersInHistory)
+            
+            // if the user is not in the userInHistory and not in the copiedUserList, then they are inactive and they need to be removed
+            for(let i = 0; i < usersInHistory.length; i++){
+                // check if copiedUserList contains user
+                let contains = false;
+                
+                for(let j = 0; j < copiedUserList.length; j++){
+                    if(copiedUserList[j].userId == usersInHistory[i].userId){
+                        contains = true;
+                    }
+                }
+                if(allConversations){
+                    // check allConversations
+                    for(let j = 0; j < allConversations.length; j++){
+                        if(allConversations[j].userIdA == usersInHistory[i].userId){
+                            contains = true;
+                        }
+                    }
+                }
+
+                if(!contains && usersInHistory[i].userId != userId){
+                    console.log(usersInHistory[i].userId)
+                    console.log('inactiveRemove: activeIcon-'+ usersInHistory[i].userId)
+                    $(`#listItemChatPartener-${usersInHistory[i].userId}`).remove();
+                }
+            }
+        */
+
+
         });
 
         $('#discoverProfiles').hide();
         let usersInHistory = [];
+        let usersInRecentList = [];
+
 
         let numUnread = 0;
 
+
+        // HANDLES THE MESSAGED USERS (ACTIVE AND INACTIVE)
         async function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType) {
+            console.log('addUserInHistory')
+            console.log(chatPartnerUsername)
+            user = {
+                userId: chatPartnerId,
+                username: chatPartnerUsername
+            }
+            
+            let active = ""
+            let activeClass = ""
+            // check if copiedUserList contains user
+            for(let i = 0; i < copiedUserList.length; i++){
+                if(copiedUserList[i].userId == chatPartnerId){
+                    console.log("found user")
+                    active="USER ACTIVE"
+                    activeClass = "green circle icon"
+                    break;
+                }
+            }
+            console.log("active: " + active)
+
+            if(active == ""){
+                active = "USER INACTIVE"
+                activeClass = "orange moon icon"
+            }
+
             let lastmsg = lastMessage;
             if (msgType == "img" || msgType == "vid") {
                 lastmsg = "Sent media"
@@ -191,18 +378,65 @@ block content
                 return;
             }
             usersInRecent.push(chatPartnerId);
-                
-            const listItem = `<div class="item">
-                                <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute"></span>
-                                <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
-                                <div class="content">
-                                    <a class="header" href="http://localhost:3000/user/${chatPartnerId}">${chatPartnerUsername}</a>
-                                    <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
-                                </div>
-                                <button id="rightChevronButton" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
-                            </div>`;
+            
+            // if the userID is already in the usersInRecentList, than directly edit the item
+            // else, add a new item
+            let found = false;
+            for(let i = 0; i < usersInRecentList.length; i++){
+                if(usersInRecentList[i].userId == chatPartnerId){
+                    console.log("found user userinRecentList")
+                    found = true;
+                    break;
+                }
+            }
+            for(let i = 0; i < usersInHistory.length; i++){
+                if(usersInHistory[i].userId == chatPartnerId){
+                    console.log("found user userInHistory")
+                    found = true;
+                    break;
+                }
+            }
+            if(found){
+                console.log("found user")
+                $(`#listItemChatPartener-${chatPartnerId}`).remove();
+                const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
+                                    <div style="display: flex; flex-direction: row; justify-content: flex-start;">
+                                        <div style="position: relative;">
+                                            <span id="redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>
+                                            <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
+                                            <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="${activeClass}"></i>
+                                        </div>
+                                        <div class="content">
+                                            <a class="header" href="http://localhost:3000/user/${chatPartnerId}">${chatPartnerUsername}</a>
+                                            <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
+                                        </div>
+                                    </div>
+                                    <button id="rightChevronButton" style="margin-left: auto;" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
+                                </div>`;
 
-            $('#chatHistory').append(listItem);
+                $('#chatHistory').prepend(listItem);
+            } else{
+                const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
+                                        <div style="display: flex; flex-direction: row; justify-content: flex-start;">
+                                            <div style="position: relative;">
+                                                <span id="redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>  
+                                                <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
+                                                <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;"class="${activeClass}"></i>
+                                            </div>    
+                                            <div class="content">
+                                                <a class="header" href="http://localhost:3000/user/${chatPartnerId}">${chatPartnerUsername}</a>
+                                                <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
+                                            </div>
+                                        </div>
+                                        <button id="rightChevronButton" style="margin-left: auto;" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
+                                    </div>`;
+
+                $('#chatHistory').append(listItem);  
+            }
+
+
+           
+            usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername});
 
             await socket.emit("find-partner",{userId: chatPartnerId})
             await socket.on("partner-pfp",({pfp , userId})=>{
@@ -214,7 +448,7 @@ block content
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
                 }
             })
-
+            
             let element = document.getElementById("lastMessage");
             element.id = chatPartnerId + 'lastMessage';
 
@@ -233,15 +467,86 @@ block content
             }
         }
 
+        // make this the main function to handle adding user to the singular tab -> use messages list, copiedUserList, and usersInHistory
+        // make sure to not add the user if already in the list
+        // DEALS WITH THE USERS THAT ARE ACTIVE AND HAVE NOT BEEN MESSAGED
+        async function addRestOfUsers(user){
+            let chatPartnerId = user.userId
+            let chatPartnerUsername = user.username
+            
+            console.log("addRestOfUsers")
+            console.log({id: chatPartnerId, name: chatPartnerUsername})
+            console.log({selfID: userId, selfName: username})
+            if(chatPartnerId == userId){
+                return;
+            }
+            // check if usersInRecentList has the same userId
+            for(let i = 0; i < usersInRecentList.length; i++){
+                if(usersInRecentList[i].userId == chatPartnerId){
+                    return;
+                }
+            }
+            // check if usersInHistory has the same userId
+            for(let i = 0; i < usersInHistory.length; i++){
+                if(usersInHistory[i].userId == chatPartnerId){
+                    return;
+                }
+            }
+
+            const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
+                                <div style="display: flex; flex-direction: row; justify-content: flex-start;">
+                                    <div style="position: relative;">
+                                        <span id="redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>
+                                        <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
+                                        <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="green circle icon"></i>
+                                    </div>
+
+                                    <div class="content">
+                                        <a class="header" href="http://localhost:3000/user/${chatPartnerId}">${chatPartnerUsername}</a>
+                                        <div class="description" style="max-width: 180px" id="lastMessage">Start a Conversation!</div>
+                                    </div>
+                                </div>
+                                <button id="rightChevronButton" style="margin-left: auto;"class="ui icon right floated mini button"><i class="angle right icon"></i></button>
+                            </div>`;
+
+            $('#chatHistory').append(listItem);
+            usersInRecentList.push({userId: chatPartnerId, username: chatPartnerUsername});
+            
+
+            await socket.emit("find-partner",{userId: chatPartnerId})
+            await socket.on("partner-pfp",({pfp , userId})=>{
+                if (pfp != null && userId == chatPartnerId) {
+                    let pic = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
+                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
+                }
+                else if (userId == chatPartnerId) {
+                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
+                }
+            })
+
+            let element = document.getElementById("rightChevronButton");
+            element.id = chatPartnerId + 'rightChevronButton';
+            document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
+
+        
+
+        }
+
         let blocked = [];
         let isBlocked = [];
 
+        // only called at the beginning of the page load
         socket.on("receive-chat-history", (allConvo) => {
+            console.log("CURR receive-chat-history")
+            console.log(allConvo)
+            alLConversations = allConvo;
+            /*
             if (allConvo.length == 0) {
                 $('#recentButton').hide();
                 $('#recentChatHistory').hide();
                 $('#discoverProfiles').show();
             }
+            */
 
             usersInHistory = [];
 
@@ -285,11 +590,96 @@ block content
                 addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType);
             });
 
-            copiedUserList.forEach((user) => {
-                addUserInDiscover(user);
-            });
-        });
+    
+            // First handle all of the users that are messaged.
+            // Then handle all of the users that are active but not messaged. - pretty much discover tab
+            // Then handle all of the users that are inactive.
+            console.log('usersInHistory')
+            console.log(usersInHistory)
+            console.log('usersInRecentList')
+            console.log(usersInRecentList)
+            console.log('copiedUserList')
+            console.log(copiedUserList)
 
+
+            copiedUserList.forEach((user) => {
+                console.log('addRestOfUsers')
+                console.log('active user' + user.userId + ' ' + user.username)
+                addRestOfUsers(user)
+                //addUserInDiscover(user);
+            });
+            console.log(usersInHistory)
+        }); 
+
+        // used by userList socket event takes the allConvo.
+        async function allOfTheConversation(allConvo){
+            console.log("CURR allOfTheConversation")
+            if(!allConvo){
+                return;
+            }
+            console.log(allConvo)
+            allConvo.forEach((chatPartner) => {
+                let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
+                let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
+                let lastMessage = ""
+                let msgType = chatPartner.content[chatPartner.content.length - 1].msg.type
+           
+                if (chatPartner.blocked == chatPartnerId) {
+                    blocked.push(chatPartnerId);
+                }
+                
+                if (chatPartner.blocked == userId) {
+                    isBlocked.push(chatPartnerId);
+                }
+
+                if (chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
+                    if (chatPartner.content[chatPartner.content.length - 1].from.userId == userId) { // chat sent
+                        lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    }
+                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage") {
+                        lastMessage = "Deleted message"
+                    }
+                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
+                        lastMessage = "Unread message"
+                    }
+                    else {
+                        lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    }
+                else {
+                    lastMessage = "Sent media"
+                }
+                
+                usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
+
+                numUnread = chatPartner.content.filter(c => c.from.userId == chatPartnerId).filter(c => !c.msg.read).length
+
+                addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType);
+            });
+
+    
+            // First handle all of the users that are messaged.
+            // Then handle all of the users that are active but not messaged. - pretty much discover tab
+            // Then handle all of the users that are inactive.
+            console.log('usersInHistory')
+            console.log(usersInHistory)
+            console.log('usersInRecentList')
+            console.log(usersInRecentList)
+            console.log('copiedUserList')
+            console.log(copiedUserList)
+
+
+            copiedUserList.forEach((user) => {
+                console.log('addRestOfUsers')
+                console.log('active user' + user.userId + ' ' + user.username)
+                addRestOfUsers(user)
+                //addUserInDiscover(user);
+            });
+            console.log(usersInHistory)
+        }
+
+
+
+        /*
         function addUserInDiscover(user) {
             let count = 0;
             let prevRow = count;
@@ -308,12 +698,12 @@ block content
                 }
 
                 const userpfpsrc = user.userpfp ? "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png"; 
-
+                // Discover profile
                 const profile = ` <div class="eight wide column">
                                     <div class="ui card" style="margin-bottom:10px">
                                         <div class="content">
                                             <div class="center aligned column"><img class="ui circular tiny image" src=${userpfpsrc} style="margin-bottom:4px; object-fit:cover; width:75px; height:75px"/></div>
-                                            <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username}</div>
+                                            <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username} ****Active</div>
                                             <button id="profileButton" class="ui button tiny fluid fluid" style="margin-bottom:4px">Profile </button>
                                             <button id="messageButton" class="ui positive button tiny fluid">Message </button>
                                         </div>
@@ -333,11 +723,12 @@ block content
                 $('#discoverProfileNoUsersText').hide();
             }
         }
-
+        */
         function onClickProfile(userId) {
             window.location.href = "/user/" + userId;
         }
 
+        /*
         document.getElementById('recentButton').onclick=function(){onClickRecentButton()};
         function onClickRecentButton() {
             $('#recentButton').addClass('active');
@@ -355,6 +746,7 @@ block content
                 $('#recentChatHistory').hide();
             }
         }
+        */
 
         let chatPartnerSocketId = null;
         let chatPartnerUsername = null;
@@ -514,14 +906,17 @@ block content
             let nudgeType = null;
             if (input.value) {
                 if (input.value == infoBreach1) {
+                    console.log(infoBreach1)
                     riskyScenario = "infoBreach1"
                     nudgeType = "abstinence";
                 }
                 else if (input.value == infoBreach2) {
+                    console.log(infoBreach2)
                     riskyScenario = "infoBreach2"
                     nudgeType = "sensitivityFilter";
                 }
                 else if (input.value == infoBreach3) {
+                    console.log(infoBreach3)
                     riskyScenario = "infoBreach3"
                     nudgeType = "guidedActions";
                 }
@@ -751,8 +1146,8 @@ block content
                     addUserInHistory(partnerUsername, msg.msg.body, partnerId, 0, msg.msg.type);
                 }
                 
-                $('#recentButton').show();
-                onClickRecentButton();
+                //$('#recentButton').show();
+                //onClickRecentButton();
 
                 usersInHistory.push({userId: partnerId, username: partnerUsername});
             }
