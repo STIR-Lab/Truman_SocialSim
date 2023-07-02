@@ -1416,28 +1416,28 @@ block content
 
 
         function addNudgeType2(msg) {
-                    const nudge = `<div class="row" id="nudgeType2" style="padding-top:6px; padding-bottom:6px">
-                                    <div class="right aligned one wide column" style="padding:0!important"></div>
-                                    <div class="seven wide column">
-                                        <div class="ui cards">
-                                            <div class="card" style="min-width:400px">
-                                                
-                                                <div class="ui right circular basic icon mini floated button" id="exitMessageButton"><i class="close icon"></i></div>
-                                                <div class="content" style="text-align:left">
-                                                    <div class="description">The last message you received is censored due to potentially harmful content. Click <a style="color:blue" href="http://localhost:3000/risk_information">here</a> to learn more. Are you sure you want to view this message?</div>
-                                                </div>
-                                                <div class="extra content">
-                                                    <div class="ui three buttons">
-                                                        <div class="ui basic black button" id="showMeButton">View</div>
-                                                        <div class="ui basic black button" id="deleteMessageButton">Delete</div>
-                                                        <div class="ui basic black button" id="blockUserButton">Block </div>
-                                                    </div>
-                                                </div>
+            const nudge = `<div class="row" id="nudgeType2" style="padding-top:6px; padding-bottom:6px">
+                            <div class="right aligned one wide column" style="padding:0!important"></div>
+                            <div class="seven wide column">
+                                <div class="ui cards">
+                                    <div class="card" style="min-width:400px">
+                                        <div class="content" style="text-align:center">
+                                            <div class="description">We have detected a harmful message from this user. You might want to check out associated risks before you view it.</div>
+                                            <a style="color:blue" href="http://localhost:3000/risk_information"> 
+                                                <u>click here to learn more</u>
+                                            </a>
+                                        </div>
+                                        <div class="extra content">
+                                            <div class="ui two buttons">
+                                                <div class="ui basic black button" id="deleteMessageButton">Delete Message</div>
+                                                <div class="ui basic black button" id="showMeButton">Show me</div>
                                             </div>
                                         </div>
-                                        <p style="font-size:10px; margin-top:-8px">${formatTime(msg.msg.time)}</p>
                                     </div>
-                                </div>`
+                                </div>
+                                <p style="font-size:10px; margin-top:-8px">${formatTime(msg.msg.time)}</p>
+                            </div>
+                        </div>`
 
                     $('#messages').append(nudge);
                     $('#messages').scrollTop($('#messages')[0].scrollHeight);
@@ -1451,74 +1451,36 @@ block content
                     element = document.getElementById("showMeButton");
                     element.id = msg._id + 'showMeButton';
 
-                    element = document.getElementById("exitMessageButton");
-                    element.id = msg._id + 'exitMessageButton';
+            document.getElementById(msg._id + 'deleteMessageButton').onclick=function(){onClickDeleteMessageButton(msg)};
+            document.getElementById(msg._id + 'showMeButton').onclick=function(){onClickShowMeButton(msg)};
+        }
 
-                    element = document.getElementById("blockUserButton");
-                    element.id = msg._id + 'blockUserButton';
-
-                    document.getElementById(msg._id + 'deleteMessageButton').onclick=function(){onClickDeleteMessageButton(msg)};
-                    document.getElementById(msg._id + 'showMeButton').onclick=function(){onClickShowMeButton(msg)};
-                    document.getElementById(msg._id + 'exitMessageButton').onclick=function(){onClickExitButton(msg)};
-                    document.getElementById(msg._id + 'blockUserButton').onclick=function(){onClickBlockButton(msg)};
+        function onClickDeleteMessageButton(msg) {
+            document.getElementById(msg._id + 'nudgeType2').remove();
+            socket.emit("nudge-reaction", {
+                messageId: msg._id,
+                userAction: "deleteMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
                 }
+            });
+            $('#' + chatPartnerUserId + 'lastMessage').text("Deleted message");
+            addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, true);
+        }
 
-                function onClickBlockButton(msg){
-                    // remove the nudge
-                    document.getElementById(msg._id + 'nudgeType2').remove();
-                    $('#nudgeType2').hide();
-                    console.log(msg);
-                   
-                    socket.emit("nudge-reaction", {
-                        messageId: msg._id,
-                        userAction: "blockUser",
-                        other: {
-                            username: chatPartnerUsername,
-                            userId: chatPartnerUserId,
-                        }
-                    });
-                
+        function onClickShowMeButton(msg) {
+            document.getElementById(msg._id + 'nudgeType2').remove();
+            socket.emit("nudge-reaction", {
+                messageId: msg._id,
+                userAction: "showMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
                 }
+            });
+            $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
+            addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
+        }
 
-                function onClickExitButton(msg){
-                    document.getElementById(msg._id + 'nudgeType2').remove();
-                    socket.emit("nudge-reaction", {
-                        messageId: msg._id,
-                        userAction: "showMessage",
-                        other: {
-                            username: chatPartnerUsername,
-                            userId: chatPartnerUserId,
-                        }
-                    });
-                    $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
-                    addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
-
-                }
-
-                function onClickDeleteMessageButton(msg) {
-                    document.getElementById(msg._id + 'nudgeType2').remove();
-                    socket.emit("nudge-reaction", {
-                        messageId: msg._id,
-                        userAction: "deleteMessage",
-                        other: {
-                            username: chatPartnerUsername,
-                            userId: chatPartnerUserId,
-                        }
-                    });
-                    $('#' + chatPartnerUserId + 'lastMessage').text("Deleted message");
-                    addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, true);
-                }
-
-                function onClickShowMeButton(msg) {
-                    document.getElementById(msg._id + 'nudgeType2').remove();
-                    socket.emit("nudge-reaction", {
-                        messageId: msg._id,
-                        userAction: "showMessage",
-                        other: {
-                            username: chatPartnerUsername,
-                            userId: chatPartnerUserId,
-                        }
-                    });
-                    $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
-                    addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
-                }
+        
