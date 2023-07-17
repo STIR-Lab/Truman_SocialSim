@@ -197,7 +197,7 @@ const chatSocket = (server) => {
         await storeMessage(formattedMsg, newConvo);
       }
 
-      // console.log(formattedMsg);
+       console.log(formattedMsg);
       io.to(to.userId) // to recipient
         // .to(socket.userId) // to sender room
         .emit("receive-message", formattedMsg);
@@ -229,7 +229,7 @@ const chatSocket = (server) => {
       convoInfo.markModified("content");
 
       if (userAction === "blockUser") {
-        convoInfo.blocked = other.userId;
+        convoInfo.blocked = other.username;
         convoInfo.markModified("blocked");
       }
 
@@ -237,11 +237,30 @@ const chatSocket = (server) => {
 
       if (userAction === "blockUser") {
         console.log("=============emmitting block===============");
+    
+        User.findOne({username: socket.username}, (err, user) => {
+          if (err) {
+            console.log(err);
+            return;
+          }
+          
+          if (user) {
+            user.blocked.push(other.username);
+            user.save(err => {
+              if (err) {
+                console.log(err);
+              } else {
+                console.log('User blocked list updated successfully.');
+              }
+            });
+          }
+        });
         // console.log(formattedMsg);
         io.to(other.userId) // to recipient
           // .to(socket.userId) // to sender room
           .emit("blocked", "You've been blocked.");
 
+        
         // io.to(to.userId) // to recipient
         io.to(socket.userId) // to sender room
           .emit("block-success", "Successfully blocked.");
@@ -294,6 +313,9 @@ const chatSocket = (server) => {
      *
      */
 
+    
+    
+
     socket.on(
       "send-reaction",
       async ({ messageID, person, reactionType, reactions, to }) => {
@@ -329,6 +351,10 @@ const chatSocket = (server) => {
         await convoInfo.save();
       }
     );
+
+
+    
+
 
     socket.on("disconnect", async () => {
       const matchingSockets = await io.in(socket.userId).allSockets();

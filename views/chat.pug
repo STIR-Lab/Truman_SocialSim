@@ -56,7 +56,11 @@ block content
                             label.custom-file-upload(for='fileupload' )
                                 i.camera.icon
                         input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/*,video/mp4,video/x-m4v,video/*")
-                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
+                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;') 
+                        //- button#addFriendButton(type="button")
+                        //-     i.plus.circle.icon
+                        //-     | Add Friends
+    
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
@@ -85,12 +89,47 @@ block content
             #dismissModal2Button.button.ui.button
                 | Dismiss
 
+    
+    //- #friendRequestModal.ui.mini.modal
+    //-     .header Friend Request
+    //-         .ui.center.aligned.container
+    //-             .content
+    //-                 .ui.center.aligned.container
+    //-                     | You have a new friend request from this user.
+    //-             .actions
+    //-                 #acceptButton.button.ui.button
+    //-                     | Accept
+    //-                 #declineButton.button.ui.button
+    //-                     | Decline
+    
+    //- #acceptFriendModal.ui.mini.modal
+    //-     .header Friend Request
+    //-         .ui.center.aligned.container
+    //-             .content
+    //-                 .ui.center.aligned.container
+    //-                     | You have added this user as your friend.
+    //-             .actions
+    //-                 #confirmButton.button.ui.button
+    //-                     | Confirm
+
+    //- #declineFriendModal.ui.mini.modal
+    //-     .header Friend Request
+    //-         .ui.center.aligned.container
+    //-             .content
+    //-                 .ui.center.aligned.container
+    //-                     | You have declined the friend request from this user.
+    //-             .actions
+    //-                 #confirm2Button.button.ui.button
+    //-                     | Confirm
+
     script(src='/socket.io/socket.io.js')
     script.
         const userId = document.getElementById('userIdTag').getAttribute('userId');
         const username = document.getElementById('usernameTag').getAttribute('username');
         const userpfp = document.getElementById('userProfilePicture').getAttribute('userpfp');
         
+
+
         // hide input until user picks chat partner
         $('#messageInput').hide();
         $('#nudge3Card').hide();
@@ -138,6 +177,44 @@ block content
 
         let usersInDiscover = [];
         let usersInRecent = [];
+
+
+        //- document.getElementById('addFriendButton').onclick = function(){onClickAddfriend()};
+
+        //- function onClickAddfriend() {
+        //-     //$('#friendRequestModal').modal('show');
+        //-     const fromUserId = userId;
+        //-     const toUserId = chatPartnerUserId;
+        //-     const fromUserNamd = username;
+
+        //-     const message = 'Friends request sent';
+        //-     //- {
+        //-     //-     type: 'friend-request',
+        //-     //-     content: 'user' + username + ' would like to add you as a friend. Do you accept?',
+        //-     //-     chatId: toUserId, // Assuming chatId is usually the recipient's ID,
+        //-     //- };
+            
+        //-     socket.emit('send-message', { 
+        //-         msg: {
+        //-             type: "txt",  
+        //-             body: message
+        //-         },
+        //-         nudge: {
+        //-             nudgeShown: nudgeShown,
+        //-             riskyScenario: "friendsNudge",
+        //-             nudgeType: "friends",
+        //-             userAction: null,
+        //-         },
+        //-         to: {
+        //-             username: chatPartnerUsername,
+        //-             userId: chatPartnerUserId,
+        //-             socketId: chatPartnerSocketId
+        //-         } 
+        //-     });
+        //- }
+
+        
+
 
         socket.on("userList", (userList) => {
             copiedUserList = JSON.parse(JSON.stringify(userList));
@@ -503,6 +580,7 @@ block content
         const infoBreach2 = "http://www.hahpics.xyz/4034-349i/";
         const infoBreach3 = "oh no way? Same. We should hang out sometime! What neighborhood do you live in?";
 
+        //const friendsNudge = "Friends request sent";
         const explicitContent1 = "explicitContent1.png";
 
         $('#messageInput')[0].addEventListener('submit', function(e) {
@@ -523,6 +601,10 @@ block content
                     riskyScenario = "infoBreach3"
                     nudgeType = "guidedActions";
                 }
+                //- } else if (input.value == friendsNudge) {
+                //-     riskyScenario = "friendsNudge"
+                //-     nudgeType = "friends";
+                //- }
 
                 $('#nudge3Card').hide();
 
@@ -661,6 +743,9 @@ block content
                     if (nudgeShown && messageList[i].nudge.nudgeType == "sensitivityFilter" && messageList[i].nudge.userAction == "") {
                         addNudgeType2(messageList[i]);
                     }
+                    //- if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == friendsNudge) {
+                    //-     $('#friendRequestModal').modal('show');
+                    //- }
                     else {
                         addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id, messageList[i].from.userId, messageList[i].nudge, false);
                         loadReactions(messageList[i].msg.reactions, messageList[i]._id)
@@ -709,6 +794,30 @@ block content
         function onClickCloseNudge3Button() {
             $('#nudge3Card').hide();
         } 
+
+        //- document.getElementById('acceptButton').onclick=function(){onclickAcceptButton()};
+        //- function onclickAcceptButton() {
+        //-     $('#friendRequestModal').modal('hide');
+        //-     $('#acceptFriendModal').modal('show');
+        //-     sendMessage("I have accepted your friend request.");
+        //-     // something to do with database friends array
+        //- }
+
+        //- document.getElementById('declineButton').onclick=function(){onclickDeclineButton()};
+        //- function onclickDeclineButton() {
+        //-     $('#friendRequestModal').modal('hide');
+        //-     $('#declineFriendModal').modal('show');
+        //-     sendMessage("Sorry, I have declined your friend request.");
+        //-     // something to do with database friends array
+        //- }
+
+        //- document.getElementById('confirmButton').onclick=function(){onclickConfirmButton()};
+        //- document.getElementById('confirm2Button').onclick=function(){onclickConfirmButton()};
+        //- function onclickConfirmButton() {
+        //-     $('#declineFriendModal').modal('hide');
+        //-     $('#acceptFriendModal').modal('hide');
+        //-     // something to do with database friends array
+        //- }
         
         socket.on("receive-message", (msg) => {
             // update latest message in recent chat history
@@ -771,6 +880,9 @@ block content
                 if (nudgeShown && msg.msg.body == infoBreach2) {
                     addNudgeType2(msg);
                 }
+                //- if (nudgeShown && msg.msg.body == friendsNudge) {
+                //-     $('#friendRequestModal').modal('show');
+                //- }
                 else {
                     addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
                 }
@@ -836,6 +948,9 @@ block content
                 otherElement.innerHTML = `${emoji}`;
             }
         })
+
+
+
 
         // triggered when the user gets all messages
         function loadReactions(reactions, messageID) {
@@ -1063,11 +1178,15 @@ block content
             element = document.getElementById("exitNudgeButton");
             element.id = msg._id + 'exitNudgeButton';
 
+            //- element = document.getElementById("addFriendButton");
+            //- element.id = msg._id + 'addFriendButton';
+
 
             document.getElementById(msg._id + 'deleteMessageButton').onclick=function(){onClickDeleteMessageButton(msg)};
             document.getElementById(msg._id + 'showMeButton').onclick=function(){onClickShowMeButton(msg)};
             document.getElementById(msg._id + 'blockUserButton').onclick=function(){onClickBlockUserButton(msg)};
             document.getElementById(msg._id + 'exitNudgeButton').onclick=function(){onClickExitNudgeButton(msg)};
+            //- document.getElementById(msg._id + 'addFriendButton').onclick=function(){onClickAddFriendButton(msg)};
         }
 
         function onClickExitNudgeButton(msg) {
@@ -1115,5 +1234,9 @@ block content
             $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
         }
+
+
+
+
 
         

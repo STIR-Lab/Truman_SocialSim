@@ -49,6 +49,7 @@ exports.getScript = (req, res, next) => {
   console.log("time_diff  is now "+time_diff);
   console.log("time_limit  is now "+time_limit);
   
+  
   User.findById(req.user.id)
   .populate({ 
        path: 'posts.reply',

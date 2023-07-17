@@ -203,7 +203,7 @@ exports.getActor = async (req, res, next) => {
  * POST /feed/
  * Update user's feed posts Actions.
  */
-exports.postBlockOrReport = (req, res, next) => {
+exports.postBlockOrReportOrFriend = (req, res, next) => {
   User.findById(req.user.id, (err, user) => {
     //somehow user does not exist here
     if (err) {
@@ -218,7 +218,18 @@ exports.postBlockOrReport = (req, res, next) => {
       log.time = Date.now();
       log.action = "block";
       log.actorName = req.body.blocked;
-      user.blockAndReportLog.push(log);
+      user.blockAndReportAndfriendLog.push(log);
+    }
+
+    //if we have a friended user and they are not already in the list, add them now
+    if (req.body.friended && !user.friended.includes(req.body.friended)) {
+      user.friended.push(req.body.friended);
+
+      var log = {};
+      log.time = Date.now();
+      log.action = "friend";
+      log.actorName = req.body.friended;
+      user.blockAndReportAndfriendLog.push(log);
     }
 
     //if we have a reported user and they are not already in the list, add them now
@@ -230,7 +241,7 @@ exports.postBlockOrReport = (req, res, next) => {
       log.action = "report";
       log.actorName = req.body.reported;
       log.report_issue = req.body.report_issue;
-      user.blockAndReportLog.push(log);
+      user.blockAndReportAndfriendLog.push(log);
     } else if (
       req.body.unblocked &&
       user.blocked.includes(req.body.unblocked)
@@ -242,7 +253,7 @@ exports.postBlockOrReport = (req, res, next) => {
       log.time = Date.now();
       log.action = "unblock";
       log.actorName = req.body.unblocked;
-      user.blockAndReportLog.push(log);
+      user.blockAndReportAndfriendLog.push(log);
     }
 
     user.save((err) => {

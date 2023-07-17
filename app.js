@@ -408,7 +408,7 @@ app.get(
 app.post(
   "/user",
   passportConfig.isAuthenticated,
-  actorsController.postBlockOrReport
+  actorsController.postBlockOrReportOrFriend
 );
 
 app.get("/bell", passportConfig.isAuthenticated, userController.checkBell);

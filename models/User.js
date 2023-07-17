@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
   active: {type: Boolean, default: true},
   isAdmin: {type: Boolean, default: false},
 
+  
   completed: {type: Boolean, default: false},
 
   numPosts: { type: Number, default: -1 }, //not including replys
@@ -40,6 +41,7 @@ const userSchema = new mongoose.Schema({
 
   blocked: [String],
   reported: [String],
+  friended: [String],
 
   study_days: {
       type: [Number],
@@ -108,7 +110,7 @@ const userSchema = new mongoose.Schema({
     GeneralCommentNumber: Number
     })],
 
-  blockAndReportLog: [new Schema({
+    blockAndReportAndfriendLog: [new Schema({
     time: Date,
     action: String,
     report_issue: String,

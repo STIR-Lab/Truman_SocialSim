@@ -20,6 +20,40 @@ block content
       .one.ui.bottom.attached.icon.buttons
           button.ui.editprofile.button(data-tooltip='Update Your Profile', data-position='bottom left')
             i.write.icon
+      .extra.content
+        .ui.fluid.card
+            .content
+              .header Friend List
+            .content
+              table.ui.very.basic.table
+                thead
+                  tr
+                    th Username
+                tbody
+                  each friend in user.friended
+                    tr
+                      td
+                        a(href=`/user/${friend}`)= friend
+      .extra.content
+        .ui.fluid.card
+            .content
+              .header Blocked List
+            .content
+              table.ui.very.basic.table
+                thead
+                  tr
+                    th Username
+                tbody
+                  each blockedUser in user.blocked
+                    tr
+                      td
+                        a(href=`/user/${blockedUser}`)= blockedUser
+
+
+
+      
+  
+
 
 
   .eight.wide.computer.ten.wide.tablet.sixteen.wide.mobile.column 
