@@ -31,7 +31,7 @@ const chatSocket = (server) => {
 			const session = sessionStore.findSession(sessionId);
 			if (session) {
 				// attach user pfp to session
-				session.userpfp = await getChatPartnerPFP(session.userId); //socket.handshake.auth.userpfp;
+				session.userpfp = await getChatPartnerPFP(session.userId); // socket.handshake.auth.userpfp;
 
 				socket.sessionId = sessionId;
 				socket.userId = session.userId;
@@ -56,7 +56,7 @@ const chatSocket = (server) => {
 			socket.userpfp = userpfp;
 
 			console.log("HERE 2");
-			//console.log(socket.userpfp)
+			// console.log(socket.userpfp)
 
 			next();
 		}
@@ -76,6 +76,11 @@ const chatSocket = (server) => {
 	io.on("connection", async (socket) => {
 		console.log("Websocket connection...");
 
+		
+        socket.onAny((event, ...args) => {
+            console.log(event, args);
+        });
+
 		// Save session info and emit to the client
 		sessionStore.saveSession(socket.sessionId, {
 			userId: socket.userId,
@@ -89,18 +94,18 @@ const chatSocket = (server) => {
 		});
 
 		socket.on("find-partner", async (userId) => {
-			let pfp = await getChatPartnerPFP(userId.userId);
+			const pfp = await getChatPartnerPFP(userId.userId);
 
-			//console.log(pfp)
+			// console.log(pfp)
 
 			io.to(socket.userId).emit("partner-pfp", {
-				pfp: pfp,
+				pfp,
 				userId: userId.userId,
 			});
 		});
 
 		// Fetch existing users
-    console.log("=============emmitting userlist===============")
+		console.log("=============emmitting userlist===============");
 		socket.emit("userList", getCurrentUsers());
 		socket.broadcast.emit("userList", getCurrentUsers());
 
@@ -112,23 +117,21 @@ const chatSocket = (server) => {
 		io.to(socket.userId).emit("receive-chat-history", allConvo);
 
 		// Fetch all active users
-		// let allUsers = await User.find({
-		//   active: true,
-		// });
-		// const formattedAllUsers = allUsers.map((user) => {
-		//   return {
-		//     userId: user._id,
-		//     username: user.username,
-		//   };
-		// });
-		// io.to(socket.userId).emit("discover-users", formattedAllUsers);
+		const allUsers = await User.find({
+			active: true,
+		});
+		const formattedAllUsers = allUsers.map((user) => ({
+			userId: user._id,
+			username: user.username,
+		}));
+		io.to(socket.userId).emit("discover-users", formattedAllUsers);
 
 		// Finds a specific conversation in db and sends back to the front end
 		socket.on("get-messages", async ({ to }) => {
-			let convoInfo = await searchConvo(
+			const convoInfo = await searchConvo(
 				socket.username,
 				socket.userId,
-				//socket.userpfp,
+				// socket.userpfp,
 				to.username,
 				to.userId
 			);
@@ -154,7 +157,7 @@ const chatSocket = (server) => {
           nudgeShown: Boolean, --> Nudge was shown/not shown, keep true for all for now, future research will only show the nudge to half of the teens
           riskyScenario: String, --> Risky Scenario type, "info_breach_1", "explicit_content_2", etc
           nudgeType: String, --> Nudge type, Pop up vs censored
-          userAction: String, --> Action taken by the user 
+          userAction: String, --> Action taken by the user
         },
         to: {
           username: string,
@@ -166,22 +169,25 @@ const chatSocket = (server) => {
 
 		socket.on("send-message", async ({ msg, nudge, to }) => {
 			// NOTE: io.to(socket.io) || socket.to(socket.io)?
-
+			console.log("send-message activated", to);
+			console.log(socket.username, socket.userId);
 			nudge = nudge == undefined ? {} : nudge;
 
-			let formattedMsg = await formatMessage(
+			const formattedMsg = await formatMessage(
 				msg,
 				nudge,
 				{ username: socket.username, userId: socket.userId }, // from
 				to
 			);
 
-			let convoInfo = await searchConvo(
+			const convoInfo = await searchConvo(
 				socket.username,
 				socket.userId,
 				to.username,
 				to.userId
 			);
+
+			// console.log(convoInfo);
 
 			if (convoInfo) {
 				await storeMessage(formattedMsg, convoInfo);
@@ -190,31 +196,33 @@ const chatSocket = (server) => {
 			else {
 				console.log("no ongoing convo found, creating a new one.");
 
-				let newConvo = new Conversation({
+				const newConvo = new Conversation({
 					usernameA: to.username,
 					userIdA: to.userId,
-					//userpfpA: to.userpfp,
+					// userpfpA: to.userpfp,
 					usernameB: socket.username,
-					//userpfpB: socket.userpfp,
+					// userpfpB: socket.userpfp,
 					userIdB: socket.userId,
 				});
 				await newConvo.save();
-
+				// console.log(newConvo);
 				await storeMessage(formattedMsg, newConvo);
 			}
 
 			// console.log(formattedMsg);
-			io.to(to.userId) // to recipient
+			await io
+				.to(to.userId) // to recipient
 				// .to(socket.userId) // to sender room
 				.emit("receive-message", formattedMsg);
 
 			// io.to(to.userId) // to recipient
-			io.to(socket.userId) // to sender room
+			await io
+				.to(socket.userId) // to sender room
 				.emit("receive-message", formattedMsg);
 		});
 
 		socket.on("nudge-reaction", async ({ messageId, userAction, other }) => {
-			let convoInfo = await searchConvo(
+			const convoInfo = await searchConvo(
 				socket.username,
 				socket.userId,
 				other.username,
@@ -225,14 +233,21 @@ const chatSocket = (server) => {
 				return;
 			}
 
-			//Finding index of the content array where messageID is equal to an id within that array
-			let messageIndex = convoInfo.content.findIndex((message) => {
-				return message._id == messageId;
-			});
+			// Finding index of the content array where messageID is equal to an id within that array
+			const messageIndex = convoInfo.content.findIndex(
+				(message) => message._id == messageId
+			);
 
-			//Save userAction to db
+			// Save userAction to db
 			convoInfo.content[messageIndex].nudge.userAction = userAction;
 			convoInfo.markModified("content");
+
+			if (userAction === "deleteMessageAndLetOthersKnow") {
+				console.log(`${other.username} has sent potentially harmful content.`);
+				const harmfulContentString = `${other.username} has sent potentially harmful content.`;
+				// emit to other users that potenially harmful content has been sent
+				socket.broadcast.emit("letOthersKnowLinkNudge", harmfulContentString);
+			}
 
 			if (userAction === "blockUser") {
 				convoInfo.blocked = other.userId;
@@ -240,7 +255,7 @@ const chatSocket = (server) => {
 			}
 
 			await convoInfo.save();
-
+			console.log(userAction);
 			if (userAction === "blockUser") {
 				console.log("=============emmitting block===============");
 				// console.log(formattedMsg);
@@ -308,13 +323,13 @@ const chatSocket = (server) => {
 				io.to(socket.userId) // to sender room
 					.to(to.userId) // to recipient
 					.emit("receive-reaction", {
-						reactions: reactions,
-						reactionType: reactionType,
-						person: person,
-						messageID: messageID,
+						reactions,
+						reactionType,
+						person,
+						messageID,
 					});
 
-				let convoInfo = await searchConvo(
+				const convoInfo = await searchConvo(
 					socket.username,
 					socket.userId,
 					to.username,
@@ -325,12 +340,12 @@ const chatSocket = (server) => {
 					return;
 				}
 
-				//Finding index of the content array where messageID is equal to an id within that array
-				let messageIndex = convoInfo.content.findIndex((message) => {
-					return message._id == messageID;
-				});
+				// Finding index of the content array where messageID is equal to an id within that array
+				const messageIndex = convoInfo.content.findIndex(
+					(message) => message._id == messageID
+				);
 
-				//Save reaction to db
+				// Save reaction to db
 				convoInfo.content[messageIndex].msg.reactions[person] = reactionType;
 
 				convoInfo.markModified("content");
@@ -344,7 +359,7 @@ const chatSocket = (server) => {
 			if (isDisconnected) {
 				// Disconnect current session from sessionStore
 				sessionStore.disconnectSession(socket.sessionId);
-				/** 
+				/**
           socket.broadcast.emit(
             "disconneted",
             formatMessage(leaveNotification(socket.username), chatBot, "ALL")
@@ -364,11 +379,13 @@ const chatSocket = (server) => {
 						);
 				});
 				// refresh current users
-        console.log("=============emmitting userlist DISCONNECT===============")
+				console.log(
+					"=============emmitting userlist DISCONNECT==============="
+				);
 				const userList = getCurrentUsers();
-        console.log(userList) 
-				socket.emit("userList", userList);   
-    		socket.broadcast.emit("userList", getCurrentUsers());
+				console.log(userList);
+				socket.emit("userList", userList);
+				socket.broadcast.emit("userList", getCurrentUsers());
 			}
 		}); // socket.on disconnect
 	}); // io.on connection
@@ -414,7 +431,7 @@ async function formatMessage(msg, nudge, from, to) {
 		//     console.log(value);
 		//  }
 
-		let prefix = from.userId + Math.random().toString(36).slice(2, 10);
+		const prefix = from.userId + Math.random().toString(36).slice(2, 10);
 		msg.body.filename = prefix + msg.body.filename.replace(/[^A-Z0-9]+/gi, "_");
 		console.log(msg.body);
 		await uploadFile(msg.body);
@@ -436,8 +453,8 @@ async function formatMessage(msg, nudge, from, to) {
 			...nudge,
 			userAction: "",
 		},
-		from: from,
-		to: to,
+		from,
+		to,
 	});
 }
 
@@ -480,7 +497,7 @@ function getCurrentUsers() {
  *
  */
 async function getChatHistory(username, userId) {
-	let allConvo = await Conversation.find({
+	const allConvo = await Conversation.find({
 		$or: [
 			{
 				usernameA: username,
@@ -504,7 +521,7 @@ async function getChatPartnerPFP(userId) {
 			_id: userId,
 		});
 
-		console.log("GOT " + userId + " PFP");
+		console.log(`GOT ${userId} PFP`);
 		return chatPartner[0].profile.picture;
 	} catch (error) {
 		console.log(error);
@@ -525,10 +542,10 @@ async function getChatPartnerPFP(userId) {
  */
 async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
 	let curConvo = await Conversation.findOne({
-		usernameA: usernameA,
-		userIdA: userIdA,
-		usernameB: usernameB,
-		userIdB: userIdB,
+		usernameA,
+		userIdA,
+		usernameB,
+		userIdB,
 	});
 
 	if (curConvo) {
@@ -542,25 +559,24 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
 		//   usernameB: usernameB,
 		//   userIdB: userIdB,
 		// };
-	} else {
-		curConvo = await Conversation.findOne({
-			usernameA: usernameB,
-			userIdA: userIdB,
-			usernameB: usernameA,
-			userIdB: userIdA,
-		});
-		if (curConvo) {
-			// console.log("found existing convo", curConvo);
-			return curConvo;
+	}
+	curConvo = await Conversation.findOne({
+		usernameA: usernameB,
+		userIdA: userIdB,
+		usernameB: usernameA,
+		userIdB: userIdA,
+	});
+	if (curConvo) {
+		// console.log("found existing convo", curConvo);
+		return curConvo;
 
-			// {
-			//   curConvo: curConvo,
-			//   usernameA: usernameB,
-			//   userIdA: userIdB,
-			//   usernameB: usernameA,
-			//   userIdB: userIdA,
-			// };
-		}
+		// {
+		//   curConvo: curConvo,
+		//   usernameA: usernameB,
+		//   userIdA: userIdB,
+		//   usernameB: usernameA,
+		//   userIdB: userIdA,
+		// };
 	}
 
 	return null;
