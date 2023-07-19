@@ -91,16 +91,16 @@ server = http.createServer(app);
 mongoose.Promise = global.Promise;
 
 // TODO: UNCOMMENT WHEN PROPER WIFI
-/*
+
 mongoose.connect(process.env.MONGODB_URI || process.env.MONGOLAB_URI, {
   useNewUrlParser: true,
 });
-*/
 
+/*
 mongoose.connect("mongodb://localhost:27017", {
 	useNewUrlParser: true,
 });
-
+*/
 mongoose.connection.on("error", (err) => {
 	console.error(err);
 	console.log(
@@ -213,8 +213,8 @@ app.use(
 		},
 		secret: process.env.SESSION_SECRET,
 		store: new MongoStore({
-			url: 'mongodb://localhost:27017',
-			// url: process.env.MONGODB_URI || process.env.MONGOLAB_URI,
+			// url: 'mongodb://localhost:27017',
+			url: process.env.MONGODB_URI || process.env.MONGOLAB_URI,
 			autoReconnect: true,
 			clear_interval: 3600,
 		}),

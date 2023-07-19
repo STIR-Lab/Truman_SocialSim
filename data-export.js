@@ -63,6 +63,7 @@ mongoose.Promise = global.Promise;
 //mongoose.connect(process.env.MONGODB_URI || process.env.MONGOLAB_URI);
 //mongoose.connect(process.env.MONGOLAB_TEST || process.env.PRO_MONGOLAB_URI, { useMongoClient: true });
 mongoose.connect(process.env.MONGOLAB_TEST || process.env.PRO_MONGOLAB_URI, { useNewUrlParser: true });
+//mongoose.connect('mongodb://localhost:27017', { useNewUrlParser: true });
 mongoose.connection.on('error', (err) => {
   console.error(err);
   console.log('%s MongoDB connection error. Please make sure MongoDB is running.');
