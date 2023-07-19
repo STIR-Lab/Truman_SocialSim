@@ -1,9 +1,9 @@
 extends ../ui_layout
 
+
 block content
   .computer.only.tablet.only.eight.wide.column
     img.ui.fluid.image(src='/public/homepage.jpg')
-  
 
   .eight.wide.computer.eight.wide.tablet.sixteen.wide.mobile.column
     h2.ui.header Sign in
@@ -23,3 +23,36 @@ block content
       .ui.big.green.labeled.icon.button.signup
         i.signup.icon
         |   Sign Up
+      .ui.big.green.labeled.icon.button.completedSurvey
+        i.paper.plane.icon
+        |   Completed Study Tasks
+
+  #completedSurveyNudge.ui.mini.modal
+          .content
+              .ui.center.aligned.container
+                  | Thank you for completing our Social Media Simulation! Please complete our post survey.
+          .actions
+              #toPostSurveyButton.button.ui.button
+                  | Complete Post Survey!
+
+              
+      
+  script.
+
+    const POST_SURVEY_LINK = 'https://vusequaltrics.qualtrics.com/jfe/form/SV_3agBmlFyyuS6Xie'
+    // Completed Survey Button
+    $('.ui.big.green.labeled.button.completedSurvey').on("click", function () {
+      console.log('Completed Survey Button')
+      $('#completedSurveyNudge').modal('show')
+      
+    });
+    document.getElementById('toPostSurveyButton').onclick=function(){completedSurveyFunc()};
+      
+    function completedSurveyFunc(){
+      $('#completedSurveyNudge').hide();
+      window.location.replace(POST_SURVEY_LINK)
+    }
+
+    /*
+      
+    */
