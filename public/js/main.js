@@ -64,9 +64,9 @@ $(window).on("load", function () {
     },
 
     onSuccess: function (event, fields) {
-      console.log("Event is :");
+      console.log("Event is :", event);
       //console.log(event);
-      console.log("fields is :");
+      console.log("fields is :", fields.body);
       //console.log(fields);
       $(".ui.feed.form")[0].submit();
     },
@@ -158,6 +158,8 @@ $('a.others').click(function(){
   $(".ui.editprofile.button").on("click", function () {
     window.location.href = "/account";
   });
+
+
 
   ////////////////////
   $("input.newcomment").keyup(function (event) {
@@ -284,6 +286,7 @@ $('a.others').click(function(){
       blocked: username,
       _csrf: $('meta[name="csrf-token"]').attr("content"),
     });
+    
   });
 
   //Block Modal for User that is already Blocked
@@ -303,6 +306,80 @@ $('a.others').click(function(){
       },
     })
     .modal("show");
+
+  // //this is the Add Friend button
+  // $("button.ui.button.friend").on("click", function () {
+  //   console.log("clicked!!!! " + username);
+  //   var username = $(this).attr("username");
+  //   //Modal for Friending Feature
+  //   $(".ui.small.basic.friend.modal")
+  //     .modal({
+  //       closable: false,
+  //       onDeny: function () {
+  //         //report user
+  //       },
+  //       onApprove: function () {
+  //         //unfriend user
+  //         $.post("/user", {
+  //           unfriended: username,
+  //           _csrf: $('meta[name="csrf-token"]').attr("content"),
+  //         });
+  //       },
+  //     })
+  //     .modal("show");
+
+  //   console.log("***********Friend USER " + username);
+  //   $.post("/user", {
+  //     friended: username,
+  //     _csrf: $('meta[name="csrf-token"]').attr("content"),
+  //   });
+  // });
+
+  $("button.ui.button.friend").on("click", function () {
+    var username = $(this).attr("username");
+  
+    // Request sent modal
+    $(".ui.small.basic.request.sent.modal")
+      .modal('show');
+  
+    console.log("Sending friend request to " + username);
+  
+    // After 30 seconds, simulate the request being accepted
+    setTimeout(function() {
+      // Show request accepted modal
+      $(".ui.small.basic.request.accepted.modal")
+        .modal('show');
+  
+      console.log("Friend request accepted by " + username);
+  
+      // Add friend
+      $.post("/user", {
+        friended: username,
+        _csrf: $('meta[name="csrf-token"]').attr('content'),
+      });
+    }, 10000); // 30000 milliseconds = 30 seconds
+  });
+
+  //Friend Modal for User that is already Friended
+  // $(".ui.on.small.basic.friend.modal")
+  //   .modal({
+  //     closable: false,
+  //     onDeny: function () {
+  //       //report user
+  //     },
+  //     onApprove: function () {
+  //       //unfriend user
+  //       var username = $("button.ui.button.friend").attr("username");
+  //       $.post("/user", {
+  //         unfriended: username,
+  //         _csrf: $('meta[name="csrf-token"]').attr("content"),
+  //       });
+  //     },
+  //   })
+  //   .modal("show");
+
+
+
 
   //this is the LIKE button
   $(".like.button").on("click", function () {
