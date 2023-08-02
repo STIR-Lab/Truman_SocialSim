@@ -64,7 +64,7 @@ block content
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
-                #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png")
+                #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://socialsimulation.s3.amazonaws.com/default-pfp.png")
  
     #newChatModal.ui.mini.modal
         .header
@@ -284,11 +284,11 @@ block content
             await socket.emit("find-partner",{userId: chatPartnerId})
             await socket.on("partner-pfp",({pfp , userId})=>{
                 if (pfp != null && userId == chatPartnerId) {
-                    let pic = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
+                    let pic = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
                 }
                 else if (userId == chatPartnerId) {
-                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
+                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
                 }
             })
 
@@ -384,7 +384,7 @@ block content
                     prevRow = count;
                 }
 
-                const userpfpsrc = user.userpfp ? "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png"; 
+                const userpfpsrc = user.userpfp ? "https://socialsimulation.s3.amazonaws.com/" + user.userpfp : "https://socialsimulation.s3.amazonaws.com/default-pfp.png"; 
 
                 const profile = ` <div class="eight wide column">
                                     <div class="ui card" style="margin-bottom:10px">
@@ -436,7 +436,7 @@ block content
         let chatPartnerSocketId = null;
         let chatPartnerUsername = null;
         let chatPartnerUserId = null;
-        let chatPartnerPFP = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
+        let chatPartnerPFP = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
 
         function onClickUsername(userId) {
             $('#' + userId + 'redBubble').hide();
@@ -463,7 +463,7 @@ block content
 
             socket.on("partner-pfp",({ pfp, userId})=>{
                 if (pfp != null && userId == chatPartnerUserId) {
-                    chatPartnerPFP = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
+                    chatPartnerPFP = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
                 }
             })
             
@@ -1022,10 +1022,10 @@ block content
                 
             }
             else if (msg.type == "img") {
-                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+                 msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
             }
             else if (msg.type == "vid") {
-                msgType = `<video width="200" style="border-radius:6px" controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
+                msgType = `<video width="200" style="border-radius:6px" controls><source src="https://socialsimulation.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
             // reaction box
             const react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:20%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
@@ -1076,10 +1076,10 @@ block content
                 }
             }
             else if (msg.type == "img") {
-                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+                 msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
             }
             else if (msg.type == "vid") {
-                msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
+                msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://socialsimulation.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
 
             // reaction box
