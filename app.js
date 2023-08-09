@@ -430,6 +430,11 @@ app.post(
   passportConfig.isAuthenticated,
   scriptController.postUpdateUserPostFeedAction
 );
+app.post(
+	"/commentnudge/reaction",
+	passportConfig.isAuthenticated,
+	scriptController.postCommentNudgeReaction
+);
 
 /**
  * Error Handler.
@@ -457,7 +462,7 @@ app.use(function (err, req, res, next) {
 /**
  * Socket.io Implementation
  */
-
+console.log("CHAT SERVER ACTIVATED", server)
 chatSocket(server);
 
 /**

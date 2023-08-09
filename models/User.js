@@ -58,6 +58,10 @@ const userSchema = new mongoose.Schema({
 
     //Actor Comments for User Made Posts
     comments: [new Schema({
+      class: String, // comment nudge, etc
+			nudge: Object, //nudge object
+                // { nudgeShown: Boolean, --> Nudge was shown/not shown, keep true for all for now, future research will only show the nudge to half of the teens
+                // userAction: String --> Action taken by the user, either 'null', 'view', 'report' or 'delete'}
       //class: String, //Bully, Marginal, normal, etc
       actor: {type: Schema.ObjectId, ref: 'Actor'},
       body: {type: String, default: '', trim: true}, //body of post or reply
