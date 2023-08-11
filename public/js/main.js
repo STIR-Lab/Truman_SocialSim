@@ -460,6 +460,169 @@ $('a.others').click(function(){
 		// $.post( "/feed", { postID: postID, like: like, _csrf : $('meta[name="csrf-token"]').attr('content') } );
 	});
 
+
+	/*
+	// Check if the comment nudge modal exists, if so then open it
+	if ($("#commentNudgeModal").length) {
+		$("#commentNudgeModal").modal('setting', 'closable', false).modal('show');
+	}
+	*/
+	/*
+	// check if nudge responded property exists on a comment and nudgeShown is true, if so open the comment nudge modal
+	$(".comment").each(function () {
+		if ($(this).attr("nudgeResponded") == 'false' && $(this).attr("nudgeShown") == 'true') {
+			$('#commentNudgeModal').modal('setting', 'closable', false).modal('show');
+		}
+	})
+	*/
+
+	// First Modal Buttons
+	// onclick icon close button
+	$("#closeModalCommentNudgeIconButton").on("click", function () {
+		// close the main modal
+		// make api req
+		console.log('CLOSE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const userAction = 'unhide'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		
+		$.post("/commentnudge/reaction", {
+		  postID,
+		  commentID,
+		  userAction,
+		  _csrf: $('meta[name="csrf-token"]').attr("content"),
+		}).then(location.reload());
+		
+	})
+
+	// onclick unhide button
+	$("#unhideCommentNudge").on("click", function () {
+		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const userAction = 'unhide'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		$.post("/commentnudge/reaction", {
+			postID,
+			commentID,
+			userAction,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(location.reload());  
+	})
+
+	// onclick hide button
+	$("#hideCommentNudge").on("click", function () {
+		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const userAction = 'hide'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		$.post("/commentnudge/reaction", {
+			postID,
+			commentID,
+			userAction,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(location.reload());
+		  
+	})
+
+	// onclick block button
+	$("#blockCommentNudge").on("click", function () {
+		// open up the secondary modal
+		$("#secondaryReportCommentModal").modal('setting', 'closable', false).modal('show');
+	})
+
+	// Secondary Modal Buttons
+	// onclick secondary close button
+	$("#closeReportModalCommentNudgeIconButton").on("click", function () {
+		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const comment_id = $("#commentNudgeModal").attr('comment_id')
+		const userAction = 'block'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		$.post("/commentnudge/reaction", {
+			postID,
+			commentID,
+			userAction,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(location.reload());
+		  
+	})
+
+	// onclick secondary report button
+	$("#reportCommentNudge").on("click", function () {
+		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const userAction = 'blockAndReport'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		$.post("/commentnudge/reaction", {
+			postID,
+			commentID,
+			userAction,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(location.reload());
+		  
+	})
+
+	// onclick secondary don't report button
+	$("#dontReportCommentNudge").on("click", function () {
+		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const userAction = 'block'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		$.post("/commentnudge/reaction", {
+			postID,
+			commentID,
+			userAction,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(location.reload());
+		  
+	})
+
+	  // this is Unhide on the hidden COMMENT NUDGE button
+	  $("a.unhide.commentnudge").on("click", function () {
+		console.log('VIEW COMMENT for NUDGE CLICKED')
+	
+		var comment = $(this).parents(".comment");
+			const postID = $(this).closest(".ui.fluid.card").attr("u_postid");
+			const commentID = comment.attr("commentnudgeid");
+		const userAction = 'unhide'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		
+		$.post("/commentnudge/reaction", {
+		  postID,
+		  commentID,
+		  userAction,
+		  _csrf: $('meta[name="csrf-token"]').attr("content"),
+		}).then(location.reload());
+		
+		});
+/*
+  // Remove these once done with them
   // this is VIEW COMMENT NUDGE button
   $("a.view.commentnudge").on("click", function () {
     console.log('VIEW COMMENT for NUDGE CLICKED')
@@ -478,6 +641,7 @@ $('a.others').click(function(){
       _csrf: $('meta[name="csrf-token"]').attr("content"),
     }).then(location.reload());
 	});
+
   // this is DELETE COMMENT NUDGE button
   $("a.delete.commentnudge").on("click", function () {
     console.log('VIEW DELETE for NUDGE CLICKED')
@@ -517,7 +681,7 @@ $('a.others').click(function(){
       _csrf: $('meta[name="csrf-token"]').attr("content"),
     }).then(location.reload());
   })
-
+*/
 	/// ///TESTING
 	/* setTimeout(function() {
   //.ui.fluid.card.test

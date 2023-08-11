@@ -423,12 +423,9 @@ exports.newPost = async (req, res) => {
 				commentNudge.commentID = user.numActorReplies;
 				commentNudge.actor = randomActor._id;
 				commentNudge.class = "commentNudge";
-				commentNudge.nudge = {
-					nudgeShown: true, // Modify this if Nudge is not suppose to be shown
-					userAction: 'null',
-				};
+				commentNudge.nudgeShown = "true"; // Modify this if Nudge is not suppose to be shown
+				commentNudge.userAction = "null";
 				commentNudge.time = post.relativeTime;
-
 				// add to posts
 				post.comments.push(commentNudge);
 			}
@@ -496,7 +493,7 @@ exports.newPost = async (req, res) => {
 /**
  * POST /commentnudge/reaction
  * Update the comment nudge based upon the user action
- * Possible user actions: 'null', 'view', 'delete', 'report'
+ * Possible user actions: 'null', 'unhide', 'hide', 'block', 'blockAndReport'
  */
 exports.postCommentNudgeReaction = async (req, res, next) => {
 	console.log("Inside postCommentNudgeReaction");
@@ -529,26 +526,61 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 	console.log("comment is ", comment);
 
 	// check if nudge exists on the object
-	if (comment.nudge) {
+	if (comment.class == "commentNudge") {
 		// then change the nudge useraction
-		user.posts[postIndex].comments[commentIndex].nudge.userAction =
+		user.posts[postIndex].comments[commentIndex].userAction =
 			req.body.userAction;
-		console.log(user.posts[postIndex].comments[commentIndex].nudge.userAction);
+		user.numPosts = user.numPosts;
+		console.log(user.posts[postIndex].comments[commentIndex].userAction);
 	} else {
 		// throw an error
 		console.log("ERROR: Could not find nudge on comment");
 	}
 
-  user.markModified('posts')
-
-	user.save((err, updatedUser) => {
+	await user.markModified("posts");
+	const result = await User.updateOne(
+		{ _id: req.user.id },
+		{ $set: { posts: user.posts }});
+	console.log("UPDATED USER");
+	// print updated user action
+	console.log(result);
+	/*
+	console.log(
+		"UPDATED USER ACTION: " +
+			result.posts[postIndex].comments[commentIndex].userAction
+	);
+	*/
+	res.status(200).redirect("/");
+	/*
+	User.updateOne(
+		{ _id: req.user.id },
+		{ $set: { posts: user.posts } },
+		(err, result) => {
+			if (err) {
+				console.log("ERROR: Could not find nudge on comment");
+				return next(err);
+			} else {
+				console.log("UPDATED USER");
+				// console.log(result)
+				console.log(
+					"UPDATED USER ACTION: " +
+						result.posts[postIndex].comments[commentIndex].userAction
+				);
+				res.status(200).redirect("/");
+			}
+		}
+	);
+	*/
+	/*
+	// save the user
+	await user.save((err, updatedUser) => {
 		if (err) {
 			return next(err);
 		}
 		// req.flash('success', { msg: 'Profile information has been updated.' });
 		console.log(
 			"UPDATED USER ACTION: " +
-				updatedUser.posts[postIndex].comments[commentIndex].nudge.userAction
+				updatedUser.posts[postIndex].comments[commentIndex].userAction
 		);
 		console.log(
 			"updated comment is:",
@@ -557,6 +589,7 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 		console.log("SAVED USER");
 		res.status(200).redirect("/");
 	});
+	*/
 };
 
 /**

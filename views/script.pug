@@ -110,35 +110,16 @@ block content
                               else
                                 a.like.comment Like
                               a.flag.comment Flag
-                      //- Else If: this is a comment nudge
+                      //- Else If this is a comment nudge
                       else if comment.class == 'commentNudge'
+                        
                         -console.log('commentNudge')
-                        -console.log(comment.nudge)
-                        if comment.nudge.nudgeShown && comment.nudge.userAction != 'view'
-                          if comment.nudge.userAction == 'delete'
-                            -console.log('DISPLAY THE DELETE COMMENT NUDGE')
-                            .comment(commentNudgeID=comment.commentID)
-                              .content
-                                | Deleted Comment
-                                .text
-                                  | This comment has been deleted. This comment also violates our community guidelines. Further violation may result in a ban for this user. 
-                                  a(href='') 
-                                    | Learn more 
-                                    i.info.circle.icon 
-                                
-                          else if comment.nudge.userAction == 'report'
-                            -console.log('DISPLAY THE REPORT COMMENT NUDGE')
-                            .comment(commentNudgeID=comment.commentID)
-                              .content
-                                | Reported Comment
-                                .text
-                                  | This comment has been reported. This comment also violates our community guidelines. Further violation may result in a ban for this user. 
-                                  a(href='') 
-                                    | Learn more 
-                                    i.info.circle.icon 
-                          else
-                            //- Only if comment.nudge.userAction == 'null'
-                            -console.log('DISPLAY THE FULL COMMENT NUDGE')
+                        -console.log(comment.nudgeShown)
+                        -console.log('COMMENT NUDGE SHOWN: ' + comment.userAction)
+                          
+                        if comment.nudgeShown
+                          if comment.userAction == 'hide'
+                            -console.log('DISPLAY THE HIDE COMMENT NUDGE')
                             .comment(commentNudgeID=comment.commentID)
                               a.avatar(href='/user/'+comment.actor.username)
                                 //-img(src=cdn+'/profile_pictures/'+comment.actor.profile.picture)
@@ -146,17 +127,139 @@ block content
                               .content
                                 | Hidden Comment
                                 .text
-                                  | This comment violates our community guidelines. Further violation may result in a ban for this user. 
+                                  | This comment was hidden as it may contain offensive content which can be hurtful to others.
+                                .actions
+                                  a.unhide.commentnudge Unhide
+                          else if comment.userAction == 'block'
+                            -console.log('DISPLAY THE BLOCK COMMENT NUDGE')
+                            .comment(commentNudgeID=comment.commentID)
+                              .content
+                                | Blocked User
+                                .text
+                                  | This comment has been blocked. This comment also violates our community guidelines. Further violation may result in a ban for this user. 
                                   a(href='') 
                                     | Learn more 
                                     i.info.circle.icon 
+                            script.
+                              // TODO: ADD CODE TO OPEN MODAL
+                              console.log('COMMENT NUDGE SHOWN: ' + #{comment.nudgeShown})
+                                                  
+                          else if comment.userAction == 'blockAndReport'
+                            -console.log('DISPLAY THE BLOCK AND REPORT COMMENT NUDGE')
+                            .comment(commentNudgeID=comment.commentID)
+                              .content
+                                | Blocked and Reported User
+                                .text
+                                  | This comment has been blocked and reported. This comment also violates our community guidelines. Further violation may result in a ban for this user. 
+                                  a(href='') 
+                                    | Learn more 
+                                    i.info.circle.icon 
+                            script.
+                              // TODO: ADD CODE TO OPEN MODAL
+                              console.log('COMMENT NUDGE SHOWN: ' + #{comment.nudgeShown})
+                            
+                          else if comment.userAction == 'unhide'
+                            //- If NUDGE IS JUST UNHIDE, just show a generic mean comment
+                            -console.log('DISPLAY THE UNHIDE COMMENT NUDGE AFTER NUDGE')
+                            .comment(commentID=comment.commentID)
+                              a.avatar(href='/user/'+comment.actor.username)
+                                //-img(src=cdn+'/profile_pictures/'+comment.actor.profile.picture)
+                                img.lazyload(data-src=cdn+"/profile_pictures/"+comment.actor.profile.picture)
+                              .content
+                                a.author(href='/user/'+comment.actor.username)=comment.actor.profile.name
+                                .metadata
+                                  span.date=(user.createdAt.getTime() + comment.time)
+                                  .rating
+                                    if comment.liked
+                                      i.red.heart.icon
+                                      span=comment.likes
+                                      | Likes 
+                                    else
+                                      i.heart.icon
+                                      span.num=comment.likes
+                                      |  Likes
+                                .text='your post is so stupid!'
                                 .actions
-                                  a.view.commentnudge View
-                                  a.delete.commentnudge Delete 
-                                  a.report.commentnudge Report
-                        else
-                          //- If the nudge is not shown OR NUDGE IS JUST VIEW, just show a generic comment
-                          -console.log('DISPLAY THE VIEW COMMENT NUDGE OR NO NUDGE')
+                                  if comment.liked
+                                    a.red.like.comment Like
+                                  else
+                                    a.like.comment Like
+                                  a.flag.comment Flag
+                            script.
+                              // TODO: ADD CODE TO OPEN MODAL
+                              console.log('COMMENT NUDGE SHOWN: ' + #{comment.nudgeShown})
+                            
+                          else
+                            //- Only if comment.userAction == 'null'
+                            -console.log('DISPLAY THE FULL COMMENT NUDGE')
+                            .ui.modal#commentNudgeModal(
+                                commentNudgeID=comment.commentID, 
+                                comment_id = comment._id,
+                                postnudgeID=val.id, 
+                                nudgeShown=comment.nudgeShown
+                              )
+                              //- close button
+                              #closeModalCommentNudgeIconButton.icon.button.CloseModal
+                                i.close.icon
+                              .content
+                                | #[u #{comment.actor.username}] just made a comment on your post that is #[strong hidden] as it violates our community guidelines due to #[strong offensive language].
+                                a(href='') 
+                                    | Learn more 
+                                    i.info.circle.icon 
+                              .actions 
+                                .ui.three.attached.buttons
+                                  #unhideCommentNudge.button.ui.basic.black.button
+                                      | Unhide
+                                  #hideCommentNudge.button.ui.basic.black.button
+                                      | Keep Hidden
+                                  #blockCommentNudge.button.ui.basic.black.button
+                                      | Block
+                            
+                            .ui.modal#secondaryReportCommentModal(commentNudgeID=comment.commentID, 
+                              comment_id = comment._id,
+                                postnudgeID=val.id)
+                              #closeReportModalCommentNudgeIconButton.icon.button.CloseModal
+                                  i.close.icon
+                              .content
+                                | #[u #{comment.actor.username}] has been blocked. Would you also like to report this user?
+                              .actions
+                                .ui.three.attached.buttons
+                                  #reportCommentNudge.button.ui.basic.black.button
+                                      | Yes
+                                  #dontReportCommentNudge.button.ui.basic.black.button
+                                      | No      
+                            -console.log(comment)
+                            .comment(commentNudgeID=comment.commentID, 
+                                    postnudgeID=val.id
+                                )
+                              a.avatar(href='/user/'+comment.actor.username)
+                                //-img(src=cdn+'/profile_pictures/'+comment.actor.profile.picture)
+                                img.lazyload(data-src=cdn+"/profile_pictures/"+comment.actor.profile.picture)
+                              .content
+                                | Hidden Comment
+                                .text
+                                  | This comment violates our community guidelines. Further violation may result in a ban for this user. 
+                                  a(href='localhost3000/risk_information') 
+                                    | Learn more 
+                                    i.info.circle.icon 
+                                .actions
+                                  a.unhide.commentnudge Unhide
+                            script.
+                              // TODO: ADD CODE TO OPEN MODAL
+                              console.log('COMMENT NUDGE SHOWN: ' + #{comment.nudgeShown})
+                              	// Logic for double modal
+                              $('.coupled.modal').modal({
+                                allowMultiple: false
+                              });
+
+                              // attach events to buttons, also make the nudges unexitable from clicking on background
+                              $('#secondaryReportCommentModal').modal('attach events', '#commentNudgeModal.modal #blockCommentNudge.button')
+                              
+                              $("#commentNudgeModal").modal('setting', 'closable', false).modal('show');
+
+                        else 
+                          //- If nudgeShown is false, then show a generic nice comment
+                          -console.log('DISPLAY THE VIEW COMMENT NO NUDGE')
                           .comment(commentID=comment.commentID)
                             a.avatar(href='/user/'+comment.actor.username)
                               //-img(src=cdn+'/profile_pictures/'+comment.actor.profile.picture)
@@ -174,13 +277,14 @@ block content
                                     i.heart.icon
                                     span.num=comment.likes
                                     |  Likes
-                              .text='GENERIC MEAN GENERAL COMMENT'
+                              .text='nice!'
                               .actions
                                 if comment.liked
                                   a.red.like.comment Like
                                 else
                                   a.like.comment Like
-                                a.flag.comment Flag
+                                  a.flag.comment Flag
+                        
                       //- Else this is a normal comment from the script
                       else
                         .comment(commentID=comment.commentID)
