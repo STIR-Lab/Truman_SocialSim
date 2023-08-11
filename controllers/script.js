@@ -496,62 +496,63 @@ exports.newPost = async (req, res) => {
  * Possible user actions: 'null', 'unhide', 'hide', 'block', 'blockAndReport'
  */
 exports.postCommentNudgeReaction = async (req, res, next) => {
-	console.log("Inside postCommentNudgeReaction");
-	console.log(req.body);
-
-	// find the user
-	let user = await User.findById(req.user.id);
-	if (!user) {
-		console.log("ERROR: Could not find user in DB");
+	try {
+		console.log("Inside postCommentNudgeReaction");
 		console.log(req.body);
-		return next(err);
-	}
-	// find correct post in the user object
-	// console.log(user)
-	// console.log(user.posts)
-	let post = user.posts.find((o) => o._id == req.body.postID);
-	let postIndex = user.posts.findIndex((o) => o._id == req.body.postID);
-	// console.log(post);
 
-	if (!post) {
-		console.log("ERROR: Could not find post in user object");
-		return next(err);
-	}
-	// find the right comment in the post
-	let comment = post.comments.find((o) => o.commentID == req.body.commentID);
-	let commentIndex = post.comments.findIndex(
-		(o) => o.commentID == req.body.commentID
-	);
+		// find the user
+		let user = await User.findById(req.user.id);
+		if (!user) {
+			console.log("ERROR: Could not find user in DB");
+			console.log(req.body);
+			return next(err);
+		}
+		// find correct post in the user object
+		// console.log(user)
+		// console.log(user.posts)
+		let post = user.posts.find((o) => o._id == req.body.postID);
+		let postIndex = user.posts.findIndex((o) => o._id == req.body.postID);
+		// console.log(post);
 
-	console.log("comment is ", comment);
+		if (!post) {
+			console.log("ERROR: Could not find post in user object");
+			return next(err);
+		}
+		// find the right comment in the post
+		let comment = post.comments.find((o) => o.commentID == req.body.commentID);
+		let commentIndex = post.comments.findIndex(
+			(o) => o.commentID == req.body.commentID
+		);
 
-	// check if nudge exists on the object
-	if (comment.class == "commentNudge") {
-		// then change the nudge useraction
-		user.posts[postIndex].comments[commentIndex].userAction =
-			req.body.userAction;
-		user.numPosts = user.numPosts;
-		console.log(user.posts[postIndex].comments[commentIndex].userAction);
-	} else {
-		// throw an error
-		console.log("ERROR: Could not find nudge on comment");
-	}
+		console.log("comment is ", comment);
 
-	await user.markModified("posts");
-	const result = await User.updateOne(
-		{ _id: req.user.id },
-		{ $set: { posts: user.posts }});
-	console.log("UPDATED USER");
-	// print updated user action
-	console.log(result);
-	/*
-	console.log(
-		"UPDATED USER ACTION: " +
-			result.posts[postIndex].comments[commentIndex].userAction
-	);
-	*/
-	res.status(200).redirect("/");
-	/*
+		// check if nudge exists on the object
+		if (comment.class == "commentNudge") {
+			// then change the nudge useraction
+			user.posts[postIndex].comments[commentIndex].userAction =
+				req.body.userAction;
+			user.numPosts = user.numPosts;
+			console.log(user.posts[postIndex].comments[commentIndex].userAction);
+		} else {
+			// throw an error
+			console.log("ERROR: Could not find nudge on comment");
+		}
+
+		await user.markModified("posts");
+		const updatedUser = await user.save();
+		console.log("UPDATED USER");
+		console.log(
+			"UPDATED USER ACTION: " +
+				updatedUser.posts[postIndex].comments[commentIndex].userAction
+		);
+		console.log(
+			"updated comment is:",
+			updatedUser.posts[postIndex].comments[commentIndex]
+		);
+		console.log("SAVED USER");
+
+		res.status(200).send({ result: "success" })
+		/*
 	User.updateOne(
 		{ _id: req.user.id },
 		{ $set: { posts: user.posts } },
@@ -571,7 +572,7 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 		}
 	);
 	*/
-	/*
+		/*
 	// save the user
 	await user.save((err, updatedUser) => {
 		if (err) {
@@ -590,6 +591,9 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 		res.status(200).redirect("/");
 	});
 	*/
+	} catch (err) {
+		return next(err);
+	}
 };
 
 /**
