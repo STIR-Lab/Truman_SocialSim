@@ -4,17 +4,17 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
-const userSchema = new mongoose.Schema(
-  {
-    email: { type: String, unique: true },
-    password: String,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
-    username: String,
-    active: { type: Boolean, default: true },
-    isAdmin: { type: Boolean, default: false },
+const userSchema = new mongoose.Schema({
+  email: { type: String, unique: true },
+  password: String,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  username: String,
+  active: {type: Boolean, default: true},
+  isAdmin: {type: Boolean, default: false},
 
-    completed: { type: Boolean, default: false },
+  
+  completed: {type: Boolean, default: false},
 
     numPosts: { type: Number, default: -1 }, // not including replys
     numReplies: { type: Number, default: -1 }, // not including posts
@@ -40,8 +40,9 @@ const userSchema = new mongoose.Schema(
 
     tokens: Array,
 
-    blocked: [String],
-    reported: [String],
+  blocked: [String],
+  reported: [String],
+  friended: [String],
 
     study_days: {
       type: [Number],
@@ -125,14 +126,12 @@ const userSchema = new mongoose.Schema(
       }),
     ],
 
-    blockAndReportLog: [
-      new Schema({
-        time: Date,
-        action: String,
-        report_issue: String,
-        actorName: String,
-      }),
-    ],
+    blockAndReportAndfriendLog: [new Schema({
+    time: Date,
+    action: String,
+    report_issue: String,
+    actorName: String
+    })],
 
     profile_feed: [
       new Schema({

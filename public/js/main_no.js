@@ -1,5 +1,7 @@
 //$(document).ready(function() {
-
+  $(document).ready(function(){
+    $('.ui.accordion').accordion();
+  });
 //Before Page load:
 $('#content').hide();
 $('#loading').show();

@@ -1,81 +1,10 @@
 const mongoose = require('mongoose');
 const {expect} = require('chai');
 const sinon = require('sinon');
-//require('sinon-mongoose');
+require('sinon-mongoose');
 
 const User = require('../models/User');
 
-const mongoose = require('mongoose');
-const { expect } = require('chai');
-const sinon = require('sinon');
-
-const User = require('../models/User');
-
-describe('User Model', () => {
-  afterEach(() => {
-    sinon.restore();
-  });
-
-  it('should create a new user', (done) => {
-    const saveStub = sinon.stub(User.prototype, 'save').yields(null);
-    const user = new User({ email: 'test@gmail.com', password: 'root' });
-
-    user.save((err, result) => {
-      expect(saveStub.calledOnce).to.be.true;
-      expect(err).to.be.null;
-      done();
-    });
-  });
-
-  it('should return error if user is not created', (done) => {
-    const saveStub = sinon.stub(User.prototype, 'save').yields({ name: 'ValidationError' });
-    const user = new User({ email: 'test@gmail.com', password: 'root' });
-
-    user.save((err, result) => {
-      expect(saveStub.calledOnce).to.be.true;
-      expect(err.name).to.equal('ValidationError');
-      expect(result).to.be.undefined;
-      done();
-    });
-  });
-
-  it('should not create a user with the unique email', (done) => {
-    const saveStub = sinon.stub(User.prototype, 'save').yields({ name: 'MongoError', code: 11000 });
-    const user = new User({ email: 'test@gmail.com', password: 'root' });
-
-    user.save((err, result) => {
-      expect(saveStub.calledOnce).to.be.true;
-      expect(err.name).to.equal('MongoError');
-      expect(err.code).to.equal(11000);
-      expect(result).to.be.undefined;
-      done();
-    });
-  });
-
-  it('should find user by email', (done) => {
-    const findOneStub = sinon.stub(User, 'findOne').yields(null, { _id: '5700a128bd97c1341d8fb365', email: 'test@gmail.com' });
-
-    User.findOne({ email: 'test@gmail.com' }, (err, result) => {
-      expect(findOneStub.calledOnce).to.be.true;
-      expect(result.email).to.equal('test@gmail.com');
-      done();
-    });
-  });
-
-  it('should remove user by email', (done) => {
-    const removeStub = sinon.stub(User, 'remove').yields(null, { nRemoved: 1 });
-
-    User.remove({ email: 'test@gmail.com' }, (err, result) => {
-      expect(removeStub.calledOnce).to.be.true;
-      expect(err).to.be.null;
-      expect(result.nRemoved).to.equal(1);
-      done();
-    });
-  });
-});
-
-
-/*
 describe('User Model', () => {
   it('should create a new user', (done) => {
     const UserMock = sinon.mock(new User({ email: 'test@gmail.com', password: 'root' }));
@@ -175,4 +104,3 @@ describe('User Model', () => {
     })
   });
 });
-*/

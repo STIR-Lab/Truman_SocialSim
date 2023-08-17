@@ -63,15 +63,14 @@ $(window).on("load", () => {
 			},
 		},
 
-		onSuccess(event, fields) {
-			console.log("Event is :");
-			console.log(event);
-			console.log("fields is :");
-			console.log(fields);
-			$(".ui.feed.form")[0].submit();
-			console.log("submitting form");
-		},
-	});
+    onSuccess: function (event, fields) {
+      console.log("Event is :", event);
+      //console.log(event);
+      console.log("fields is :", fields.body);
+      //console.log(fields);
+      $(".ui.feed.form")[0].submit();
+    },
+  });
 
 	$(".ui.feed.form").submit((e) => {
 		e.preventDefault();
@@ -152,10 +151,12 @@ $('a.others').click(function(){
 		window.location.href = "/com"; // maybe go to tour site???
 	});
 
-	// Edit button
-	$(".ui.editprofile.button").on("click", () => {
-		window.location.href = "/account";
-	});
+  //Edit button
+  $(".ui.editprofile.button").on("click", function () {
+    window.location.href = "/account";
+  });
+
+
 
 
 
@@ -270,12 +271,13 @@ $('a.others').click(function(){
 			})
 			.modal("show");
 
-		console.log(`***********Block USER ${username}`);
-		$.post("/user", {
-			blocked: username,
-			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		});
-	});
+    console.log("***********Block USER " + username);
+    $.post("/user", {
+      blocked: username,
+      _csrf: $('meta[name="csrf-token"]').attr("content"),
+    });
+    
+  });
 
 	// Block Modal for User that is already Blocked
 	$(".ui.on.small.basic.blocked.modal")
@@ -295,25 +297,101 @@ $('a.others').click(function(){
 		})
 		.modal("show");
 
+  // //this is the Add Friend button
+  // $("button.ui.button.friend").on("click", function () {
+  //   console.log("clicked!!!! " + username);
+  //   var username = $(this).attr("username");
+  //   //Modal for Friending Feature
+  //   $(".ui.small.basic.friend.modal")
+  //     .modal({
+  //       closable: false,
+  //       onDeny: function () {
+  //         //report user
+  //       },
+  //       onApprove: function () {
+  //         //unfriend user
+  //         $.post("/user", {
+  //           unfriended: username,
+  //           _csrf: $('meta[name="csrf-token"]').attr("content"),
+  //         });
+  //       },
+  //     })
+  //     .modal("show");
+
+  //   console.log("***********Friend USER " + username);
+  //   $.post("/user", {
+  //     friended: username,
+  //     _csrf: $('meta[name="csrf-token"]').attr("content"),
+  //   });
+  // });
+
+  $("button.ui.button.friend").on("click", function () {
+    var username = $(this).attr("username");
+  
+    // Request sent modal
+    $(".ui.small.basic.request.sent.modal")
+      .modal('show');
+  
+    console.log("Sending friend request to " + username);
+  
+    // After 30 seconds, simulate the request being accepted
+    setTimeout(function() {
+      // Show request accepted modal
+      $(".ui.small.basic.request.accepted.modal")
+        .modal('show');
+  
+      console.log("Friend request accepted by " + username);
+  
+      // Add friend
+      $.post("/user", {
+        friended: username,
+        _csrf: $('meta[name="csrf-token"]').attr('content'),
+      });
+    }, 10000); // 30000 milliseconds = 30 seconds
+  });
+
+  //Friend Modal for User that is already Friended
+  // $(".ui.on.small.basic.friend.modal")
+  //   .modal({
+  //     closable: false,
+  //     onDeny: function () {
+  //       //report user
+  //     },
+  //     onApprove: function () {
+  //       //unfriend user
+  //       var username = $("button.ui.button.friend").attr("username");
+  //       $.post("/user", {
+  //         unfriended: username,
+  //         _csrf: $('meta[name="csrf-token"]').attr("content"),
+  //       });
+  //     },
+  //   })
+  //   .modal("show");
 
 
-	// this is the LIKE button
-	$(".like.button").on("click", function () {
-		// if already liked, unlike if pressed
-		if ($(this).hasClass("red")) {
-			console.log("***********UNLIKE: post");
-			$(this).removeClass("red");
-			var label = $(this).next("a.ui.basic.red.left.pointing.label.count");
-			label.html((i, val) => val * 1 - 1);
-		}
-		// since not red, this button press is a LIKE action
-		else {
-			$(this).addClass("red");
-			var label = $(this).next("a.ui.basic.red.left.pointing.label.count");
-			label.html((i, val) => val * 1 + 1);
-			const postID = $(this).closest(".ui.fluid.card").attr("postID");
-			const like = Date.now();
-			console.log(`***********LIKE: post ${postID} at time ${like}`);
+
+
+  //this is the LIKE button
+  $(".like.button").on("click", function () {
+    //if already liked, unlike if pressed
+    if ($(this).hasClass("red")) {
+      console.log("***********UNLIKE: post");
+      $(this).removeClass("red");
+      var label = $(this).next("a.ui.basic.red.left.pointing.label.count");
+      label.html(function (i, val) {
+        return val * 1 - 1;
+      });
+    }
+    //since not red, this button press is a LIKE action
+    else {
+      $(this).addClass("red");
+      var label = $(this).next("a.ui.basic.red.left.pointing.label.count");
+      label.html(function (i, val) {
+        return val * 1 + 1;
+      });
+      var postID = $(this).closest(".ui.fluid.card").attr("postID");
+      var like = Date.now();
+      console.log("***********LIKE: post " + postID + " at time " + like);
 
 			if ($(this).closest(".ui.fluid.card").attr("type") == "userPost") {
 				$.post("/userPost_feed", {

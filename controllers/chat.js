@@ -27,11 +27,11 @@ const chatSocket = (server) => {
   io.use(async (socket, next) => {
     const sessionId = socket.handshake.auth.sessionId;
 
-    if (sessionId) {
-      const session = sessionStore.findSession(sessionId);
-      if (session) {
-        // attach user pfp to session
-        session.userpfp = await getChatPartnerPFP(session.userId); // socket.handshake.auth.userpfp;
+		if (sessionId) {
+			const session = sessionStore.findSession(sessionId);
+			if (session) {
+				// attach user pfp to session
+				session.userpfp = await getChatPartnerPFP(session.userId); //socket.handshake.auth.userpfp;
 
         socket.sessionId = sessionId;
         socket.userId = session.userId;
@@ -110,6 +110,8 @@ const chatSocket = (server) => {
 
     // Diff tabs opened by the same user, thus we need to make diff sockets join the same room
     socket.join(socket.userId);
+    // Diff tabs opened by the same user, thus we need to make diff sockets join the same room
+    socket.join(socket.userId);
 
     // Finds all conversation history of a user
     const allConvo = await getChatHistory(socket.username, socket.userId);
@@ -142,6 +144,7 @@ const chatSocket = (server) => {
       );
     });
 
+    /**
     /**
      * Message
      *
@@ -242,6 +245,9 @@ const chatSocket = (server) => {
       if (!convoInfo) {
         return;
       }
+      if (!convoInfo) {
+        return;
+      }
 
       // Finding index of the content array where messageID is equal to an id within that array
       const messageIndex = convoInfo.content.findIndex(
@@ -278,6 +284,39 @@ const chatSocket = (server) => {
           .emit('block-success', 'Successfully blocked.');
       }
     });
+      await convoInfo.save();
+
+      if (userAction === "blockUser") {
+        console.log("=============emmitting block===============");
+    
+        User.findOne({username: socket.username}, (err, user) => {
+          if (err) {
+            console.log(err);
+            return;
+          }
+          
+          if (user) {
+            user.blocked.push(other.username);
+            user.save(err => {
+              if (err) {
+                console.log(err);
+              } else {
+                console.log('User blocked list updated successfully.');
+              }
+            });
+          }
+        });
+        // console.log(formattedMsg);
+        io.to(other.userId) // to recipient
+          // .to(socket.userId) // to sender room
+          .emit("blocked", "You've been blocked.");
+
+        
+        // io.to(to.userId) // to recipient
+        io.to(socket.userId) // to sender room
+          .emit("block-success", "Successfully blocked.");
+      }
+    });
 
     socket.on('read-messages', async ({ messageIds, other }) => {
       // search convo between from & socket user
@@ -292,7 +331,17 @@ const chatSocket = (server) => {
       if (!convoInfo) {
         return;
       }
+      if (!convoInfo) {
+        return;
+      }
 
+      convoInfo.content.forEach((content) => {
+        messageIds.forEach((id) => {
+          if (id == content._id) {
+            content.msg.read = true;
+          }
+        });
+      });
       convoInfo.content.forEach((content) => {
         messageIds.forEach((id) => {
           if (id == content._id) {
@@ -306,6 +355,7 @@ const chatSocket = (server) => {
     });
 
     /**
+    /**
      * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
      *
      * {
@@ -315,7 +365,6 @@ const chatSocket = (server) => {
      *    mimeType?: "png" | "jpg", etc
      *    fileName?: string
      *    time: string
-     // eslint-disable-next-line max-len
      *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
      *  }
      *  to: {
@@ -348,6 +397,9 @@ const chatSocket = (server) => {
           to.userId
         );
 
+        if (!convoInfo) {
+          return;
+        }
         if (!convoInfo) {
           return;
         }
@@ -478,7 +530,9 @@ async function formatMessage(msg, nudge, from, to) {
  */
 async function storeMessage(msg, convoInfo) {
   convoInfo.content.push(msg);
+  convoInfo.content.push(msg);
 
+  await convoInfo.save();
   await convoInfo.save();
 }
 
@@ -497,7 +551,18 @@ function getCurrentUsers() {
       });
     }
   });
+  const userList = [];
+  sessionStore.findAllSessions().forEach((session) => {
+    if (session.connected) {
+      userList.push({
+        userId: session.userId,
+        username: session.username,
+        userpfp: session.userpfp,
+      });
+    }
+  });
 
+  return userList;
   return userList;
 }
 
@@ -523,11 +588,16 @@ async function getChatHistory(username, userId) {
   });
 
   return allConvo;
+  return allConvo;
 }
 
 async function getChatPartnerPFP(userId) {
   let chatPartner;
 
+  try {
+    chatPartner = await User.find({
+      _id: userId,
+    });
   try {
     chatPartner = await User.find({
       _id: userId,
@@ -540,6 +610,7 @@ async function getChatPartnerPFP(userId) {
     return '';
   }
 
+  // console.log(chatPartner[0].profile.picture)
   // console.log(chatPartner[0].profile.picture)
 }
 
@@ -560,6 +631,9 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
     userIdB,
   });
 
+  if (curConvo) {
+    // console.log("found existing convo", curConvo);
+    return curConvo;
   if (curConvo) {
     // console.log("found existing convo", curConvo);
     return curConvo;
@@ -591,6 +665,7 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
     // };
   }
 
+  return null;
   return null;
 }
 

@@ -66,17 +66,10 @@ mongoose.connect(process.env.MONGODB_URI || process.env.MONGOLAB_URI);
 // mongoose.connect('mongodb://localhost:27017', { useNewUrlParser: true });
 mongoose.connection.on('error', (err) => {
   console.error(err);
-  console.log('%s MongoDB connection error. Please make sure MongoDB is running.');
-  process.exit();
-});
-
-/*
-mongoose.connection.on('error', (err) => {
-  console.error(err);
   console.log('%s MongoDB connection error. Please make sure MongoDB is running.', chalk.red('✗'));
   process.exit();
 });
-*/
+
 
 User.find()
   .where('active').equals(false)
