@@ -556,7 +556,7 @@ $('a.others').click(function(){
 
 	// First Modal Buttons
 	// onclick icon close button
-	$("#closeModalCommentNudgeIconButton").on("click", async function () {
+	$("#closeModalCommentNudgeIconButton").on("click", function () {
 		// close the main modal
 		// make api req
 		console.log('CLOSE MODAL FOR COMMENT NUDGE')
@@ -568,22 +568,17 @@ $('a.others').click(function(){
 		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
 		)
 		
-		const result = await $.post("/commentnudge/reaction", {
+		$.post("/commentnudge/reaction", {
 		  postID,
 		  commentID,
 		  userAction,
 		  _csrf: $('meta[name="csrf-token"]').attr("content"),
-		})
-		console.log('RESULT', result)
-		if(result.result == 'success'){
-			console.log('SUCCESS')
-			location.reload();
-		  }
+		}).then(location.reload());
 		
 	})
 
 	// onclick unhide button
-	$("#unhideCommentNudge").on("click", async function () {
+	$("#unhideCommentNudge").on("click", function () {
 		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
 		// get the postID and commentID from the modal
 		const postID = $("#commentNudgeModal").attr('postnudgeID')
@@ -592,22 +587,16 @@ $('a.others').click(function(){
 		console.log(
 		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
 		)
-		
-		const result = await $.post("/commentnudge/reaction", {
+		$.post("/commentnudge/reaction", {
 			postID,
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  })
-		  console.log('RESULT', result)
-		  if(result.result == 'success'){
-			console.log('SUCCESS')
-			location.reload();
-		  }
+		  }).then(location.reload());  
 	})
 
 	// onclick hide button
-	$("#hideCommentNudge").on("click", async function () {
+	$("#hideCommentNudge").on("click", function () {
 		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
 		// get the postID and commentID from the modal
 		const postID = $("#commentNudgeModal").attr('postnudgeID')
@@ -616,18 +605,12 @@ $('a.others').click(function(){
 		console.log(
 		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
 		)
-		
-		const result = await $.post("/commentnudge/reaction", {
+		$.post("/commentnudge/reaction", {
 			postID,
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  })
-		console.log('RESULT', result)
-		if(result.result == 'success'){
-			console.log('SUCCESS')
-			location.reload();
-		  }
+		  }).then(location.reload());
 		  
 	})
 
@@ -639,7 +622,7 @@ $('a.others').click(function(){
 
 	// Secondary Modal Buttons
 	// onclick secondary close button
-	$("#closeReportModalCommentNudgeIconButton").on("click", async function () {
+	$("#closeReportModalCommentNudgeIconButton").on("click", function () {
 		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
 		// get the postID and commentID from the modal
 		const postID = $("#commentNudgeModal").attr('postnudgeID')
@@ -649,23 +632,17 @@ $('a.others').click(function(){
 		console.log(
 		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
 		)
-		
-		const result = await $.post("/commentnudge/reaction", {
+		$.post("/commentnudge/reaction", {
 			postID,
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  })
-		  console.log('RESULT', result)
-		  if(result.result == 'success'){
-			console.log('SUCCESS')
-			location.reload();
-		  }
+		  }).then(location.reload());
 		  
 	})
 
 	// onclick secondary report button
-	$("#reportCommentNudge").on("click", async function () {
+	$("#reportCommentNudge").on("click", function () {
 		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
 		// get the postID and commentID from the modal
 		const postID = $("#commentNudgeModal").attr('postnudgeID')
@@ -674,23 +651,17 @@ $('a.others').click(function(){
 		console.log(
 		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
 		)
-		
-		const result = await $.post("/commentnudge/reaction", {
+		$.post("/commentnudge/reaction", {
 			postID,
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  })
-		  console.log('RESULT', result)
-		  if(result.result == 'success'){
-			console.log('SUCCESS')
-			location.reload();
-		  }
+		  }).then(location.reload());
 		  
 	})
 
 	// onclick secondary don't report button
-	$("#dontReportCommentNudge").on("click", async function () {
+	$("#dontReportCommentNudge").on("click", function () {
 		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
 		// get the postID and commentID from the modal
 		const postID = $("#commentNudgeModal").attr('postnudgeID')
@@ -699,48 +670,35 @@ $('a.others').click(function(){
 		console.log(
 		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
 		)
-		
-		const result = await $.post("/commentnudge/reaction", {
+		$.post("/commentnudge/reaction", {
 			postID,
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  })
-		  console.log('RESULT', result)
-		  if(result.result == 'success'){
-			console.log('SUCCESS')
-			location.reload();
-		  }
+		  }).then(location.reload());
 		  
 	})
 
-	// this is Unhide on the hidden COMMENT NUDGE button
-	$("a.unhide.commentnudge").on("click", async function () {
-	console.log('VIEW COMMENT for NUDGE CLICKED')
-
-	var comment = $(this).parents(".comment");
-		const postID = $(this).closest(".ui.fluid.card").attr("u_postid");
-		const commentID = comment.attr("commentnudgeid");
-	const userAction = 'unhide'
-	console.log(
-		`#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
-	)
+	  // this is Unhide on the hidden COMMENT NUDGE button
+	  $("a.unhide.commentnudge").on("click", function () {
+		console.log('VIEW COMMENT for NUDGE CLICKED')
 	
-	
-	const result = await $.post("/commentnudge/reaction", {
-		postID,
-		commentID,
-		userAction,
-		_csrf: $('meta[name="csrf-token"]').attr("content"),
-	  })
-	  console.log('RESULT', result)
-	  if(result.result == 'success'){
-		console.log('SUCCESS')
-		location.reload();
-	  }
-		// .then(location.reload());
-	
-	});
+		var comment = $(this).parents(".comment");
+			const postID = $(this).closest(".ui.fluid.card").attr("u_postid");
+			const commentID = comment.attr("commentnudgeid");
+		const userAction = 'unhide'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		
+		$.post("/commentnudge/reaction", {
+		  postID,
+		  commentID,
+		  userAction,
+		  _csrf: $('meta[name="csrf-token"]').attr("content"),
+		}).then(location.reload());
+		
+		});
 /*
   // Remove these once done with them
   // this is VIEW COMMENT NUDGE button
