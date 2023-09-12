@@ -316,8 +316,7 @@ const chatSocket = (server) => {
         io.to(socket.userId) // to sender room
           .emit("block-success", "Successfully blocked.");
       }
-    });
-
+    
     socket.on('read-messages', async ({ messageIds, other }) => {
       // search convo between from & socket user
       // eslint-disable-next-line prefer-const
@@ -551,18 +550,6 @@ function getCurrentUsers() {
       });
     }
   });
-  const userList = [];
-  sessionStore.findAllSessions().forEach((session) => {
-    if (session.connected) {
-      userList.push({
-        userId: session.userId,
-        username: session.username,
-        userpfp: session.userpfp,
-      });
-    }
-  });
-
-  return userList;
   return userList;
 }
 
@@ -598,10 +585,6 @@ async function getChatPartnerPFP(userId) {
     chatPartner = await User.find({
       _id: userId,
     });
-  try {
-    chatPartner = await User.find({
-      _id: userId,
-    });
 
     console.log(`GOT ${userId} PFP`);
     return chatPartner[0].profile.picture;
@@ -610,7 +593,6 @@ async function getChatPartnerPFP(userId) {
     return '';
   }
 
-  // console.log(chatPartner[0].profile.picture)
   // console.log(chatPartner[0].profile.picture)
 }
 
@@ -631,9 +613,6 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
     userIdB,
   });
 
-  if (curConvo) {
-    // console.log("found existing convo", curConvo);
-    return curConvo;
   if (curConvo) {
     // console.log("found existing convo", curConvo);
     return curConvo;
@@ -665,7 +644,6 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
     // };
   }
 
-  return null;
   return null;
 }
 
