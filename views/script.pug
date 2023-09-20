@@ -115,7 +115,7 @@ block content
                         
                         -console.log('commentNudge')
                         -console.log(comment.nudgeShown)
-                        -console.log('COMMENT NUDGE SHOWN: ' + comment.userAction)
+                        -console.log('COMMENT NUDGE SHOWN 1: ' + comment.userAction)
                           
                         if comment.nudgeShown
                           if comment.userAction == 'hide'
@@ -142,7 +142,7 @@ block content
                                     i.info.circle.icon 
                             script.
                               // TODO: ADD CODE TO OPEN MODAL
-                              console.log('COMMENT NUDGE SHOWN: ' + #{comment.nudgeShown})
+                              console.log('COMMENT NUDGE SHOWN A: ' + #{comment.nudgeShown})
                                                   
                           else if comment.userAction == 'blockAndReport'
                             -console.log('DISPLAY THE BLOCK AND REPORT COMMENT NUDGE')
@@ -156,7 +156,7 @@ block content
                                     i.info.circle.icon 
                             script.
                               // TODO: ADD CODE TO OPEN MODAL
-                              console.log('COMMENT NUDGE SHOWN: ' + #{comment.nudgeShown})
+                              console.log('COMMENT NUDGE SHOWN B: ' + #{comment.nudgeShown})
                             
                           else if comment.userAction == 'unhide'
                             //- If NUDGE IS JUST UNHIDE, just show a generic mean comment
@@ -187,7 +187,7 @@ block content
                                   a.flag.comment Flag
                             script.
                               // TODO: ADD CODE TO OPEN MODAL
-                              console.log('COMMENT NUDGE SHOWN: ' + #{comment.nudgeShown})
+                              console.log('COMMENT NUDGE SHOWN C: ' + #{comment.nudgeShown})
                             
                           else
                             //- Only if comment.userAction == 'null'
@@ -246,7 +246,7 @@ block content
                                   a.unhide.commentnudge Unhide
                             script.
                               // TODO: ADD CODE TO OPEN MODAL
-                              console.log('COMMENT NUDGE SHOWN: ' + #{comment.nudgeShown})
+                              console.log('COMMENT NUDGE SHOWN D: ' + #{comment.nudgeShown})
                               	// Logic for double modal
                               $('.coupled.modal').modal({
                                 allowMultiple: false

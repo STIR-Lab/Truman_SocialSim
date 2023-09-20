@@ -493,7 +493,7 @@ chatSocket(server);
 server.listen(PORT, () => {
   console.log(
     '%s App is running at http://localhost:%d in %s mode',
-
+    chalk.green("✓"),
     PORT,
     app.get('env')
   );

@@ -5,19 +5,16 @@ block content
     .row
         .five.wide.column
             .ui.segment(style='height:90vh')
-                .ui.basic.buttons.fluid(style="margin-bottom:12px") 
-                    #recentButton.ui.button
+                .ui.basic.fluid(style="margin-bottom:18px") 
                         h3.ui.header(style="margin-top:2px") 
-                            i.clock.outline.icon(style="margin-right:-4px") 
-                            |   Recent
-                    #discoverButton.ui.button
-                        h3.ui.header(style="margin-top:2px") 
-                            i.globe.icon(style="margin-right:-4px") 
-                            |   Discover
+                            |   Messages
                 
                 #recentChatHistory(style="margin-top:4px") 
                     #chatHistory.ui.relaxed.divided.list
            
+                #discoverProfiles.ui.grid.stackable
+                    #discoverProfileNoUsersText.p(style="margin-top:20px") There are no new users online.
+
         .eleven.wide.column
             .ui.segment(style='height:90vh')
                 h2#chatPartnerName.ui.left.floated.header
@@ -30,15 +27,16 @@ block content
                     #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
 
                 #nudge3Card.ui.card(style='position: absolute; bottom: -60px; left: 50%; transform: translate(-50%, -50%); width:450px;')
-                    .content(style='background-color: rgba(239,239,240)')
+                    .content
                         #closeNudge3.button.ui.circular.basic.icon.mini.right.floated.button
                             i.close.icon
-                        p Risky message requesting location detected, here are some ways you can respond
+                        p Risky message detected, here are some ways you can respond
                     .ui.vertical.buttons
-                        #nudge3Button1.button.fluid.ui.button(style="background-color: rgba(228,241,254); margin-bottom:4px") No, thank you
-                        #nudge3Button2.button.fluid.ui.button(style="background-color: rgba(228,241,254); margin-bottom:4px") Please leave me alone
-                        #nudge3Button3.button.fluid.ui.button(style="background-color: rgba(228,241,254); margin-bottom:4px") I am not going to
-                        #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3); font-weight: bold') Block and Report
+                        #nudge3Button1.button.fluid.ui.button(style="margin-bottom:4px") I don't feel comfortable sharing that info
+                        #nudge3Button2.button.fluid.ui.button(style="margin-bottom:4px") Sorry, I don't know you
+                        #nudge3Button3.button.fluid.ui.button(style="margin-bottom:4px") I don't think it's appropriate to ask that
+                        #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Block
+                        #nudge3Button5.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Report
 
 
                 form#messageInput(action='')
@@ -54,15 +52,11 @@ block content
                             label.custom-file-upload(for='fileupload' )
                                 i.camera.icon
                         input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/*,video/mp4,video/x-m4v,video/*")
-                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;') 
-                        //- button#addFriendButton(type="button")
-                        //-     i.plus.circle.icon
-                        //-     | Add Friends
-    
+                        button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
 
                 #userIdTag(userId=user.id)
                 #usernameTag(username=user.username)
-                #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://socialsimulation.s3.amazonaws.com/default-pfp.png")
+                #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png")
  
     #newChatModal.ui.mini.modal
         .header
@@ -72,41 +66,34 @@ block content
             #userList.ui.relaxed.divided.list
 
     #nudge1Modal.ui.mini.modal
-        #closeModalNudge1IconButton.icon.button.CloseModal
-            i.close.icon
         .content
             .ui.center.aligned.container
-                | This user is asking for #[strong sensitive information] which may compromise your privacy.
+                | This user is asking for sensitive information which may reveal your location. Are you sure you want to share this information?
         #ButtonsList.actions
-            .ui.two.buttons
+            .ui.four.buttons
+                    #dismissModal1Button.ui.basic.black.button
+                        | Yes, Continue
                     #leaveModalButton.ui.basic.black.button
-                        | Exit Chat
+                        | No, Leave
                     #blockModal1Button.ui.basic.black.button
-                        strong Block User
-        .ui.three.buttons
-            #nudge1Button1.button.ui.basic.black.button 
-                | Sorry, I don't want to share that
-            #nudge1Button2.button.fluid.ui.basic.black.button 
-                | I don't feel comfortable sharing that
-            #nudge1Button3.button.fluid.ui.basic.black.button
-                | Lol that's private information
-        
-                        
-                    
+                        | No, Block User
+                    #reportButton.ui.basic.black.button
+                        | No, Report User
+
     #nudge2NewModal.ui.mini.modal
-        #closeModalNudge2IconButton.icon.button.CloseModal
-            i.close.icon
         .content
-            #nudge2NewModalContent.ui.center.aligned.container
-                | is not in your friends list and sent you #[strong inappropriate messages.] Would you like to exit this conversation?
+            .ui.center.aligned.container
+                | You just received messages from an older stranger, which may be unsafe. Would you like to leave this conversation?
         #ButtonsList.actions
-            .ui.three.buttons
-                #leaveNudge2NewModal.button.ui.basic.black.button
-                    | Exit Chat
-                #leaveAndBlockNudge2NewModal.button.ui.basic.black.button
-                    strong Block User
+            .ui.four.buttons
                 #dismissNudge2NewModal.button.ui.basic.black.button
-                    | Continue Chat
+                    | No, Continue
+                #leaveNudge2NewModal.button.ui.basic.black.button
+                    | Yes, Leave
+                #leaveAndBlockNudge2NewModal.button.ui.basic.black.button
+                    | Yes, Block User
+                #reportNudge2NewModal.button.ui.basic.black.button
+                    | Yes, Report User
 
     #nudge2Modal.ui.mini.modal
         .content.center.aligned.column
@@ -125,56 +112,19 @@ block content
                 | Dismiss
     
     #newNudge4Modal.ui.mini.modal
-        #closeModalNudge4IconButton.icon.button.CloseModal
-            i.close.icon
         .content
             .ui.center.aligned.container
-                | The last message is hidden due to potenially #[strong explicit content]. Would you like to delete this message?
-                #newNudge4ModalInfoButton.icon.button.InfoButton
-                    i.info.circle.icon 
+                | The last message you received is censored due to potentially harmful content. Learn why this is harmful. Are you sure you want to view this message?
         #ButtonsList.actions
             .ui.three.buttons
+                #newNudge4ModalViewButton.button.ui.basic.black.button
+                    | View
                 #newNudge4ModalDeleteButton.button.ui.basic.black.button
-                    | Hide Message
-                #newNudge4ModalBlockButton.button.ui.basic.black.button
-                    | Block User
+                    | Delete Message
                 #newNudge4ModalDeleteAndUpdateButton.button.ui.basic.black.button
-                    | Notify Other Users
+                    | Delete and Let Others Know
                     
                 
-
-    
-    //- #friendRequestModal.ui.mini.modal
-    //-     .header Friend Request
-    //-         .ui.center.aligned.container
-    //-             .content
-    //-                 .ui.center.aligned.container
-    //-                     | You have a new friend request from this user.
-    //-             .actions
-    //-                 #acceptButton.button.ui.button
-    //-                     | Accept
-    //-                 #declineButton.button.ui.button
-    //-                     | Decline
-    
-    //- #acceptFriendModal.ui.mini.modal
-    //-     .header Friend Request
-    //-         .ui.center.aligned.container
-    //-             .content
-    //-                 .ui.center.aligned.container
-    //-                     | You have added this user as your friend.
-    //-             .actions
-    //-                 #confirmButton.button.ui.button
-    //-                     | Confirm
-
-    //- #declineFriendModal.ui.mini.modal
-    //-     .header Friend Request
-    //-         .ui.center.aligned.container
-    //-             .content
-    //-                 .ui.center.aligned.container
-    //-                     | You have declined the friend request from this user.
-    //-             .actions
-    //-                 #confirm2Button.button.ui.button
-    //-                     | Confirm
 
     script(src='/socket.io/socket.io.js')
     script.
@@ -182,8 +132,6 @@ block content
         const username = document.getElementById('usernameTag').getAttribute('username');
         const userpfp = document.getElementById('userProfilePicture').getAttribute('userpfp');
         
-
-
         // hide input until user picks chat partner
         $('#messageInput').hide();
         $('#nudge3Card').hide();
@@ -228,69 +176,27 @@ block content
         });
 
 
-        // this will store the user information as well as a status object:
-        // status:{messaged: Boolean, active: Boolean}
-        // if a user is in copiedUserList, then they are active
-        // if a user is in the message convo, then they are messaged
-        let completeMessageUserList = []
-
-        // stores the ACTIVE USERS
         let copiedUserList = null;
 
-        // used for new chat button
         let usersInUserList = [];
 
         let loadedHistory = false;
 
-        // let usersInDiscover = [];
-
-        // figure out what this is used for
+        let usersInDiscover = [];
         let usersInRecent = [];
-
-
-        //- document.getElementById('addFriendButton').onclick = function(){onClickAddfriend()};
-
-        //- function onClickAddfriend() {
-        //-     //$('#friendRequestModal').modal('show');
-        //-     const fromUserId = userId;
-        //-     const toUserId = chatPartnerUserId;
-        //-     const fromUserNamd = username;
-            // New Chat Button Code        //-     const message = 'Friends request sent';
-        //-     //- {
-        //-     //-     type: 'friend-request',
-        //-     //-     content: 'user' + username + ' would like to add you as a friend. Do you accept?',
-        //-     //-     chatId: toUserId, // Assuming chatId is usually the recipient's ID,
-        //-     //- };
-            
-        //-     socket.emit('send-message', { 
-        //-         msg: {
-        //-             type: "txt",  
-        //-             body: message
-        //-         },
-        //-         nudge: {
-        //-             nudgeShown: nudgeShown,
-        //-             riskyScenario: "friendsNudge",
-        //-             nudgeType: "friends",
-        //-             userAction: null,
-        //-         },
-        //-         to: {
-        //-             username: chatPartnerUsername,
-        //-             userId: chatPartnerUserId,
-        //-             socketId: chatPartnerSocketId
-        //-         } 
-        //-     });
-        //- }
-
         
-
+        let allConversations = null;
 
         socket.on("userList", (userList) => {
+            console.log("CURR userList")
+            console.log(userList)
             copiedUserList = JSON.parse(JSON.stringify(userList));
+            
 
             userList.forEach((user) => {
                 if (!usersInUserList.includes(user.userId)) {
                     usersInUserList.push(user.userId);
-
+                    // New Chat Button
                     const u = ` <div class="item">
                                     <div class="content">
                                         <div class="header">${user.username}</div>
@@ -313,33 +219,26 @@ block content
                     if (user.userId == userId) { // do not allow user to chat itself
                         document.getElementById(user.userId + 'rightArrowButton').remove();
                     }
+
                 }
             });
 
-            // go through copiedUserList and push to completeMessageUserList
-            // Code for the Message List, adding the ACTIVE users
-            console.log('pushing copiedUserList to addToCompleteMessageUserList')
-            copiedUserList.forEach(async (user) => {
+            copiedUserList.forEach((user) => {
+                console.log('addRestOfUsers')
                 console.log('active user' + user.userId + ' ' + user.username)
-                
-                // NEW METHOD, figure out params
-                // chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType
-                console.log(user.username, null, user.userId, 0, null)
-                await addToCompleteMessageUserList(user.username, null, user.userId, 0, null)
-                // OLD METHOD
-                // addRestOfUsers(user)
+                addRestOfUsers(user)
+                //addUserInDiscover(user);
             });
-                
-            console.log('completeMessageUserList')
-            console.log(completeMessageUserList)
+
             console.log('copiedUserList')
             console.log(copiedUserList)
+
+            console.log('usersInRecentList')
+            console.log(usersInRecentList)
+
             console.log('usersInHistory')
             console.log(usersInHistory)
 
-
-            // REMOVE EVERYTHING FROM BELOW HERE, SHOULD NOT BE NEEDED WITH NEW METHOD
-            /*
             // deal with any status changes in the copiedUserList
             // if you are in the copiedUserList, that means you are active, so change their status
             let activeIDs = [];
@@ -353,8 +252,7 @@ block content
                  }
             }
             
-            
-            // the rest of the users are not active, so change their status for usersInHistory
+            // the rest of the users are not active, so change their status
             for(let i = 0; i < usersInHistory.length; i++){
                 // check if copiedUserList contains user
                 let contains = false;
@@ -372,7 +270,6 @@ block content
                     $('#activeIcon-' + usersInHistory[i].userId).removeClass().addClass("orange moon icon")
                 }
             }
-            // change active to inactive for usersInRecentList
             for(let i = 0; i < usersInRecentList.length; i++){
                 // check if copiedUserList contains user
                 let contains = false;
@@ -382,6 +279,7 @@ block content
                         contains = true;
                     }
                 }
+
                 if(!contains && usersInRecentList[i].userId != userId){
                     console.log(usersInRecentList[i].userId)
                     console.log('inactive: activeIcon-'+ usersInRecentList[i].userId)
@@ -408,22 +306,49 @@ block content
                 if(!contains){
                     console.log('remove: ')
                     console.log(usersInRecentList[i])
-                    $(`#listItemChatPartner-${usersInRecentList[i].userId}`).remove();
+                    $(`#listItemChatPartener-${usersInRecentList[i].userId}`).remove();
                     usersInRecentList.filter((userInFilter)=> userInFilter.userId != usersInRecentList[i].userId)
                 }
             }
-            */
         
 
         });
 
+        $('#discoverProfiles').hide();
         let usersInHistory = [];
+        let usersInRecentList = [];
+
 
         let numUnread = 0;
-        /*
-        OLD METHODS
+
+
         // HANDLES THE MESSAGED USERS (ACTIVE AND INACTIVE)
         async function addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType) {
+            console.log('addUserInHistory')
+            console.log(chatPartnerUsername)
+            user = {
+                userId: chatPartnerId,
+                username: chatPartnerUsername
+            }
+            
+            let active = ""
+            let activeClass = ""
+            // check if copiedUserList contains user
+            for(let i = 0; i < copiedUserList.length; i++){
+                if(copiedUserList[i].userId == chatPartnerId){
+                    console.log("found user")
+                    active="USER ACTIVE"
+                    activeClass = "green circle icon"
+                    break;
+                }
+            }
+            console.log("active: " + active)
+
+            if(active == ""){
+                active = "USER INACTIVE"
+                activeClass = "orange moon icon"
+            }
+
             let lastmsg = lastMessage;
             if (msgType == "img" || msgType == "vid") {
                 lastmsg = "Sent media"
@@ -453,8 +378,8 @@ block content
             }
             if(found){
                 console.log("found user")
-                $(`#listItemChatPartner-${chatPartnerId}`).remove();
-                const listItem = `<div class="item" id="listItemChatPartner-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
+                $(`#listItemChatPartener-${chatPartnerId}`).remove();
+                const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
                                     <div style="display: flex; flex-direction: row; justify-content: flex-start;">
                                         <div style="position: relative;">
                                             <span id="redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>
@@ -471,7 +396,7 @@ block content
 
                 $('#chatHistory').prepend(listItem);
             } else{
-                const listItem = `<div class="item" id="listItemChatPartner-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
+                const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
                                         <div style="display: flex; flex-direction: row; justify-content: flex-start;">
                                             <div style="position: relative;">
                                                 <span id="redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>  
@@ -486,19 +411,24 @@ block content
                                         <button id="rightChevronButton" style="margin-left: auto;" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
                                     </div>`;
 
-            $('#chatHistory').append(listItem);
+                $('#chatHistory').append(listItem);  
+            }
+
+
+           
+            usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername});
 
             await socket.emit("find-partner",{userId: chatPartnerId})
             await socket.on("partner-pfp",({pfp , userId})=>{
                 if (pfp != null && userId == chatPartnerId) {
-                    let pic = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
+                    let pic = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
                 }
                 else if (userId == chatPartnerId) {
-                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
+                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
                 }
             })
-
+            
             let element = document.getElementById("lastMessage");
             element.id = chatPartnerId + 'lastMessage';
 
@@ -543,7 +473,7 @@ block content
                 }
             }
 
-            const listItem = `<div class="item" id="listItemChatPartner-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
+            const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
                                 <div style="display: flex; flex-direction: row; justify-content: flex-start;">
                                     <div style="position: relative;">
                                         <span id="redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>
@@ -552,7 +482,7 @@ block content
                                     </div>
 
                                     <div class="content">
-                                        <a class="header" href="http://localhost:3000/user/${chatPartnerId}">${chatPartnerUsername}</a>
+                                        <a class="header" href="http://localhost:3000/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
                                         <div class="description" style="max-width: 180px" id="lastMessage">Start a Conversation!</div>
                                     </div>
                                 </div>
@@ -578,23 +508,40 @@ block content
             element.id = chatPartnerId + 'rightChevronButton';
             document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
 
+        
+
         }
-        */
 
         let blocked = [];
         let isBlocked = [];
+
+        let reported = [];
+        let isReported = [];
+
+        socket.on('discover-users', (formattedAllUsers) => {
+            console.log('discover-users')
+            console.log(formattedAllUsers)
+        })
+
 
         // only called at the beginning of the page load
         socket.on("receive-chat-history", (allConvo) => {
             console.log("CURR receive-chat-history")
             console.log(allConvo)
             alLConversations = allConvo;
+            /*
+            if (allConvo.length == 0) {
+                $('#recentButton').hide();
+                $('#recentChatHistory').hide();
+                $('#discoverProfiles').show();
+            }
+            */
 
             usersInHistory = [];
 
             loadedHistory = true;
 
-            allConvo.forEach(async (chatPartner) => {
+            allConvo.forEach((chatPartner) => {
                 let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
                 let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
                 let lastMessage = ""
@@ -606,6 +553,14 @@ block content
                 
                 if (chatPartner.blocked == userId) {
                     isBlocked.push(chatPartnerId);
+                }
+
+                if (chatPartner.reported == chatPartnerId) {
+                    reported.push(chatPartnerId);
+                }
+                
+                if (chatPartner.reported == userId) {
+                    isReported.push(chatPartnerId);
                 }
 
                 if (chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
@@ -624,179 +579,189 @@ block content
                 else {
                     lastMessage = "Sent media"
                 }
+                
+                usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
 
-                let found = false;
-                // make sure duplicates aren't being pushed to usersInHistory
-                for(let i = 0; i < usersInHistory.length; i++){
-                    if(usersInHistory[i].userId == chatPartnerId){
-                        found = true;
-                        break
-                    }
-                }
-                if(!found){
-                    usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
-                }
                 numUnread = chatPartner.content.filter(c => c.from.userId == chatPartnerId).filter(c => !c.msg.read).length
 
-                // add to and push to completeMessageUserList
-                console.log(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType)
-                await addToCompleteMessageUserList(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType)
-                
-                // OLD METHOD
-                // addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType);
+                addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType);
             });
 
-            // TO BE REMOVED
+    
+            // First handle all of the users that are messaged.
+            // Then handle all of the users that are active but not messaged. - pretty much discover tab
+            // Then handle all of the users that are inactive.
             console.log('usersInHistory')
             console.log(usersInHistory)
             console.log('usersInRecentList')
             console.log(usersInRecentList)
             console.log('copiedUserList')
             console.log(copiedUserList)
-            console.log('completeMessageUserList', completeMessageUserList)
 
+
+            copiedUserList.forEach((user) => {
+                console.log('addRestOfUsers')
+                console.log('active user' + user.userId + ' ' + user.username)
+                addRestOfUsers(user)
+                //addUserInDiscover(user);
+            });
+            console.log(usersInHistory)
         }); 
 
-        // deals with adding all of the users to the completeMessageUserList
-        // TODO: MAKE SURE TO DEAL WITH ANY REFERENCES TO copiedUserList, usersInRecentList, usersInHistory
-        // TODO: ONCE EVERYTHING WORKS, REMOVE usersInRecentList
-        async function addToCompleteMessageUserList(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType){
-            // console log the methods params
-            console.log('addToCompleteMessageUserList')
-            console.log(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType)
-            // make sure user is not SELF
-            const status = {
-                active: false,
-                messaged: false
-            }
-            const self = {
-                userId: userId,
-                username: username
-            }
-
-            console.log(self)
-            console.log(chatPartnerId)
-            if (chatPartnerId == self.userId) {
+        // used by userList socket event takes the allConvo.
+        async function allOfTheConversation(allConvo){
+            console.log("CURR allOfTheConversation")
+            if(!allConvo){
                 return;
             }
-        
-            // check if user is in completeMessageUserList, if not then push to list
-            console.log(!completeMessageUserList.some(e => e.userId == chatPartnerId))
-            if (!completeMessageUserList.some(e => e.userId == chatPartnerId)) {
-                // TODO: GIVE PROPER NAMES FOR CONSISTENCY
-                completeMessageUserList.push({username: chatPartnerUsername, userId: chatPartnerId, status:{active: false, messaged: false}});
-            }
-            console.log(completeMessageUserList)
-            // determine if active, use copiedUserList
-            // check if user is in copiedUserList, if so then change status to active
-            if (copiedUserList.some(e => e.userId == chatPartnerId)) {
-                console.log(completeMessageUserList)
-                completeMessageUserList.find(e => e.userId == chatPartnerId).status.active = true;
-                status.active = true;
-            }
-
-            // determine if messaged, use usersInHistory
-            // check if user is in usersInHistory, if so then change status to messaged
-            if (usersInHistory.some(e => e.userId == chatPartnerId)) {
-                completeMessageUserList.find(e => e.userId == chatPartnerId).status.messaged = true;
-                status.messaged = true;
-            }
-
-            // if listItemChatPartner-<chatPartnerId> exists, remove it
-            if (document.getElementById(`listItemChatPartner-${chatPartnerId}`)) {
-                $(`#listItemChatPartner-${chatPartnerId}`).remove();
-            }
-            
-            // if active & messaged look AT addUserInHistory
-            // if active & not messaged LOOK AT addRestOfUsers
-            // if inactive & messaged look AT addUserInHistory
-            
-            // if inactive && not messaged, just remove from the list
-            if (!status.active && !status.messaged) {
-                // remove from actual list
-                completeMessageUserList = completeMessageUserList.filter(e => e.userId != chatPartnerId);
-                return;
-            }
-            
-            let activeClass = ''
-            // if active, then change activeClass to green circle icon, else orange moon icon
-            if(status.active){
-                activeClass = 'green circle icon'
-            } else{
-                activeClass = 'orange moon icon'
-            }
-            // if lastMessage is null or not messaged, then set lastMessage to "start a conversation"
-            if(!lastMessage || !status.messaged){
-                lastMessage = 'Start a conversation!'
-            }
-            let lastmsg = lastMessage;
-            if (msgType == "img" || msgType == "vid") {
-                lastmsg = "Sent media"
-            }
-
-            const listItem = `<div class="item" id="listItemChatPartner-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
-                        <div style="display: flex; flex-direction: row; justify-content: flex-start;">
-                            <div style="position: relative;">
-                                <span id="${chatPartnerId}redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>  
-                                <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
-                                <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;"class="${activeClass}"></i>
-                            </div>    
-                            <div class="content">
-                                <a class="header" href="http://localhost:3000/user/${chatPartnerId}">${chatPartnerUsername}</a>
-                                <div class="description" style="max-width: 180px" id="${chatPartnerId}lastMessage">${lastmsg}</div>
-                            </div>
-                        </div>
-                        <button id='${chatPartnerId}rightChevronButton' style="margin-left: auto;" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
-                    </div>`;
-
-
-            // if active, prepend to the list; else append to the list
-            if(status.active){
-                $('#chatHistory').prepend(listItem);
-            } else{
-                $('#chatHistory').append(listItem);
-            }
-            
-            await socket.emit("find-partner",{userId: chatPartnerId})
-            await socket.on("partner-pfp",({pfp , userId})=>{
-                if (pfp != null && userId == chatPartnerId) {
-                    let pic = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
-                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
+            console.log(allConvo)
+            allConvo.forEach((chatPartner) => {
+                let chatPartnerUsername = chatPartner.usernameA == username ? chatPartner.usernameB : chatPartner.usernameA;
+                let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
+                let lastMessage = ""
+                let msgType = chatPartner.content[chatPartner.content.length - 1].msg.type
+           
+                if (chatPartner.blocked == chatPartnerId) {
+                    blocked.push(chatPartnerId);
                 }
-                else if (userId == chatPartnerId) {
-                    document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
+                
+                if (chatPartner.blocked == userId) {
+                    isBlocked.push(chatPartnerId);
                 }
-            })
+
+                if (chatPartner.reported == chatPartnerId) {
+                    reported.push(chatPartnerId);
+                }
+                
+                if (chatPartner.reported == userId) {
+                    isReported.push(chatPartnerId);
+                }
+
+                if (chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
+                    if (chatPartner.content[chatPartner.content.length - 1].from.userId == userId) { // chat sent
+                        lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    }
+                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage" || chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessageAndLetOthersKnow")) {
+                        lastMessage = "Deleted message"
+                    }
+                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
+                        lastMessage = "Unread message"
+                    }
+                    else {
+                        lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    }
+                else {
+                    lastMessage = "Sent media"
+                }
+                
+                usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
+
+                numUnread = chatPartner.content.filter(c => c.from.userId == chatPartnerId).filter(c => !c.msg.read).length
+
+                addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType);
+            });
+
+    
+            // First handle all of the users that are messaged.
+            // Then handle all of the users that are active but not messaged. - pretty much discover tab
+            // Then handle all of the users that are inactive.
+            console.log('usersInHistory')
+            console.log(usersInHistory)
+            console.log('usersInRecentList')
+            console.log(usersInRecentList)
+            console.log('copiedUserList')
+            console.log(copiedUserList)
 
 
-            $('#' + chatPartnerId + 'redBubble').hide();
-            $('#' + chatPartnerId + 'redBubble').text(0);
-            
-            document.getElementById(chatPartnerId+'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
-
-            $('#' + chatPartnerId + 'redBubble').text(numUnread);
-            if (numUnread > 0) {
-                $('#' + chatPartnerId + 'redBubble').show();
-            }
-        
+            copiedUserList.forEach((user) => {
+                console.log('addRestOfUsers')
+                console.log('active user' + user.userId + ' ' + user.username)
+                addRestOfUsers(user)
+                //addUserInDiscover(user);
+            });
+            console.log(usersInHistory)
         }
 
 
+
+        /*
+        function addUserInDiscover(user) {
+            let count = 0;
+            let prevRow = count;
+            const row = `<div id="prevRow" class="row"></div>`;
+
+            $('#discoverProfiles').append(row);
+            let element = document.getElementById("prevRow");
+            element.id = 'row' + count;
+
+            if (user.userId != userId && !usersInHistory.filter(element => element.userId == user.userId).length && !usersInDiscover.includes(user.userId)) {
+                usersInDiscover.push(user.userId);
+                count++;
+                if (count > 0 && count % 2 == 0) {
+                    $('#discoverProfiles').append(row);
+                    prevRow = count;
+                }
+
+                const userpfpsrc = user.userpfp ? "https://trumanprofilepictures.s3.amazonaws.com/" + user.userpfp : "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png"; 
+                // Discover profile
+                const profile = ` <div class="eight wide column">
+                                    <div class="ui card" style="margin-bottom:10px">
+                                        <div class="content">
+                                            <div class="center aligned column"><img class="ui circular tiny image" src=${userpfpsrc} style="margin-bottom:4px; object-fit:cover; width:75px; height:75px"/></div>
+                                            <div class="description" style="text-align: center; margin-bottom:4px;">@${user.username} ****Active</div>
+                                            <button id="profileButton" class="ui button tiny fluid fluid" style="margin-bottom:4px">Profile </button>
+                                            <button id="messageButton" class="ui positive button tiny fluid">Message </button>
+                                        </div>
+                                    </div>
+                                </div>`
+                
+                document.getElementById('row' + prevRow).insertAdjacentHTML('beforeend', profile);
+
+                let element = document.getElementById("profileButton");
+                element.id = user.userId + 'profileButton';
+                document.getElementById(user.userId + 'profileButton').onclick=function(){onClickProfile(user.userId)};
+
+                element = document.getElementById("messageButton");
+                element.id = user.userId + 'messageButton';
+                document.getElementById(user.userId + 'messageButton').onclick=function(){onClickUsername(user.userId)};
+
+                $('#discoverProfileNoUsersText').hide();
+            }
+        }
+        */
         function onClickProfile(userId) {
             window.location.href = "/user/" + userId;
         }
 
+        /*
+        document.getElementById('recentButton').onclick=function(){onClickRecentButton()};
+        function onClickRecentButton() {
+            $('#recentButton').addClass('active');
+            $('#discoverButton').removeClass('active');
+            $('#discoverProfiles').hide();
+            $('#recentChatHistory').show();
+        }
+
+        document.getElementById('discoverButton').onclick=function(){onClickDiscoverButton()};
+        function onClickDiscoverButton() {
+            if (history) {
+                $('#discoverButton').addClass('active');
+                $('#recentButton').removeClass('active');
+                $('#discoverProfiles').show();
+                $('#recentChatHistory').hide();
+            }
+        }
+        */
 
         let chatPartnerSocketId = null;
         let chatPartnerUsername = null;
         let chatPartnerUserId = null;
-        let chatPartnerPFP = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
+        let chatPartnerPFP = "https://trumanprofilepictures.s3.amazonaws.com/default-pfp.png";
 
         function onClickUsername(userId) {
-            console.log('OPENING CHAT PANEL BETWEEN THE TWO USERS')
             $('#' + userId + 'redBubble').hide();
             $('#' + userId + 'redBubble').text(0);
-
+            
             // find user in online list
             copiedUserList.forEach((user) => {
                 if (user.userId == userId) {
@@ -818,7 +783,7 @@ block content
 
             socket.on("partner-pfp",({ pfp, userId})=>{
                 if (pfp != null && userId == chatPartnerUserId) {
-                    chatPartnerPFP = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
+                    chatPartnerPFP = `https://trumanprofilepictures.s3.amazonaws.com/${pfp}`;
                 }
             })
             
@@ -844,7 +809,7 @@ block content
         document.getElementById('nudge3Button1').onclick=function(){onClickNudge3Button1()};
         function onClickNudge3Button1() {
             $('#nudge3Card').hide();
-            sendMessage("No, thank you");
+            sendMessage("I don't feel comfortable sharing that info");
             socket.emit("nudge-reaction", {
                 messageId: nudge3MessageId,
                 userAction: "sendMessage",
@@ -857,7 +822,7 @@ block content
         document.getElementById('nudge3Button2').onclick=function(){onClickNudge3Button2()};
         function onClickNudge3Button2() {
             $('#nudge3Card').hide();
-            sendMessage("Please leave me alone");
+            sendMessage("Sorry, I don't know you");
             socket.emit("nudge-reaction", {
                 messageId: nudge3MessageId,
                 userAction: "sendMessage",
@@ -870,7 +835,7 @@ block content
         document.getElementById('nudge3Button3').onclick=function(){onClickNudge3Button3()};
         function onClickNudge3Button3() {
             $('#nudge3Card').hide();
-            sendMessage("I am not going to");
+            sendMessage("I don't think it's appropriate to ask that");
             socket.emit("nudge-reaction", {
                 messageId: nudge3MessageId,
                 userAction: "sendMessage",
@@ -893,28 +858,55 @@ block content
             });
         }
 
-        socket.on("blocked", async (msg) => { // this user blocked
-            const chatPartnerID = chatPartnerUserId
+        document.getElementById('nudge3Button5').onclick=function(){onClickNudge3Button5()};
+        function onClickNudge3Button5() {
+            $('#nudge3Card').hide();
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "reportUser",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+
+        socket.on("blocked", (msg) => { // this user blocked
             const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
                             <p><b>${chatPartnerUsername} has blocked you</b></p>
                         </div>`
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
             $('#messageInput').hide();
-            await location.reload()
-            await onClickUsername(chatPartnerID)
+            location.reload()
         });
 
-        socket.on("block-success", async (msg) => { // blocked chat partner
-            const chatPartnerID = chatPartnerUserId
+        socket.on("block-success", (msg) => { // blocked chat partner
             const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has been blocked</b></p>
+                            <p><b>${chatPartnerUsername} has been blocked and reported</b></p>
                         </div>`
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
             $('#messageInput').hide();
-            await location.reload()
-            await onClickUsername(chatPartnerID)
+            location.reload()
+        });
+
+        socket.on("reported", (msg) => { // this user reported
+            const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
+                            <p><b>${chatPartnerUsername} has reported you</b></p>
+                        </div>`
+            $('#messages').append(mes);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            location.reload()
+        });
+
+        socket.on("report-success", (msg) => { // reported chat partner
+            const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
+                            <p><b>${chatPartnerUsername} has been reported</b></p>
+                        </div>`
+            $('#messages').append(mes);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            location.reload()
         });
 
         async function sendMessage(msg) {
@@ -939,10 +931,9 @@ block content
 
         const infoBreach1 = "Which school do you go to?";
         const infoBreach2 = "http://www.hahpics.xyz/4034-349i/";
-        const infoBreach3 = "just finished ffrm my school here in orlando wat is ur house address";
+        const infoBreach3 = "oh no way? Same. We should hang out sometime! What neighborhood do you live in?";
         const infoBreach3New = "I’d love to get to know u better"
 
-        //const friendsNudge = "Friends request sent";
         const explicitContent1 = "explicitContent1.png";
 
         $('#messageInput')[0].addEventListener('submit', async function(e) {
@@ -952,14 +943,17 @@ block content
             let nudgeType = null;
             if (input.value) {
                 if (input.value == infoBreach1) {
+                    console.log(infoBreach1)
                     riskyScenario = "infoBreach1"
                     nudgeType = "abstinence";
                 }
                 else if (input.value == infoBreach2) {
+                    console.log(infoBreach2)
                     riskyScenario = "infoBreach2"
                     nudgeType = "sensitivityFilter";
                 }
                 else if (input.value == infoBreach3) {
+                    console.log(infoBreach3)
                     riskyScenario = "infoBreach3"
                     nudgeType = "guidedActions";
                 }
@@ -1085,10 +1079,6 @@ block content
             }
         }
 
-        document.getElementById('newNudge4ModalInfoButton').onclick=function(){
-            window.location.href = '/risk_information'
-        }
-
         // get all messages
         socket.on("message-list", (messageList) => {
             let messageIds = [];
@@ -1099,12 +1089,10 @@ block content
                 }
                 else  {
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach1) {
-                        document.getElementById('closeModalNudge1IconButton').onclick=function(){onClickShowMeModal(messageList[i])}
+                        document.getElementById('dismissModal1Button').onclick=function(){onClickShowMeModal(messageList[i])};
                         document.getElementById('blockModal1Button').onclick=function(){blockUserModal1(messageList[i])}
+                        document.getElementById('reportButton').onclick=function(){reportUserModal1(messageList[i])}
                         document.getElementById('leaveModalButton').onclick=function(){leaveUserModal(messageList[i])}
-                        document.getElementById('nudge1Button1').onclick=function(){onClickNudge3Button1(messageList[i])}
-                        document.getElementById('nudge1Button2').onclick=function(){onClickNudge3Button2(messageList[i])}
-                        document.getElementById('nudge1Button3').onclick=function(){onClickNudge3Button3(messageList[i])}
                         $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
                         
                     }
@@ -1113,8 +1101,7 @@ block content
                         $('#nudge2Modal').modal('setting', 'closable', false).modal('show');
                     }
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach3) {
-                        console.log('CARD NUDGE')
-                        $('#nudge3Card').show();
+                        $('#nudge3Card').modal('setting', 'closable', false).show();
                         nudge3MessageId = messageList[i]._id;
                     }
                     if(nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach3New){
@@ -1122,27 +1109,19 @@ block content
                         document.getElementById('dismissNudge2NewModal').onclick=function(){onClickShowMeModal(messageList[i])}
                         document.getElementById('leaveNudge2NewModal').onclick=function(){leaveUserModal(messageList[i])}
                         document.getElementById('leaveAndBlockNudge2NewModal').onclick=function(){blockUserModal1(messageList[i])}
-                        document.getElementById('closeModalNudge2IconButton').onclick=function(){onClickShowMeModal(msg)}
-
-                        let nudge2ContentText = chatPartnerUsername + ' is not in your friends list and sent you #[strong inappropriate messages.] Would you like to exit this conversation?'
-                        $('#nudge2NewModalContent').html(nudge2ContentText)
-                        
+                        document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
                         $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
                         
                     }
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach2) {
-                        document.getElementById('newNudge4ModalBlockButton').onclick=function(){blockUserModal1(messageList[i])};
+                        document.getElementById('newNudge4ModalViewButton').onclick=function(){onClickShowMeModal(messageList[i])};
                         document.getElementById('newNudge4ModalDeleteButton').onclick=function(){onClickNewDeleteButton(messageList[i])};
                         document.getElementById('newNudge4ModalDeleteAndUpdateButton').onclick=function(){onClickNewDeleteAndUpdateButton(messageList[i])};
-                        document.getElementById('closeModalNudge4IconButton').onclick=function(){onClickShowMeModal(messageList[i])};
                         $('#newNudge4Modal').modal('setting', 'closable', false).modal('show')
                         console.log('newNudge4Modal show')
                         
                         //addNudgeType2(messageList[i]);
                     }
-                    //- if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == friendsNudge) {
-                    //-     $('#friendRequestModal').modal('show');
-                    //- }
                     else {
                         
                         if(!(nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach2)){
@@ -1168,7 +1147,7 @@ block content
 
             if (blocked.includes(chatPartnerUserId)) {
                 const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has been blocked and reported</b></p>
+                            <p><b>${chatPartnerUsername} has been blocked</b></p>
                         </div>`
                 $('#messages').append(mes);
                 $('#messages').scrollTop($('#messages')[0].scrollHeight);
@@ -1182,6 +1161,14 @@ block content
                 $('#messages').append(mes);
                 $('#messages').scrollTop($('#messages')[0].scrollHeight);
                 $('#messageInput').hide();
+            }
+
+            if (reported.includes(chatPartnerUserId)) {
+                const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
+                            <p><b>${chatPartnerUsername} has been reported</b></p>
+                        </div>`
+                $('#messages').append(mes);
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
             }
         });
 
@@ -1198,16 +1185,6 @@ block content
         document.getElementById('closeNudge3').onclick=function(){onClickCloseNudge3Button()};
         function onClickCloseNudge3Button() {
             $('#nudge3Card').hide();
-            socket.emit("nudge-reaction", {
-                messageId: nudge3MessageId,
-                userAction: "showMessage",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
-            $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
-            addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
         } 
 
         socket.on("receive-message", async (msg) => {
@@ -1242,35 +1219,19 @@ block content
                     return true;
                 }
             });
-            // TODO MAKE THIS THE OLD CODE
 
             if (userInDiscover) {
                 if (msg.to.userId == userId) {
-                    // addUserInHistory(partnerUsername, msg.msg.body, partnerId, 1, msg.msg.type);
-                    // add to and push to completeMessageUserList
-                    await addToCompleteMessageUserList(partnerUsername, msg.msg.body, partnerId, 1, msg.msg.type);
+                    addUserInHistory(partnerUsername, msg.msg.body, partnerId, 1, msg.msg.type);
                 }
                 else {
-                    // addUserInHistory
-                    // add to and push to completeMessageUserList
-                await addToCompleteMessageUserList(partnerUsername, msg.msg.body, partnerId, 0, msg.msg.type);
-                
+                    addUserInHistory(partnerUsername, msg.msg.body, partnerId, 0, msg.msg.type);
                 }
                 
                 //$('#recentButton').show();
                 //onClickRecentButton();
-                let found = false;
-                // make sure duplicates aren't being pushed to usersInHistory
-                for(let i = 0; i < usersInHistory.length; i++){
-                    if(usersInHistory[i].userId == chatPartnerId){
-                        found = true;
-                        break
-                    }
-                }
-                if(!found){
-                    usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
-                }
-    
+
+                usersInHistory.push({userId: partnerId, username: partnerUsername});
             }
             if (msg.from.userId == userId) {
                 addChatSentMessage(msg.msg, msg.msg.time, msg._id);
@@ -1279,30 +1240,26 @@ block content
                 if (nudgeShown && msg.msg.body == infoBreach1) {
                     console.log(infoBreach1)
                     nudge1NewShown = true;
-                    document.getElementById('closeModalNudge1IconButton').onclick=function(){onClickShowMeModal(msg)}
+                    document.getElementById('dismissModal1Button').onclick=function(){onClickShowMeModal(msg)};
                     document.getElementById('blockModal1Button').onclick=function(){blockUserModal1(msg)}
+                    document.getElementById('reportButton').onclick=function(){reportUserModal1(msg)}
                     document.getElementById('leaveModalButton').onclick=function(){leaveUserModal(msg)}
-                    document.getElementById('nudge1Button1').onclick=function(){onClickNudge3Button1(msg)}
-                    document.getElementById('nudge1Button2').onclick=function(){onClickNudge3Button2(msg)}
-                    document.getElementById('nudge1Button3').onclick=function(){onClickNudge3Button3(msg)}
                     $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
                 }
                 if (nudgeShown && msg.nudge.riskyScenario == "explicitContent1") {
                     $('#nudge2Modal').modal('setting', 'closable', false).modal('show');
                 }
                 if (nudgeShown && msg.msg.body == infoBreach3) {
-                    console.log('CARD NUDGE')
-                    $('#nudge3Card').show();
+                    $('#nudge3Card').modal('setting', 'closable', false).show();
                     nudge3MessageId = msg._id;
                 }
                 if (nudgeShown && msg.msg.body == infoBreach2) {
                     // deals with newNudge4 buttons
                     console.log('newNudge4Modal show')
                     nudge2NewShown = true;
-                    document.getElementById('newNudge4ModalBlockButton').onclick=function(){blockUserModal1(msg)};
+                    document.getElementById('newNudge4ModalViewButton').onclick=function(){onClickShowMeModal(msg)};
                     document.getElementById('newNudge4ModalDeleteButton').onclick=function(){onClickNewDeleteButton(msg)};
                     document.getElementById('newNudge4ModalDeleteAndUpdateButton').onclick=function(){onClickNewDeleteAndUpdateButton(msg)};
-                    document.getElementById('closeModalNudge4IconButton').onclick=function(){onClickShowMeModal(msg)};
                     $('#newNudge4Modal').modal('setting', 'closable', false).modal('show')
                     
                 }
@@ -1311,11 +1268,7 @@ block content
                     document.getElementById('dismissNudge2NewModal').onclick=function(){onClickShowMeModal(msg)}
                     document.getElementById('leaveNudge2NewModal').onclick=function(){leaveUserModal(msg)}
                     document.getElementById('leaveAndBlockNudge2NewModal').onclick=function(){blockUserModal1(msg)}
-                    document.getElementById('closeModalNudge2IconButton').onclick=function(){onClickShowMeModal(msg)}
-
-                    let nudge2ContentText = chatPartnerUsername + ' is not in your friends list and sent you #[strong inappropriate messages.] Would you like to exit this conversation?'
-                    $('#nudge2NewModalContent').html(nudge2ContentText)
-                        
+                    document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
                     $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
                 }
 
@@ -1350,44 +1303,6 @@ block content
         });
         
 
-        function onClickNudge3Button1(msg){
-            onClickDismissButton();
-            sendMessage("Sorry, I don't want to share that");
-            socket.emit("nudge-reaction", {
-                messageId: msg._id,
-                userAction: "sendMessage",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
-        }
-        
-        function onClickNudge3Button2(msg){
-            onClickDismissButton();
-            sendMessage("I don't feel comfortable sharing that");
-            socket.emit("nudge-reaction", {
-                messageId: msg._id,
-                userAction: "sendMessage",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
-        }
-
-        function onClickNudge3Button3(msg){
-            onClickDismissButton();
-            sendMessage("Lol that's private information");
-            socket.emit("nudge-reaction", {
-                messageId: msg._id,
-                userAction: "sendMessage",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
-        }
         
         function onClickShowMeModal(msg) {
             onClickDismissButton();
@@ -1409,6 +1324,19 @@ block content
             socket.emit("nudge-reaction", {
                 messageId: msg._id,
                 userAction: "blockUser",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+
+        }
+
+        function reportUserModal1(msg){
+            onClickDismissButton()
+            socket.emit("nudge-reaction", {
+                messageId: msg._id,
+                userAction: "reportUser",
                 other: {
                     username: chatPartnerUsername,
                     userId: chatPartnerUserId,
@@ -1474,9 +1402,6 @@ block content
                 otherElement.innerHTML = `${emoji}`;
             }
         })
-
-
-
 
         // triggered when the user gets all messages
         function loadReactions(reactions, messageID) {
@@ -1548,10 +1473,10 @@ block content
                 
             }
             else if (msg.type == "img") {
-                 msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
             }
             else if (msg.type == "vid") {
-                msgType = `<video width="200" style="border-radius:6px" controls><source src="https://socialsimulation.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
+                msgType = `<video width="200" style="border-radius:6px" controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
             // reaction box
             const react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:20%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
@@ -1598,14 +1523,14 @@ block content
             if (msg.type == "txt") {
                 msgType = `<p>${msg.body}</p>`
                 if (messageDeleted || nudge.nudgeType == "sensitivityFilter" && (nudge.userAction == "deleteMessage" || nudge.userAction == "deleteMessageAndLetOthersKnow" )) {
-                    msgType = `<p><b>hidden message</b></p>`
+                    msgType = `<p><b>deleted message</b></p>`
                 }
             }
             else if (msg.type == "img") {
-                 msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+                 msgType = `<img src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
             }
             else if (msg.type == "vid") {
-                msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://socialsimulation.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
+                msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://trumanprofilepictures.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
 
             // reaction box
@@ -1690,14 +1615,13 @@ block content
         }
          
 
-        /*
+
         function addNudgeType2(msg) {
             const nudge = `<div class="row" id="nudgeType2" style="padding-top:6px; padding-bottom:6px">
                             <div class="right aligned one wide column" style="padding:0!important"></div>
                             <div class="seven wide column">
                                 <div class="ui cards">
-                                    <div class="card" style="min-width:400px;  position: relative;">
-                                        
+                                    <div class="card" style="min-width:400px">
                                         <div class="content" style="text-align:center">
                                             <div class="description"> The last message you received is censored due to potentially harmful content. <a style="color:blue" href="http://localhost:3000/risk_information"> 
                                                 <u>Learn why this is harmful.</u>
@@ -1711,21 +1635,20 @@ block content
                                                 
                                             </div>
                                         </div>
-                                        <div id="exitNudgeButton" style="position: absolute; top: 1px; right: 1px; padding: 1px; font-size: 16px; color: #ffffff; background-color: #888; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; cursor: pointer;">x</div>
                                     </div>
                                 </div>
                                 <p style="font-size:10px; margin-top:-8px">${formatTime(msg.msg.time)}</p>
                             </div>
                         </div>`
 
-            $('#messages').append(nudge);
-            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                    $('#messages').append(nudge);
+                    $('#messages').scrollTop($('#messages')[0].scrollHeight);
 
-            let element = document.getElementById("nudgeType2");
-            element.id = msg._id + 'nudgeType2';
+                    let element = document.getElementById("nudgeType2");
+                    element.id = msg._id + 'nudgeType2';
 
-            element = document.getElementById("deleteMessageButton");
-            element.id = msg._id + 'deleteMessageButton';
+                    element = document.getElementById("deleteMessageButton");
+                    element.id = msg._id + 'deleteMessageButton';
 
                     element = document.getElementById("showMeButton");
                     element.id = msg._id + 'showMeButton';
@@ -1737,7 +1660,6 @@ block content
                     document.getElementById(msg._id + 'showMeButton').onclick=function(){onClickShowMeButton(msg)};
                     document.getElementById(msg._id + 'deleteMessageAndLetOthersKnowButton').onclick=function(){onClickDeleteAndLetOthersKnowButton(msg)}
         }
-        */
 
         function onClickDeleteAndLetOthersKnowButton(msg){
             console.log('onClickDeleteAndLetOthersKnowButton')
@@ -1768,18 +1690,6 @@ block content
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, true);
         }
 
-        function onClickBlockUserButton(msg) {
-            socket.emit("nudge-reaction", {
-                messageId: msg._id,
-                userAction: "blockUser",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
-        }
-
-
         function onClickShowMeButton(msg) {
             document.getElementById(msg._id + 'nudgeType2').remove();
             socket.emit("nudge-reaction", {
@@ -1800,8 +1710,7 @@ block content
             console.log(harmfulContentString + ' Learn more about why this is harmful.')
             $('#letOthersKnowAbout').modal('setting', 'closable', false).modal('show');
             // change the text to waringStr
-            // const warningStr = harmfulContentString + ' Learn more about why this is harmful.'
-            const warningStr = '#[strong Community Warning: ] It has been reported by a user that ' + harmfulContentString + ' sent a potenially harmful link to other users. Learn why this is harmful. ADD A LINK AND ICON'
-            $('#letOthersKnowAboutContent').html(warningStr)
+            const warningStr = harmfulContentString + ' Learn more about why this is harmful.'
+            $('#letOthersKnowAboutContent').text(warningStr)
         })
         document.getElementById('dismissModalEveryoneButton').onclick=function(){onClickDismissButton()};

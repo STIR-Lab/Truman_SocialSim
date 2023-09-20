@@ -334,7 +334,7 @@ $('a.others').click(function(){
   
     console.log("Sending friend request to " + username);
   
-    // After 30 seconds, simulate the request being accepted
+    // After 5 seconds, simulate the request being accepted
     setTimeout(function() {
       // Show request accepted modal
       $(".ui.small.basic.request.accepted.modal")
@@ -347,7 +347,7 @@ $('a.others').click(function(){
         friended: username,
         _csrf: $('meta[name="csrf-token"]').attr('content'),
       });
-    }, 10000); // 30000 milliseconds = 30 seconds
+    }, 5000); 
   });
 
   //Friend Modal for User that is already Friended
@@ -573,7 +573,9 @@ $('a.others').click(function(){
 		  commentID,
 		  userAction,
 		  _csrf: $('meta[name="csrf-token"]').attr("content"),
-		}).then(location.reload());
+		}).then(function(response) {
+			location.reload();
+		});
 		
 	})
 
@@ -592,7 +594,9 @@ $('a.others').click(function(){
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  }).then(location.reload());  
+		  }).then(function(response) {
+			location.reload();
+		  });  
 	})
 
 	// onclick hide button
@@ -610,7 +614,9 @@ $('a.others').click(function(){
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  }).then(location.reload());
+		  }).then(function(response) {
+			location.reload();
+		  });
 		  
 	})
 
@@ -637,7 +643,9 @@ $('a.others').click(function(){
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  }).then(location.reload());
+		  }).then(function(response) {
+			location.reload();
+		  });
 		  
 	})
 
@@ -656,7 +664,9 @@ $('a.others').click(function(){
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  }).then(location.reload());
+		  }).then(function(response) {
+			location.reload();
+		  });
 		  
 	})
 
@@ -675,7 +685,9 @@ $('a.others').click(function(){
 			commentID,
 			userAction,
 			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		  }).then(location.reload());
+		  }).then(function(response) {
+			location.reload();
+		  });
 		  
 	})
 
@@ -696,7 +708,9 @@ $('a.others').click(function(){
 		  commentID,
 		  userAction,
 		  _csrf: $('meta[name="csrf-token"]').attr("content"),
-		}).then(location.reload());
+		}).then(function(response) {
+			location.reload();
+		});
 		
 		});
 /*
