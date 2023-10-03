@@ -48,6 +48,20 @@ block content
                     tr
                       td
                         a(href=`/user/${blockedUser}`)= blockedUser
+      .extra.content
+        .ui.fluid.card
+            .content
+              .header Reported List
+            .content
+              table.ui.very.basic.table
+                thead
+                  tr
+                    th Username
+                tbody
+                  each reportedUser in user.reported
+                    tr
+                      td
+                        a(href=`/user/${reportedUser}`)= reportedUser
 
 
 

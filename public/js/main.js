@@ -622,8 +622,16 @@ $('a.others').click(function(){
 
 	// onclick block button
 	$("#blockCommentNudge").on("click", function () {
+		// block user model
+		const username = $("#commentNudgeModal").attr('actorID');
+		console.log("***********Block USER " + username);
+		$.post("/user", {
+			blocked: username,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		});
 		// open up the secondary modal
 		$("#secondaryReportCommentModal").modal('setting', 'closable', false).modal('show');
+		console.log("debug 1");
 	})
 
 	// Secondary Modal Buttons
@@ -638,6 +646,7 @@ $('a.others').click(function(){
 		console.log(
 		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
 		)
+
 		$.post("/commentnudge/reaction", {
 			postID,
 			commentID,

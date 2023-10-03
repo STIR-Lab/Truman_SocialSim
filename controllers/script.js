@@ -414,21 +414,24 @@ exports.newPost = async (req, res) => {
 			// get random actor
 			const randomActor = actors[Math.floor(Math.random() * actors.length)];
 			console.log(randomActor);
+			
 
-			if (true) {
-				console.log("This is the first user post, so we add a comment nudge");
-				const commentNudge = new Object();
-
-				commentNudge.body = "This is a comment nudge";
-				user.numActorReplies += 1;
-				commentNudge.commentID = user.numActorReplies;
-				commentNudge.actor = randomActor._id;
-				commentNudge.class = "commentNudge";
-				commentNudge.nudgeShown = "true"; // Modify this if Nudge is not suppose to be shown
-				commentNudge.userAction = "null";
-				commentNudge.time = post.relativeTime;
-				// add to posts
-				post.comments.push(commentNudge);
+			if (user.numPosts === 0) {
+				// setTimeout(async () => {
+					console.log("This is the first user post, so we add a comment nudge");
+					const commentNudge = new Object();
+			
+					commentNudge.body = "This is a comment nudge";
+					user.numActorReplies += 1;
+					commentNudge.commentID = user.numActorReplies;
+					commentNudge.actor = randomActor._id;
+					commentNudge.class = "commentNudge";
+					commentNudge.nudgeShown = "true";  // Modify this if Nudge is not supposed to be shown
+					commentNudge.userAction = "null";
+					commentNudge.time = post.relativeTime;
+					// add to posts
+					post.comments.push(commentNudge);
+				// }, 5000);  
 			}
 
 			// Now we find any Actor Replies (Comments) that go along with it
@@ -490,6 +493,124 @@ exports.newPost = async (req, res) => {
 		}
 	});
 };
+// exports.newPost = async (req, res) => {
+//     User.findById(req.user.id, async (err, user) => {
+//         if (err) {
+//             return next(err);
+//         }
+
+//         console.log("###########NEW POST###########");
+//         console.log(`Text Body of Post is ${req.body.body}`);
+
+//         const post = new Object();
+//         post.body = req.body.body;
+//         post.absTime = Date.now();
+//         post.relativeTime = post.absTime - user.createdAt;
+
+//         if (!user.numPosts && user.numPosts < -1) {
+//             user.numPosts = -1;
+//         }
+
+//         if (!user.numReplies && user.numReplies < -1) {
+//             user.numReplies = -1;
+//         }
+
+//         if (!user.numActorReplies && user.numActorReplies < -1) {
+//             user.numActorReplies = -1;
+//         }
+
+//         if (req.file) {
+//             console.log(`Text PICTURE of Post is ${req.file.filename}`);
+//             post.picture = req.file.filename;
+
+//             user.numPosts += 1;
+//             post.postID = user.numPosts;
+//             post.type = "user_post";
+//             post.comments = [];
+
+//             user.posts.unshift(post);
+//             user.logPostStats(post.postID);
+
+//             user.save(async (err) => {
+//                 if (err) {
+//                     return next(err);
+//                 }
+
+//                 res.status(200).redirect("/");
+
+//                 const actors = await Actor.find();
+//                 const randomActor = actors[Math.floor(Math.random() * actors.length)];
+//                 console.log(randomActor);
+
+// 				if (user.numPosts < 5) {
+// 					console.log("First post. Comment Nudge should be added.")
+// 					setTimeout(async () => {
+// 						console.log("Adding a comment nudge after 5 seconds");
+// 						const commentNudge = new Object();
+// 						commentNudge.body = "This post is stupid";
+// 						user.numActorReplies += 1;
+// 						commentNudge.commentID = user.numActorReplies;
+// 						commentNudge.actor = randomActor._id;
+// 						commentNudge.class = "commentNudge";
+// 						commentNudge.nudgeShown = "true";
+// 						commentNudge.userAction = "null";
+// 						commentNudge.time = Date.now() - user.createdAt;
+	
+// 						const updatedUser = await User.findById(req.user.id);
+// 						const updatedPost = updatedUser.posts.find(p => p.postID === post.postID);
+// 						if (updatedPost) {
+// 							updatedPost.comments.push(commentNudge);
+// 							updatedUser.save(err => {
+// 								if (err) {
+// 									console.error("Error saving the comment nudge:", err);
+// 								} else {
+// 									console.log("Comment nudge added successfully!");
+// 								}
+// 							});
+// 						} else {
+// 							console.error("Post not found; comment nudge not added.");
+// 						}
+// 					}, 5000);
+// 				}
+                
+//             });
+
+//             Notification.find()
+//                 .where("userPost")
+//                 .equals(post.postID)
+//                 .where("notificationType")
+//                 .equals("reply")
+//                 .populate("actor")
+//                 .exec((err, actor_replies) => {
+//                     if (err) {
+//                         return next(err);
+//                     }
+//                     if (actor_replies.length > 0) {
+//                         for (let i = 0, len = actor_replies.length; i < len; i++) {
+//                             const tmp_actor_reply = new Object();
+
+//                             tmp_actor_reply.body = actor_replies[i].replyBody;
+//                             user.numActorReplies += 1;
+//                             tmp_actor_reply.commentID = user.numActorReplies;
+//                             tmp_actor_reply.actor = actor_replies[i].actor;
+
+//                             tmp_actor_reply.time = post.relativeTime + actor_replies[i].time;
+//                             post.comments.push(tmp_actor_reply);
+//                         }
+//                     }
+//                 });
+//         } else {
+//             console.log("#@#@#@#@#@#@#ERROR: Oh Snap, Made a Post but not reply or Pic");
+//             req.flash("errors", {
+//                 msg: "ERROR: Your post or reply did not get sent",
+//             });
+//             res.redirect("/");
+//         }
+//     });
+// };
+
+  
+
 
 /**
  * POST /commentnudge/reaction

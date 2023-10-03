@@ -65,35 +65,33 @@ block content
         .content
             #userList.ui.relaxed.divided.list
 
-    #nudge1Modal.ui.mini.modal
-        .content
+    .ui.modal#nudge1Modal(style='width: 500px; border: 1px solid black; padding: 0;')
+        .content(style=' padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center;')
             .ui.center.aligned.container
                 | This user is asking for sensitive information which may reveal your location. Are you sure you want to share this information?
-        #ButtonsList.actions
-            .ui.four.buttons
-                    #dismissModal1Button.ui.basic.black.button
-                        | Yes, Continue
-                    #leaveModalButton.ui.basic.black.button
-                        | No, Leave
-                    #blockModal1Button.ui.basic.black.button
-                        | No, Block User
-                    #reportButton.ui.basic.black.button
-                        | No, Report User
+        .actions(style='border-top: 1px solid black; padding: 1px 20px; background-color: #f9f9f9; text-align: center;')
+            .ui.attached.buttons
+                button.ui.basic.button#dismissModal1Button(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
+                    | Yes, Continue
+                button.ui.basic.button#leaveModalButton(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
+                    | No, Ignore Request
+                button.ui.basic.button#blockModal1Button(style='flex: 1; text-align: center; white-space: normal;')
+                    | No, Block User
 
-    #nudge2NewModal.ui.mini.modal
-        .content
+
+    .ui.modal#nudge2NewModal(style='width: 500px; border: 1px solid black; padding: 0;')
+        .content(style=' padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center;')
             .ui.center.aligned.container
                 | You just received messages from an older stranger, which may be unsafe. Would you like to leave this conversation?
-        #ButtonsList.actions
-            .ui.four.buttons
-                #dismissNudge2NewModal.button.ui.basic.black.button
+        .actions(style='border-top: 1px solid black; padding: 1px 20px; background-color: #f9f9f9; text-align: center;')
+            .ui.attached.buttons
+                button.ui.basic.button#dismissNudge2NewModal(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
                     | No, Continue
-                #leaveNudge2NewModal.button.ui.basic.black.button
+                button.ui.basic.button#leaveNudge2NewModal(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
                     | Yes, Leave
-                #leaveAndBlockNudge2NewModal.button.ui.basic.black.button
-                    | Yes, Block User
-                #reportNudge2NewModal.button.ui.basic.black.button
-                    | Yes, Report User
+                button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal;')
+                    | Yes, Leave & Block User
+                
 
     #nudge2Modal.ui.mini.modal
         .content.center.aligned.column
@@ -111,18 +109,20 @@ block content
             #dismissModalEveryoneButton.button.ui.button
                 | Dismiss
     
-    #newNudge4Modal.ui.mini.modal
-        .content
+    .ui.modal#newNudge4Modal(style='width: 500px; border: 1px solid black; padding: 0;')
+        .content(style=' padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center;')
             .ui.center.aligned.container
                 | The last message you received is censored due to potentially harmful content. Learn why this is harmful. Are you sure you want to view this message?
-        #ButtonsList.actions
-            .ui.three.buttons
-                #newNudge4ModalViewButton.button.ui.basic.black.button
+        .actions(style='border-top: 1px solid black; padding: 1px 20px; background-color: #f9f9f9; text-align: center;')
+            .ui.attached.buttons
+                button.ui.basic.button#newNudge4ModalViewButton(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
                     | View
-                #newNudge4ModalDeleteButton.button.ui.basic.black.button
-                    | Delete Message
-                #newNudge4ModalDeleteAndUpdateButton.button.ui.basic.black.button
-                    | Delete and Let Others Know
+                button.ui.basic.button#newNudge4ModalDeleteButton(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
+                    | Delete & Dismiss
+                button.ui.basic.button#newNudge4ModalDeleteAndUpdateButton(style='flex: 1; text-align: center; white-space: normal;')
+                    | Delete & Let Others Know
+    
+    
                     
                 
 
@@ -382,7 +382,7 @@ block content
                 const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
                                     <div style="display: flex; flex-direction: row; justify-content: flex-start;">
                                         <div style="position: relative;">
-                                            <span id="redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>
+                                            <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute; color: white !important"></span>
                                             <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
                                             <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="${activeClass}"></i>
                                         </div>
@@ -399,7 +399,7 @@ block content
                 const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
                                         <div style="display: flex; flex-direction: row; justify-content: flex-start;">
                                             <div style="position: relative;">
-                                                <span id="redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>  
+                                                <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute; color: white !important"></span>  
                                                 <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
                                                 <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;"class="${activeClass}"></i>
                                             </div>    
@@ -476,7 +476,7 @@ block content
             const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
                                 <div style="display: flex; flex-direction: row; justify-content: flex-start;">
                                     <div style="position: relative;">
-                                        <span id="redBubble" class="w3-badge w3-gray" style="z-index:10; position: absolute; color: white !important"></span>
+                                        <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute; color: white !important"></span>
                                         <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
                                         <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="green circle icon"></i>
                                     </div>
@@ -1091,7 +1091,7 @@ block content
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach1) {
                         document.getElementById('dismissModal1Button').onclick=function(){onClickShowMeModal(messageList[i])};
                         document.getElementById('blockModal1Button').onclick=function(){blockUserModal1(messageList[i])}
-                        document.getElementById('reportButton').onclick=function(){reportUserModal1(messageList[i])}
+                        //document.getElementById('reportButton').onclick=function(){reportUserModal1(messageList[i])}
                         document.getElementById('leaveModalButton').onclick=function(){leaveUserModal(messageList[i])}
                         $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
                         
@@ -1109,7 +1109,7 @@ block content
                         document.getElementById('dismissNudge2NewModal').onclick=function(){onClickShowMeModal(messageList[i])}
                         document.getElementById('leaveNudge2NewModal').onclick=function(){leaveUserModal(messageList[i])}
                         document.getElementById('leaveAndBlockNudge2NewModal').onclick=function(){blockUserModal1(messageList[i])}
-                        document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
+                        //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
                         $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
                         
                     }
@@ -1268,7 +1268,7 @@ block content
                     document.getElementById('dismissNudge2NewModal').onclick=function(){onClickShowMeModal(msg)}
                     document.getElementById('leaveNudge2NewModal').onclick=function(){leaveUserModal(msg)}
                     document.getElementById('leaveAndBlockNudge2NewModal').onclick=function(){blockUserModal1(msg)}
-                    document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
+                    //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
                     $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
                 }
 
