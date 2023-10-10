@@ -26,17 +26,17 @@ block content
                 .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
                     #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
 
-                #nudge3Card.ui.card(style='position: absolute; bottom: -60px; left: 50%; transform: translate(-50%, -50%); width:450px;')
-                    .content
-                        #closeNudge3.button.ui.circular.basic.icon.mini.right.floated.button
-                            i.close.icon
-                        p Risky message detected, here are some ways you can respond
-                    .ui.vertical.buttons
-                        #nudge3Button1.button.fluid.ui.button(style="margin-bottom:4px") I don't feel comfortable sharing that info
-                        #nudge3Button2.button.fluid.ui.button(style="margin-bottom:4px") Sorry, I don't know you
-                        #nudge3Button3.button.fluid.ui.button(style="margin-bottom:4px") I don't think it's appropriate to ask that
-                        #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Block
-                        #nudge3Button5.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Report
+                //- #nudge3Card.ui.card(style='position: absolute; bottom: -60px; left: 50%; transform: translate(-50%, -50%); width:450px;')
+                //-     .content
+                //-         #closeNudge3.button.ui.circular.basic.icon.mini.right.floated.button
+                //-             i.close.icon
+                //-         p Risky message detected, here are some ways you can respond
+                    //- .ui.vertical.buttons
+                    //-     #nudge3Button1.button.fluid.ui.button(style="margin-bottom:4px") I don't feel comfortable sharing that info
+                    //-     #nudge3Button2.button.fluid.ui.button(style="margin-bottom:4px") Sorry, I don't know you
+                    //-     #nudge3Button3.button.fluid.ui.button(style="margin-bottom:4px") I don't think it's appropriate to ask that
+                    //-     #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Block
+                    //-     #nudge3Button5.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Report
 
 
                 form#messageInput(action='')
@@ -65,34 +65,143 @@ block content
         .content
             #userList.ui.relaxed.divided.list
 
-    .ui.modal#nudge1Modal(style='width: 500px; border: 1px solid black; padding: 0;')
-        .content(style=' padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center;')
-            .ui.center.aligned.container
-                | This user is asking for sensitive information which may reveal your location. Are you sure you want to share this information?
-        .actions(style='border-top: 1px solid black; padding: 1px 20px; background-color: #f9f9f9; text-align: center;')
-            .ui.attached.buttons
-                button.ui.basic.button#dismissModal1Button(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
-                    | Yes, Continue
-                button.ui.basic.button#leaveModalButton(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
-                    | No, Ignore Request
-                button.ui.basic.button#blockModal1Button(style='flex: 1; text-align: center; white-space: normal;')
-                    | No, Block User
+    //- .ui.modal#nudge1Modal(style='width: 400px; border: 1px solid black; padding: 0; border-radius: 15px;')
+    
+    //-     //- Close Button
+    //-     i.close.icon#dismissModal1Button(style='position: absolute; top: 1px; right: 8px; color: black;')
+
+    //-     .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center; border-radius: 15px; font-size: 14px;')
+    //-         .ui.center.aligned.container(style='white-space: pre-line;')
+    //-             | This user is asking for #[strong(style='color: red;') sensitive information]
+    //-             | which may compromise your privacy.
+    //-     .actions(style='border-top: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; text-align: center; border-radius: 15px;')
+    //-         .ui.attached.buttons
+    //-             //- button.ui.basic.button#dismissModal1Button(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
+    //-             //-     | Yes, Continue
+    //-             button.ui.basic.button#leaveModalButton(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
+    //-                 | Exit Chat
+    //-             button.ui.basic.button#blockModal1Button(style='flex: 1; text-align: center; white-space: normal; color: red;')
+    //-                 | #[strong(style='color: red;') Block User]
+        
+    //- //- New div to separate the bubble buttons from the nudge box
+    //- div(style='text-align: center; padding-top: 10px;')
+    //-     .ui.vertical.buttons
+    //-         #nudge3Button1.button.fluid.ui.button(style='margin-bottom: 4px; border-radius: 15px; padding: 10px; background-color: #e0e0e0;')
+    //-             | Sorry, I don't want to share that
+    //-         #nudge3Button2.button.fluid.ui.button(style='margin-bottom: 4px; border-radius: 15px; padding: 10px; background-color: #e0e0e0;')
+    //-             | I don't feel comfortable sharing that
+    //-         #nudge3Button3.button.fluid.ui.button(style='margin-bottom: 4px; border-radius: 15px; padding: 10px; background-color: #e0e0e0;')
+    //-             | Lol that's private information
+
+    style.
+        .ui.dimmer {
+            background-color: transparent !important;
+            opacity: 1 !important;
+        }
+        .ui.modal#nudge1Modal {
+            top: 76%;
+            left: 60%;
+            transform: translate(-50%, -50%);
+            position: fixed;
+        }
+        .ui.modal#nudge1Modal2 {
+            top: 89%;
+            left: 70%;
+            transform: translate(-50%, -50%);
+            position: fixed;
+            background-color: transparent !important;
+            opacity: 1 !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .bubble-button {
+            margin-right: 5px; 
+            max-width: 200px;
+            white-space: normal;
+            border-radius: 30px !important;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    .ui.modal#nudge1Modal(style='width: 400px;  padding: 0; border-radius: 15px; background-color: #f9f9f9;')
+
+        //- Close Button
+        i.close.icon#dismissModal1Button(style='position: absolute; top: 1px; right: 8px; color: black;')
+
+        //- Enclosing the content and actions in a div
+        div(style='background-color: #f9f9f9; border: 1px  #ddd; border-radius: 15px; margin-bottom: 10px;')
+            .content(style='padding: 40px 20px 20px 20px; flex-grow: 1; text-align: center; font-size: 14px;')
+                .ui.center.aligned.container(style='white-space: pre-line;')
+                    | This user is asking for #[strong(style='color: red;') sensitive information]
+                    | which may compromise your privacy.
+
+            .actions(style='border-top: 1px  #ddd; padding: 10px; text-align: center;')
+                .ui.attached.buttons
+                    //- button.ui.basic.button#dismissModal1Button(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
+                    //-     | Yes, Continue
+                    button.ui.basic.button#leaveModalButton(style='border-right: 1px ; flex: 1; text-align: center; white-space: normal;')
+                        | Exit Chat
+                    button.ui.basic.button#blockModal1Button(style='flex: 1; text-align: center; white-space: normal; color: red;')
+                        | #[strong(style='color: red;') Block User]
+
+    .ui.modal#nudge1Modal2
+        .ui.horizontal.buttons(style='text-align: center; padding-top: 10px;')
+            #nudge3Button1.button.fluid.ui.button.bubble-button.transparent-button(style='margin-right: 1px; border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
+                | Sorry, I don't want to share that
+            #nudge3Button2.button.fluid.ui.button.bubble-button.transparent-button(style='margin-right: 5px; border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
+                | I don't feel comfortable sharing that
+            #nudge3Button3.button.fluid.ui.button.bubble-button.transparent-button(style='border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
+                | Lol that's private information
 
 
-    .ui.modal#nudge2NewModal(style='width: 500px; border: 1px solid black; padding: 0;')
-        .content(style=' padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center;')
-            .ui.center.aligned.container
-                | You just received messages from an older stranger, which may be unsafe. Would you like to leave this conversation?
-        .actions(style='border-top: 1px solid black; padding: 1px 20px; background-color: #f9f9f9; text-align: center;')
-            .ui.attached.buttons
-                button.ui.basic.button#dismissNudge2NewModal(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
-                    | No, Continue
-                button.ui.basic.button#leaveNudge2NewModal(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
-                    | Yes, Leave
-                button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal;')
-                    | Yes, Leave & Block User
+
+
+
+    style.
+        .ui.dimmer {
+            background-color: transparent !important;
+            opacity: 1 !important;
+        }
+        .ui.modal#nudge2NewModal {
+            top: 76%;
+            left: 60%;
+            transform: translate(-50%, -50%);
+            position: fixed;
+        }
+        
+    .ui.modal#nudge2NewModal(style='width: 450px;  padding: 0; border-radius: 15px; background-color: #f9f9f9;')
+        //- Close Button
+        i.close.icon#dismissNudge2NewModal(style='position: absolute; top: 1px; right: 8px; color: black;')
+
+        //- Enclosing the content and actions in a div
+        div(style='background-color: #f9f9f9; border: 1px #ddd; border-radius: 15px; margin-bottom: 10px;')
+            .content(style='padding: 40px 20px 20px 20px; flex-grow: 1; text-align: center; font-size: 15px;')
+                .ui.center.aligned.container(style='white-space: pre-line;')
+                    | This user can no longer chat with you as they
+                    | are not in your friends list and sent you
+                    | #[strong(style='color: red;') inappropriate messages]. Would you like to exit
+                    | this conversation?
+
+            .actions(style='border-top: 1px #ddd; padding: 10px; text-align: center;')
+                .ui.attached.buttons
+                    button.ui.basic.button#leaveNudge2NewModal(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
+                        | Exit Chat
+                    button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
+                        | #[strong(style='color: red;') Block User]
+                    button.ui.basic.button#dismissNudge2NewModal(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
+                        | Continue Chat
                 
-
+    style.
+        .ui.dimmer {
+            background-color: transparent !important;
+            opacity: 1 !important;
+        }
+        .ui.modal#newNudge4Modal {
+            top: 76%;
+            left: 60%;
+            transform: translate(-50%, -50%);
+            position: fixed;
+        }
     #nudge2Modal.ui.mini.modal
         .content.center.aligned.column
             .ui.center.aligned.container
@@ -108,19 +217,28 @@ block content
         .actions
             #dismissModalEveryoneButton.button.ui.button
                 | Dismiss
+
     
-    .ui.modal#newNudge4Modal(style='width: 500px; border: 1px solid black; padding: 0;')
-        .content(style=' padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center;')
-            .ui.center.aligned.container
-                | The last message you received is censored due to potentially harmful content. Learn why this is harmful. Are you sure you want to view this message?
-        .actions(style='border-top: 1px solid black; padding: 1px 20px; background-color: #f9f9f9; text-align: center;')
-            .ui.attached.buttons
-                button.ui.basic.button#newNudge4ModalViewButton(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
-                    | View
-                button.ui.basic.button#newNudge4ModalDeleteButton(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
-                    | Delete & Dismiss
-                button.ui.basic.button#newNudge4ModalDeleteAndUpdateButton(style='flex: 1; text-align: center; white-space: normal;')
-                    | Delete & Let Others Know
+    .ui.modal#newNudge4Modal(style='width: 450px;  padding: 0; border-radius: 15px; background-color: #f9f9f9;')
+        //- Close Button
+        i.close.icon#dismissNudge4NewModal(style='position: absolute; top: 1px; right: 8px; color: black;')
+
+        div(style='background-color: #f9f9f9; border: 1px #ddd; border-radius: 15px; margin-bottom: 10px;')
+            .content(style='padding: 40px 20px 20px 20px; flex-grow: 1; text-align: center; font-size: 15px;')
+                .ui.center.aligned.container(style='white-space: pre-line;')
+                    | The last message is hidden due to potentially
+                    | #[strong(style='color: red;') explicit content]. Would you like to delete this
+                    | message?
+
+            .actions(style='border-top: 1px #ddd; padding: 10px; text-align: center;')
+                .ui.attached.buttons
+                    button.ui.basic.button#newNudge4ModalDeleteButton(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
+                        | Delete Message
+                    button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
+                        | #[strong(style='color: red;') Block User]
+                    button.ui.basic.button#newNudge4ModalDeleteAndUpdateButton(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
+                        | Notify Other Users
+        
     
     
                     
@@ -804,14 +922,16 @@ block content
         // researcher set variable to show nudges
         let nudgeShown = true;
 
-        let nudge3MessageId = null;
+        //let nudge3MessageId = null;
+        let nudge1MessageId = null;
 
         document.getElementById('nudge3Button1').onclick=function(){onClickNudge3Button1()};
         function onClickNudge3Button1() {
-            $('#nudge3Card').hide();
-            sendMessage("I don't feel comfortable sharing that info");
+            $('#nudge1Modal').modal('hide');
+            $('#nudge1Modal2').modal('hide');
+            sendMessage("Sorry, I don't want to share that");
             socket.emit("nudge-reaction", {
-                messageId: nudge3MessageId,
+                messageId: nudge1MessageId,
                 userAction: "sendMessage",
                 other: {
                     username: chatPartnerUsername,
@@ -821,10 +941,11 @@ block content
         }
         document.getElementById('nudge3Button2').onclick=function(){onClickNudge3Button2()};
         function onClickNudge3Button2() {
-            $('#nudge3Card').hide();
-            sendMessage("Sorry, I don't know you");
+            $('#nudge1Modal').modal('hide');
+            $('#nudge1Modal2').modal('hide');
+            sendMessage("I don't feel comfortable sharing that");
             socket.emit("nudge-reaction", {
-                messageId: nudge3MessageId,
+                messageId: nudge1MessageId,
                 userAction: "sendMessage",
                 other: {
                     username: chatPartnerUsername,
@@ -834,10 +955,11 @@ block content
         }
         document.getElementById('nudge3Button3').onclick=function(){onClickNudge3Button3()};
         function onClickNudge3Button3() {
-            $('#nudge3Card').hide();
-            sendMessage("I don't think it's appropriate to ask that");
+            $('#nudge1Modal').modal('hide');
+            $('#nudge1Modal2').modal('hide');
+            sendMessage("Lol that's private information");
             socket.emit("nudge-reaction", {
-                messageId: nudge3MessageId,
+                messageId: nudge1MessageId,
                 userAction: "sendMessage",
                 other: {
                     username: chatPartnerUsername,
@@ -845,31 +967,31 @@ block content
                 }
             });
         }
-        document.getElementById('nudge3Button4').onclick=function(){onClickNudge3Button4()};
-        function onClickNudge3Button4() {
-            $('#nudge3Card').hide();
-            socket.emit("nudge-reaction", {
-                messageId: nudge3MessageId,
-                userAction: "blockUser",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
-        }
+        //- document.getElementById('nudge3Button4').onclick=function(){onClickNudge3Button4()};
+        //- function onClickNudge3Button4() {
+        //-     $('#nudge3Card').hide();
+        //-     socket.emit("nudge-reaction", {
+        //-         messageId: nudge3MessageId,
+        //-         userAction: "blockUser",
+        //-         other: {
+        //-             username: chatPartnerUsername,
+        //-             userId: chatPartnerUserId,
+        //-         }
+        //-     });
+        //- }
 
-        document.getElementById('nudge3Button5').onclick=function(){onClickNudge3Button5()};
-        function onClickNudge3Button5() {
-            $('#nudge3Card').hide();
-            socket.emit("nudge-reaction", {
-                messageId: nudge3MessageId,
-                userAction: "reportUser",
-                other: {
-                    username: chatPartnerUsername,
-                    userId: chatPartnerUserId,
-                }
-            });
-        }
+        //- document.getElementById('nudge3Button5').onclick=function(){onClickNudge3Button5()};
+        //- function onClickNudge3Button5() {
+        //-     $('#nudge3Card').hide();
+        //-     socket.emit("nudge-reaction", {
+        //-         messageId: nudge3MessageId,
+        //-         userAction: "reportUser",
+        //-         other: {
+        //-             username: chatPartnerUsername,
+        //-             userId: chatPartnerUserId,
+        //-         }
+        //-     });
+        //- }
 
         socket.on("blocked", (msg) => { // this user blocked
             const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
@@ -1094,6 +1216,9 @@ block content
                         //document.getElementById('reportButton').onclick=function(){reportUserModal1(messageList[i])}
                         document.getElementById('leaveModalButton').onclick=function(){leaveUserModal(messageList[i])}
                         $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
+                        $('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
+                        //$('#nudge3Card').modal('setting', 'closable', false).modal('show');
+                        nudge1MessageId = messageList[i]._id;
                         
                     }
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].nudge.riskyScenario == "explicitContent1") {
@@ -1114,7 +1239,8 @@ block content
                         
                     }
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach2) {
-                        document.getElementById('newNudge4ModalViewButton').onclick=function(){onClickShowMeModal(messageList[i])};
+                        //- document.getElementById('newNudge4ModalViewButton').onclick=function(){onClickShowMeModal(messageList[i])};
+                        document.getElementById('dismissNudge4NewModal').onclick=function(){onClickShowMeModal(messageList[i])}
                         document.getElementById('newNudge4ModalDeleteButton').onclick=function(){onClickNewDeleteButton(messageList[i])};
                         document.getElementById('newNudge4ModalDeleteAndUpdateButton').onclick=function(){onClickNewDeleteAndUpdateButton(messageList[i])};
                         $('#newNudge4Modal').modal('setting', 'closable', false).modal('show')
@@ -1174,6 +1300,7 @@ block content
 
         function onClickDismissButton() {
             $('#nudge1Modal').modal('hide');
+            $('#nudge1Modal2').modal('hide');
             $('#nudge2Modal').modal('hide');
             $('#nudge2NewModal').modal('hide');
             $('#newNudge4Modal').modal('hide')

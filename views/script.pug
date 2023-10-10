@@ -200,16 +200,18 @@ block content
                                 postnudgeID=val.id, 
                                 nudgeShown=comment.nudgeShown
                                 actorID=comment.actor.username
-                                style='width: 380px;'
+                                style='width: 380px; border-radius: 15px;'
                             )
                                 //- Close Button
                                 i.close.icon#closeModalCommentNudgeIconButton(style='position: absolute; top: 1px; right: 8px; color: black;') 
 
                                 //- Modal Content
-                                .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center;')
+                                .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center; border-radius: 15px; font-size: 15px;')
                                     //- Username and Violation Notice
                                     p(style='white-space: pre-line;')  
-                                        | #[u #{comment.actor.username}] just made a comment on your post that is #[strong hidden] as it violates our community guidelines due to #[strong(style='color: red;') offensive language].
+                                        | #[u #{comment.actor.username}] just made a comment on your post
+                                        | that is #[strong hidden] as it violates our community 
+                                        | guidelines due to #[strong(style='color: red;') offensive language].
                                     //- Learn More Link
                                     a(href='', style='color: #333; text-decoration: underline;')
                                         | Learn more
@@ -217,7 +219,7 @@ block content
 
 
                                 //- Modal Actions
-                                .actions(style='border-top: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; text-align: center;')
+                                .actions(style='border-top: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; text-align: center; border-radius: 15px;')
                                     .ui.attached.buttons
                                       //- Unhide Button
                                       button.ui.basic.button#unhideCommentNudge(style='border-right: 1px solid #ddd;')
@@ -229,25 +231,26 @@ block content
                                      
                                       //- Block Button
                                       button.ui.basic.button#blockCommentNudge
-                                          | Block
+                                          | Block User
 
 
                             //- Secondary Report Comment Modal
                             .ui.modal#secondaryReportCommentModal(commentNudgeID=comment.commentID, 
                                 comment_id=comment._id,
                                 postnudgeID=val.id
-                                style='width: 350px;'
+                                style='width: 350px; border-radius: 15px;'
                             )
                                 //- Close Button
                                 i.close.icon#closeModalCommentNudgeIconButton(style='position: absolute; top: 5px; right: 10px; color: black;') 
 
                                 //- Modal Content
-                                .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9;text-align: center;')
+                                .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9;text-align: center; font-size: 15px;')
                                     //- Block Notice
-                                    | #[u #{comment.actor.username}] has been blocked. Would you also like to report this user?
+                                    | #[u #{comment.actor.username}] has been blocked. Would you 
+                                    | also like to report this user?
 
                                 //- Modal Actions
-                                .actions(style='border-top: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;')
+                                .actions(style='border-top: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; border-radius: 15px;')
                                     .ui.three.attached.buttons
                                         //- Yes Button
                                         button.ui.basic.button#reportCommentNudge(style='border-right: 1px solid #ddd;')
@@ -335,7 +338,7 @@ block content
                                   // attach events to buttons, also make the nudges unexitable from clicking on background
                                   $('#secondaryReportCommentModal').modal('attach events', '#commentNudgeModal.modal #blockCommentNudge.button');
                                   $("#commentNudgeModal").modal('setting', 'closable', false).modal('show');
-                              }, 2000);
+                              }, 5000);
 
 
                         else 
