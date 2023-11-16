@@ -26,17 +26,17 @@ block content
                 .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
                     #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
 
-                //- #nudge3Card.ui.card(style='position: absolute; bottom: -60px; left: 50%; transform: translate(-50%, -50%); width:450px;')
-                //-     .content
-                //-         #closeNudge3.button.ui.circular.basic.icon.mini.right.floated.button
-                //-             i.close.icon
-                //-         p Risky message detected, here are some ways you can respond
-                    //- .ui.vertical.buttons
-                    //-     #nudge3Button1.button.fluid.ui.button(style="margin-bottom:4px") I don't feel comfortable sharing that info
-                    //-     #nudge3Button2.button.fluid.ui.button(style="margin-bottom:4px") Sorry, I don't know you
-                    //-     #nudge3Button3.button.fluid.ui.button(style="margin-bottom:4px") I don't think it's appropriate to ask that
-                    //-     #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Block
-                    //-     #nudge3Button5.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Report
+                #nudge3Card.ui.card(style='position: absolute; bottom: -60px; left: 50%; transform: translate(-50%, -50%); width:450px;')
+                    .content
+                        #closeNudge3.button.ui.circular.basic.icon.mini.right.floated.button
+                            i.close.icon
+                        p Risky message detected, here are some ways you can respond
+                    .ui.vertical.buttons
+                        #nudge3Button1.button.fluid.ui.button(style="margin-bottom:4px") I don't feel comfortable sharing that info
+                        #nudge3Button2.button.fluid.ui.button(style="margin-bottom:4px") Sorry, I don't know you
+                        #nudge3Button3.button.fluid.ui.button(style="margin-bottom:4px") I don't think it's appropriate to ask that
+                        #nudge3Button4.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Block
+                        #nudge3Button5.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Report
 
 
                 form#messageInput(action='')
@@ -146,11 +146,11 @@ block content
 
     .ui.modal#nudge1Modal2
         .ui.horizontal.buttons(style='text-align: center; padding-top: 10px;')
-            #nudge3Button1.button.fluid.ui.button.bubble-button.transparent-button(style='margin-right: 1px; border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
+            #nudge1Button1.button.fluid.ui.button.bubble-button.transparent-button(style='margin-right: 1px; border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
                 | Sorry, I don't want to share that
-            #nudge3Button2.button.fluid.ui.button.bubble-button.transparent-button(style='margin-right: 5px; border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
+            #nudge1Button2.button.fluid.ui.button.bubble-button.transparent-button(style='margin-right: 5px; border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
                 | I don't feel comfortable sharing that
-            #nudge3Button3.button.fluid.ui.button.bubble-button.transparent-button(style='border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
+            #nudge1Button3.button.fluid.ui.button.bubble-button.transparent-button(style='border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
                 | Lol that's private information
 
 
@@ -261,10 +261,10 @@ block content
         }
         
         // for deployment
-         const URL = "http://18.224.25.178:3000/";
+        // const URL = "http://18.224.25.178:3000/";
         
         // for production
-        // const URL = "http://localhost:3000";
+         const URL = "http://localhost:3000";
         
         const socket = io(URL, { autoConnect: false, transports: ['websocket'], upgrade: false });
         
@@ -922,11 +922,11 @@ block content
         // researcher set variable to show nudges
         let nudgeShown = true;
 
-        //let nudge3MessageId = null;
+        let nudge3MessageId = null;
         let nudge1MessageId = null;
 
-        document.getElementById('nudge3Button1').onclick=function(){onClickNudge3Button1()};
-        function onClickNudge3Button1() {
+        document.getElementById('nudge1Button1').onclick=function(){onClickNudge1Button1()};
+        function onClickNudge1Button1() {
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal2').modal('hide');
             sendMessage("Sorry, I don't want to share that");
@@ -939,8 +939,9 @@ block content
                 }
             });
         }
-        document.getElementById('nudge3Button2').onclick=function(){onClickNudge3Button2()};
-        function onClickNudge3Button2() {
+
+        document.getElementById('nudge1Button2').onclick=function(){onClickNudge1Button2()};
+        function onClickNudge1Button2() {
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal2').modal('hide');
             sendMessage("I don't feel comfortable sharing that");
@@ -953,8 +954,8 @@ block content
                 }
             });
         }
-        document.getElementById('nudge3Button3').onclick=function(){onClickNudge3Button3()};
-        function onClickNudge3Button3() {
+        document.getElementById('nudge1Button3').onclick=function(){onClickNudge1Button3()};
+        function onClickNudge1Button3() {
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal2').modal('hide');
             sendMessage("Lol that's private information");
@@ -967,31 +968,71 @@ block content
                 }
             });
         }
-        //- document.getElementById('nudge3Button4').onclick=function(){onClickNudge3Button4()};
-        //- function onClickNudge3Button4() {
-        //-     $('#nudge3Card').hide();
-        //-     socket.emit("nudge-reaction", {
-        //-         messageId: nudge3MessageId,
-        //-         userAction: "blockUser",
-        //-         other: {
-        //-             username: chatPartnerUsername,
-        //-             userId: chatPartnerUserId,
-        //-         }
-        //-     });
-        //- }
 
-        //- document.getElementById('nudge3Button5').onclick=function(){onClickNudge3Button5()};
-        //- function onClickNudge3Button5() {
-        //-     $('#nudge3Card').hide();
-        //-     socket.emit("nudge-reaction", {
-        //-         messageId: nudge3MessageId,
-        //-         userAction: "reportUser",
-        //-         other: {
-        //-             username: chatPartnerUsername,
-        //-             userId: chatPartnerUserId,
-        //-         }
-        //-     });
-        //- }
+        document.getElementById('nudge3Button1').onclick=function(){onClickNudge3Button1()};
+        function onClickNudge3Button1() {
+            $('#nudge3Card').hide();
+            sendMessage("I don't feel comfortable sharing that info");
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "sendMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+        document.getElementById('nudge3Button2').onclick=function(){onClickNudge3Button2()};
+        function onClickNudge3Button2() {
+            $('#nudge3Card').hide();
+            sendMessage("Sorry, I don't know you");
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "sendMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+        document.getElementById('nudge3Button3').onclick=function(){onClickNudge3Button3()};
+        function onClickNudge3Button3() {
+            $('#nudge3Card').hide();
+            sendMessage("I don't think it's appropriate to ask that");
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "sendMessage",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+        document.getElementById('nudge3Button4').onclick=function(){onClickNudge3Button4()};
+        function onClickNudge3Button4() {
+            $('#nudge3Card').hide();
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "blockUser",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+
+        document.getElementById('nudge3Button5').onclick=function(){onClickNudge3Button5()};
+        function onClickNudge3Button5() {
+            $('#nudge3Card').hide();
+            socket.emit("nudge-reaction", {
+                messageId: nudge3MessageId,
+                userAction: "reportUser",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
 
         socket.on("blocked", (msg) => { // this user blocked
             const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
@@ -1369,9 +1410,11 @@ block content
                     nudge1NewShown = true;
                     document.getElementById('dismissModal1Button').onclick=function(){onClickShowMeModal(msg)};
                     document.getElementById('blockModal1Button').onclick=function(){blockUserModal1(msg)}
-                    document.getElementById('reportButton').onclick=function(){reportUserModal1(msg)}
+                    //document.getElementById('reportButton').onclick=function(){reportUserModal1(msg)}
                     document.getElementById('leaveModalButton').onclick=function(){leaveUserModal(msg)}
                     $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
+                    $('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
+                    nudge1MessageId = msg._id;
                 }
                 if (nudgeShown && msg.nudge.riskyScenario == "explicitContent1") {
                     $('#nudge2Modal').modal('setting', 'closable', false).modal('show');
