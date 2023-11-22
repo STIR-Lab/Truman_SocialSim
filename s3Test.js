@@ -8,8 +8,8 @@ const accessKeyId = process.env.AWS_ACCESS_KEY
 const secretAccessKey = process.env.AWS_SECRET_KEY
 
 AWS.config.update({
-  accessKeyId: "AKIARMLHUXG4WQR6SDFK",
-  secretAccessKey: "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",
+  accessKeyId: "AKIAY3ZPWG4VSUKQBANL",
+  secretAccessKey: "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",
   region: "us-east-1",
 });
 
