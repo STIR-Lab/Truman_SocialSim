@@ -191,9 +191,29 @@ $('a.others').click(function(){
 			const ava_name = ava.attr("name");
 			const postID = card.attr("postID");
 
-			const mess = `<div class="comment"> <a class="avatar"> <img src="${ava_img}"> </a> <div class="content"> <a class="author">${ava_name}</a> <div class="metadata"> <span class="date">${humanized_time_span(
-				date
-			)}</span> <i class="heart icon"></i> 0 Likes </div> <div class="text">${text}</div> <div class="actions"> <a class="like">Like</a> <a class="flag">Flag</a> </div> </div> </div>`;
+			// const mess = `<div class="comment"> <a class="avatar"> <img src="${ava_img}"> </a> <div class="content"> <a class="author">${ava_name}</a> <div class="metadata"> <span class="date">${humanized_time_span(
+			// 	date
+			// )}</span> <i class="heart icon"></i> 0 Likes </div> <div class="text">${text}</div> <div class="actions"> <a class="like">Like</a> <a class="flag">Flag</a> </div> </div> </div>`;
+			const mess = `<div class="comment">
+                        <a class="avatar">
+                            <img src="${ava_img}">
+                        </a>
+                        <div class="content">
+                            <a class="author">${ava_name}</a>
+                            <div class="metadata">
+                                <span class="date">${humanized_time_span(date)}</span>
+                                <div class="rating">
+									<i class="heart icon"></i> <span class="num">0</span> Likes
+								</div>
+                            </div>
+                            <div class="text">${text}</div>
+                            <div class="actions">
+                                <a class="like comment">Like</a>  
+                                <a class="flag comment">Flag</a>
+                            </div>
+                        </div>
+                      </div>`;
+
 			$(this).siblings("input.newcomment").val("");
 			comments.append(mess);
 			console.log(
@@ -201,7 +221,7 @@ $('a.others').click(function(){
 			);
 
 			if (card.attr("type") == "userPost") {
-				$.post("/userPost_feed", {
+				$.post("/userPost_comment", {
 					postID,
 					new_comment: date,
 					comment_text: text,
@@ -370,150 +390,125 @@ $('a.others').click(function(){
 
 
 
+   $(document).ready(function() {
+    // Event Delegation for LIKE button on posts
+    $(document).on("click", ".like.button", function () {
+		console.log("post like clicked")
+        if ($(this).hasClass("red")) {
+            $(this).removeClass("red");
+            var label = $(this).next("a.ui.basic.red.left.pointing.label.count");
+            label.html(function (i, val) { return val * 1 - 1; });
+        } else {
+            $(this).addClass("red");
+            var label = $(this).next("a.ui.basic.red.left.pointing.label.count");
+            label.html(function (i, val) { return val * 1 + 1; });
+            var postID = $(this).closest(".ui.fluid.card").attr("postID");
+            var like = Date.now();
+            console.log("***********LIKE: post " + postID + " at time " + like);
+            if ($(this).closest(".ui.fluid.card").attr("type") == "userPost") {
+                $.post("/userPost_feed", {
+                    postID,
+                    like,
+                    _csrf: $('meta[name="csrf-token"]').attr("content"),
+                });
+            } else {
+                $.post("/feed", {
+                    postID,
+                    like,
+                    _csrf: $('meta[name="csrf-token"]').attr("content"),
+                });
+            }
+        }
+    });
 
-  //this is the LIKE button
-  $(".like.button").on("click", function () {
-    //if already liked, unlike if pressed
-    if ($(this).hasClass("red")) {
-      console.log("***********UNLIKE: post");
-      $(this).removeClass("red");
-      var label = $(this).next("a.ui.basic.red.left.pointing.label.count");
-      label.html(function (i, val) {
-        return val * 1 - 1;
-      });
-    }
-    //since not red, this button press is a LIKE action
-    else {
-      $(this).addClass("red");
-      var label = $(this).next("a.ui.basic.red.left.pointing.label.count");
-      label.html(function (i, val) {
-        return val * 1 + 1;
-      });
-      var postID = $(this).closest(".ui.fluid.card").attr("postID");
-      var like = Date.now();
-      console.log("***********LIKE: post " + postID + " at time " + like);
+    // Event Delegation for LIKE on comments
+    $(document).on("click", "a.like.comment", function () {
+		console.log("like clicked")
+        if ($(this).hasClass("red")) {
+            $(this).removeClass("red");
+            var comment = $(this).parents(".comment");
+            comment.find("i.heart.icon").removeClass("red");
+            var label = comment.find("span.num");
+            label.html((i, val) => val * 1 - 1);
+        } else {
+            $(this).addClass("red");
+            var comment = $(this).parents(".comment");
+            comment.find("i.heart.icon").addClass("red");
+            var label = comment.find("span.num");
+            label.html((i, val) => val * 1 + 1);
+            const postID = $(this).closest(".ui.fluid.card").attr("postID");
+            const commentID = comment.attr("commentID");
+            const like = Date.now();
+            console.log(`#########COMMENT LIKE:  PostID: ${postID}, Comment ID: ${commentID} at time ${like}`);
+            if ($(this).closest(".ui.fluid.card").attr("type") == "userPost") {
+                $.post("/userPost_feed", {
+                    postID,
+                    commentID,
+                    like,
+                    _csrf: $('meta[name="csrf-token"]').attr("content"),
+                });
+            } else {
+                $.post("/feed", {
+                    postID,
+                    commentID,
+                    like,
+                    _csrf: $('meta[name="csrf-token"]').attr("content"),
+                });
+            }
+        }
+    });
 
-			if ($(this).closest(".ui.fluid.card").attr("type") == "userPost") {
-				$.post("/userPost_feed", {
-					postID,
-					like,
-					_csrf: $('meta[name="csrf-token"]').attr("content"),
-				});
-			} else {
-				$.post("/feed", {
-					postID,
-					like,
-					_csrf: $('meta[name="csrf-token"]').attr("content"),
-				});
-			}
-		}
-	});
+    // Event Delegation for FLAG on comments
+    $(document).on("click", "a.flag.comment", function () {
+        const comment = $(this).parents(".comment");
+        const postID = $(this).closest(".ui.fluid.card").attr("postID");
+        const typeID = $(this).closest(".ui.fluid.card").attr("type");
+        const commentID = comment.attr("commentID");
+        comment.replaceWith(
+            '<div class="comment" style="background-color:black;color:white">' +
+            '<h5 class="ui inverted header">' +
+            '<span>The admins will review this post further. We are sorry you had this experience.</span>' +
+            '</h5></div>'
+        );
+        const flag = Date.now();
+        console.log(`#########COMMENT FLAG:  PostID: ${postID}, Comment ID: ${commentID}  TYPE is ${typeID} at time ${flag}`);
+        if (typeID == "userPost") {
+            $.post("/userPost_feed", {
+                postID,
+                commentID,
+                flag,
+                _csrf: $('meta[name="csrf-token"]').attr("content"),
+            });
+        } else {
+            $.post("/feed", {
+                postID,
+                commentID,
+                flag,
+                _csrf: $('meta[name="csrf-token"]').attr("content"),
+            });
+        }
+    });
 
-	// a.like.comment
-	$("a.like.comment").on("click", function () {
-		// if already liked, unlike if pressed
-		if ($(this).hasClass("red")) {
-			console.log("***********UNLIKE: post");
-			// Un read Like Button
-			$(this).removeClass("red");
-
-			var comment = $(this).parents(".comment");
-			comment.find("i.heart.icon").removeClass("red");
-
-			var label = comment.find("span.num");
-			label.html((i, val) => val * 1 - 1);
-		}
-		// since not red, this button press is a LIKE action
-		else {
-			$(this).addClass("red");
-			var comment = $(this).parents(".comment");
-			comment.find("i.heart.icon").addClass("red");
-
-			var label = comment.find("span.num");
-			label.html((i, val) => val * 1 + 1);
-
-			const postID = $(this).closest(".ui.fluid.card").attr("postID");
-			const commentID = comment.attr("commentID");
-			const like = Date.now();
-			console.log(
-				`#########COMMENT LIKE:  PostID: ${postID}, Comment ID: ${commentID} at time ${like}`
-			);
-
-			if ($(this).closest(".ui.fluid.card").attr("type") == "userPost") {
-				$.post("/userPost_feed", {
-					postID,
-					commentID,
-					like,
-					_csrf: $('meta[name="csrf-token"]').attr("content"),
-				});
-			} else {
-				$.post("/feed", {
-					postID,
-					commentID,
-					like,
-					_csrf: $('meta[name="csrf-token"]').attr("content"),
-				});
-			}
-		}
-	});
-
-	// this is the FLAG button
-	$("a.flag.comment").on("click", function () {
-		const comment = $(this).parents(".comment");
-		const postID = $(this).closest(".ui.fluid.card").attr("postID");
-		const typeID = $(this).closest(".ui.fluid.card").attr("type");
-		const commentID = comment.attr("commentID");
-		comment.replaceWith(
-			'<div class="comment" style="background-color:black;color:white"><h5 class="ui inverted header"><span>The admins will review this post further. We are sorry you had this experience.</span></h5></div>'
-		);
-		const flag = Date.now();
-		console.log(
-			`#########COMMENT FLAG:  PostID: ${postID}, Comment ID: ${commentID}  TYPE is ${typeID} at time ${flag}`
-		);
-
-		if (typeID == "userPost") {
-			$.post("/userPost_feed", {
-				postID,
-				commentID,
-				flag,
-				_csrf: $('meta[name="csrf-token"]').attr("content"),
-			});
-		} else {
-			$.post("/feed", {
-				postID,
-				commentID,
-				flag,
-				_csrf: $('meta[name="csrf-token"]').attr("content"),
-			});
-		}
-	});
-
-	// this is the POST FLAG button
-	$(".flag.button").on("click", function () {
-		const post = $(this).closest(".ui.fluid.card.dim");
-		const postID = post.attr("postID");
-		const flag = Date.now();
-		console.log(`***********FLAG: post ${postID} at time ${flag}`);
-		$.post("/feed", {
-			postID,
-			flag,
-			_csrf: $('meta[name="csrf-token"]').attr("content"),
-		});
-		console.log("Removing Post content now!");
-		post
-			.find(".ui.dimmer.flag")
-			.dimmer({
-				closable: false,
-			})
-			.dimmer("show");
-		// repeat to ensure its closable
-		post
-			.find(".ui.dimmer.flag")
-			.dimmer({
-				closable: false,
-			})
-			.dimmer("show");
-	});
+    // Event Delegation for FLAG on posts
+    $(document).on("click", ".flag.button", function () {
+        const post = $(this).closest(".ui.fluid.card.dim");
+        const postID = post.attr("postID");
+        const flag = Date.now();
+        console.log(`***********FLAG: post ${postID} at time ${flag}`);
+        $.post("/feed", {
+            postID,
+            flag,
+            _csrf: $('meta[name="csrf-token"]').attr("content"),
+        });
+        console.log("Removing Post content now!");
+        post.find(".ui.dimmer.flag").dimmer({
+            closable: false,
+        }).dimmer("show");
+        post.find(".ui.dimmer.flag").dimmer({
+            closable: false,
+        }).dimmer("show");
+    });
+});
 
 	// User wants to REREAD
 	$(".ui.button.reread").on("click", function () {

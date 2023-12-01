@@ -1074,6 +1074,43 @@ exports.postUpdateProFeedAction = (req, res, next) => {
 };
 
 /**
+ * POST /userPost_comment
+ * Create a new comment on a user's post.
+ */
+ exports.postNewCommentOnUserPost = (req, res, next) => {
+    User.findById(req.user.id, (err, user) => {
+        if (err) {
+            return next(err);
+        }
+
+        const feedIndex = _.findIndex(user.posts, (o) => o.postID == req.body.postID);
+        if (feedIndex === -1) {
+            return res.status(404).send({ error: "Post not found." });
+        }
+
+        if (req.body.new_comment) {
+            const cat = {
+                new_comment: true,
+                commentID: 900 + user.numReplies, // unique ID for the comment
+                body: req.body.comment_text,
+                isUser: true,
+                absTime: Date.now(),
+                time: Date.now() - user.createdAt
+            };
+
+            user.numReplies += 1;
+            user.posts[feedIndex].comments.push(cat);
+            user.save((err) => {
+                if (err) { return next(err); }
+                res.send({ result: "success", comment: cat });
+            });
+        } else {
+            res.status(400).send({ error: "Invalid request." });
+        }
+    });
+};
+
+/**
  * POST /userPost_feed/
  * Update user's POST feed Actions.
  */
@@ -1100,18 +1137,18 @@ exports.postUpdateUserPostFeedAction = (req, res, next) => {
 		}
 
 		// create a new Comment
-		else if (req.body.new_comment) {
-			const cat = new Object();
-			cat.new_comment = true;
-			user.numReplies += 1;
-			cat.commentID = 900 + user.numReplies; // this is so it doesn't get mixed with actor comments
-			cat.body = req.body.comment_text;
-			cat.isUser = true;
-			cat.absTime = Date.now();
-			cat.time = cat.absTime - user.createdAt;
-			user.posts[feedIndex].comments.push(cat);
-			console.log("$#$#$#$#$#$$New  USER COMMENT Time: ", cat.time);
-		}
+		// else if (req.body.new_comment) {
+		// 	const cat = new Object();
+		// 	cat.new_comment = true;
+		// 	user.numReplies += 1;
+		// 	cat.commentID = 900 + user.numReplies; // this is so it doesn't get mixed with actor comments
+		// 	cat.body = req.body.comment_text;
+		// 	cat.isUser = true;
+		// 	cat.absTime = Date.now();
+		// 	cat.time = cat.absTime - user.createdAt;
+		// 	user.posts[feedIndex].comments.push(cat);
+		// 	console.log("$#$#$#$#$#$$New  USER COMMENT Time: ", cat.time);
+		// }
 
 		// Are we doing anything with a comment?
 		else if (req.body.commentID) {

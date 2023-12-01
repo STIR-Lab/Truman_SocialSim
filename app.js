@@ -450,6 +450,11 @@ app.post(
   passportConfig.isAuthenticated,
   scriptController.postUpdateUserPostFeedAction
 );
+app.post(
+  '/userPost_comment',
+  passportConfig.isAuthenticated,
+  scriptController.postNewCommentOnUserPost
+);
 
 app.post(
   '/commentnudge/reaction',
