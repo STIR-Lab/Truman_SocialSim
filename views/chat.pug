@@ -287,7 +287,7 @@ block content
             $('#newChatModal').modal('setting', 'closable', false).modal('show');
         }
         
-        // for deployment
+        //for deployment
         const URL = "http://18.224.25.178:3000/";
         
         // for production
@@ -1679,17 +1679,79 @@ block content
             }
         }
 
+        //- function formatTime(time) {
+        //-     let seen = false;
+        //-     let idx = -1;
+        //-     for (let i = 0; i < time.length; i++) {
+        //-         if (time[i] == ':' && !seen)
+        //-             seen = true;
+        //-         else if (time[i] == ':' && seen)
+        //-             idx = i;
+        //-     }
+        //-     return time.slice(0, idx) + time.slice(idx + 3);
+        //- }
+
+        //- function formatTime(time) {
+        //-     console.log("time1", time);
+        //-     // Convert 12-hour time to 24-hour time for parsing
+        //-     let isPM = time.includes('pm');
+        //-     let timeParts = time.match(/(\d+):(\d+):(\d+)/);
+        //-     let hours = parseInt(timeParts[1], 10);
+        //-     if (isPM && hours < 12) {
+        //-         hours += 12;
+        //-     } else if (!isPM && hours === 12) {
+        //-         hours = 0;
+        //-     }
+        //-     // Ensuring two-digit hour format
+        //-     hours = hours.toString().padStart(2, '0');
+
+        //-     let fixedDate = `1970-01-01T${hours}:${timeParts[2]}:${timeParts[3]}Z`;
+        //-     console.log("fixedDate", fixedDate);
+            
+        //-     let date = new Date(fixedDate);
+        //-     console.log("date", date);
+        //-     time = date.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
+        //-     console.log("time2", time);
+        //-     let seen = false;
+        //-     let idx = -1;
+        //-     for (let i = 0; i < time.length; i++) {
+        //-         if (time[i] == ':' && !seen)
+        //-             seen = true;
+        //-         else if (time[i] == ':' && seen)
+        //-             idx = i;
+        //-     }
+        //-     console.log("time3", time)
+        //-     return time.slice(0, idx) + time.slice(idx + 3);
+        //- }
+
         function formatTime(time) {
-            let seen = false;
-            let idx = -1;
-            for (let i = 0; i < time.length; i++) {
-                if (time[i] == ':' && !seen)
-                    seen = true;
-                else if (time[i] == ':' && seen)
-                    idx = i;
+            console.log("time1", time);
+            // Convert 12-hour time to 24-hour time for parsing
+            let isPM = time.includes('pm');
+            let timeParts = time.match(/(\d+):(\d+):(\d+)/);
+            let hours = parseInt(timeParts[1], 10);
+            if (isPM && hours < 12) {
+                hours += 12;
+            } else if (!isPM && hours === 12) {
+                hours = 0;
             }
-            return time.slice(0, idx) + time.slice(idx + 3);
+            // Ensuring two-digit hour format
+            hours = hours.toString().padStart(2, '0');
+
+            let fixedDate = `1970-01-01T${hours}:${timeParts[2]}:${timeParts[3]}Z`;
+            console.log("fixedDate", fixedDate);
+            
+            let date = new Date(fixedDate);
+            console.log("date", date);
+            time = date.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
+            console.log("time2", time);
+
+            // Extracting just the HH:MM part
+            let finalTime = time.match(/(\d+:\d+ [AP]M)/);
+            return finalTime ? finalTime[0] : time; // Returns the extracted time or the original if no match
         }
+
+
         function addChatSentMessage(msg, time, id) {
 
             let msgType = "";

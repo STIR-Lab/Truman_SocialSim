@@ -491,7 +491,7 @@ async function formatMessage(msg, nudge, from, to) {
 		msg: {
 			...msg,
 			read: false,
-			time: moment().format("h:mm:ss a"),
+			time: moment().utc().format("h:mm:ss a"),
 			reactions: {
 				self: "none",
 				other: "none",
