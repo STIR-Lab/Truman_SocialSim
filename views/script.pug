@@ -184,7 +184,7 @@ block content
                                     a.red.like.comment Like
                                   else
                                     a.like.comment Like
-                                  a.flag.comment Flag
+                                  a.flag.comment Flag and Delete
                             script.
                               // TODO: ADD CODE TO OPEN MODAL
                               console.log('COMMENT NUDGE SHOWN C: ' + #{comment.nudgeShown})
@@ -208,8 +208,9 @@ block content
                                 //- Modal Content
                                 .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center; border-radius: 15px; font-size: 15px;')
                                     //- Username and Violation Notice
+                      
                                     p(style='white-space: pre-line;')  
-                                        | #[u #{comment.actor.username}] just made a comment on your post
+                                        | #[a(href='/user/' + comment.actor.username) #{comment.actor.username}] just made a comment on your post
                                         | that is #[strong hidden] as it violates our community 
                                         | guidelines due to #[strong(style='color: red;') offensive language].
                                     //- Learn More Link

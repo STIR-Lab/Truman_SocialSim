@@ -20,6 +20,8 @@ $(window).on("load", () => {
 	) {
 		$.getJSON("/bell", (json) => {
 			if (json.result) {
+				console.log(json)
+				console.log(json.result)
 				$("i.big.alarm.icon").replaceWith(
 					'<i class="big icons"><i class="red alarm icon"></i><i class="corner yellow lightning icon"></i></i>'
 				);
@@ -270,6 +272,15 @@ $('a.others').click(function(){
 	$(".ui.home.inverted.button").on("click", () => {
 		window.location.href = "/";
 	});
+
+	$(".ui.green.ok.inverted.button").on("click", () => {
+		console.log("unblock")
+		setTimeout(() => {
+			window.location.reload();
+		}, 1000);
+	});
+
+	
 
 	// this is the Block User button
 	$("button.ui.button.block").on("click", function () {

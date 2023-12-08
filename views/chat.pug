@@ -7,7 +7,9 @@ block content
             .ui.segment(style='height:90vh')
                 .ui.basic.fluid(style="margin-bottom:18px") 
                         h3.ui.header(style="margin-top:2px") 
-                            |   Messages
+                            i.comments.icon
+                            |   Messages  
+                            
                 
                 #recentChatHistory(style="margin-top:4px") 
                     #chatHistory.ui.relaxed.divided.list
@@ -39,9 +41,34 @@ block content
                         #nudge3Button5.button.fluid.ui.button(style='background-color: rgba(255,0,0,0.3)') Report
 
 
+                //- form#messageInput(action='')
+                //-     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
+                //-         img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
+                //-         #sending(src="#" style="position: absolute; bottom: 50px; left: 50%; display: none;")
+                //-             code
+                //-                 | sending...
+                //-         input#input(autocomplete="off" type='text' placeholder='Enter message')
+                //-         button#submitMessage(type="submit")
+                //-             i.paper.plane.icon 
+                //-         button(type="button" style='position: relative; right: 2px;')     
+                //-             label.custom-file-upload(for='fileupload' )
+                //-                 i.camera.icon
+                //-         input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/*,video/mp4,video/x-m4v,video/*")
+                //-         button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
+
+                //- #userIdTag(userId=user.id)
+                //- #usernameTag(username=user.username)
+                //- #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://socialsimulation.s3.amazonaws.com/default-pfp.png")
+ 
                 form#messageInput(action='')
                     .ui.fluid.icon.input(style='position: absolute; bottom: 10px; left: 50%; transform: translate(-50%, -50%); width:450px;')
-                        img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 70px; left: 50%; display: none;")
+                        img#outputImage(src="#" style="width: 60px; height:auto; position: absolute; bottom: 50px; left: 10px; display: none; border: 1px solid grey;")
+                        button#cancelImageUpload.ui.icon.button(style="position: absolute; width: 15px; height: 15px; bottom: 75px; left: 75px; display: none; align-items: center; justify-content: center;  padding: 0; border: none;")
+                            i.close.icon(style="font-size: 10px;")
+
+                            
+
+
                         #sending(src="#" style="position: absolute; bottom: 50px; left: 50%; display: none;")
                             code
                                 | sending...
@@ -54,10 +81,10 @@ block content
                         input#fileupload(type='file' style="display: none;" name="fileupload" accept="image/*,video/mp4,video/x-m4v,video/*")
                         button#uploadImage(type="button" style='position: relative; right: 2px; display: none;')     
 
-                #userIdTag(userId=user.id)
-                #usernameTag(username=user.username)
-                #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://socialsimulation.s3.amazonaws.com/default-pfp.png")
- 
+                    #userIdTag(userId=user.id)
+                    #usernameTag(username=user.username)
+                    #userProfilePicture(userpfp = user.profile.picture ? user.profile.picture : "https://socialsimulation.s3.amazonaws.com/default-pfp.png")
+
     #newChatModal.ui.mini.modal
         .header
             .ui.center.aligned.container
@@ -188,7 +215,7 @@ block content
                         | Exit Chat
                     button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
                         | #[strong(style='color: red;') Block User]
-                    button.ui.basic.button#dismissNudge2NewModal(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
+                    button.ui.basic.button#continueModal(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
                         | Continue Chat
                 
     style.
@@ -261,10 +288,10 @@ block content
         }
         
         // for deployment
-         const URL = "http://18.224.25.178:3000/";
+        const URL = "http://18.224.25.178:3000/";
         
         // for production
-         //const URL = "http://localhost:3000";
+        //const URL = "http://localhost:3000";
         
         const socket = io(URL, { autoConnect: false, transports: ['websocket'], upgrade: false });
         
@@ -505,7 +532,7 @@ block content
                                             <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="${activeClass}"></i>
                                         </div>
                                         <div class="content">
-                                            <a class="header" href="/user/${chatPartnerId}">${chatPartnerUsername}</a>
+                                            <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
                                             <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
                                         </div>
 
@@ -523,7 +550,7 @@ block content
                                                 <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;"class="${activeClass}"></i>
                                             </div>    
                                             <div class="content">
-                                                <a class="header" href="http://localhost:3000/user/${chatPartnerId}">${chatPartnerUsername}</a>
+                                                <a class="header" href="user/${chatPartnerUsername}">${chatPartnerUsername}</a>
                                                 <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
                                             </div>
                                         </div>
@@ -849,7 +876,8 @@ block content
         }
         */
         function onClickProfile(userId) {
-            window.location.href = "/user/" + userId;
+            console.log("clicked");
+            window.location.href = "/user/" + chatPartnerUsername;
         }
 
         /*
@@ -1124,7 +1152,8 @@ block content
                 else if(input.value == infoBreach3New){
                     console.log(infoBreach3New)
                     riskyScenario = "infoBreach3New"
-                    nudgeType = "userActions";
+                    //nudgeType = "userActions";
+                    nudgeType = "sensitivityFilter"
                 }
 
                 $('#nudge3Card').hide();
@@ -1176,6 +1205,7 @@ block content
                         } 
                     });
                     document.getElementById("sending").style.display = "block"
+                    document.getElementById('cancelImageUpload').style.display = 'none';
                 }
                 else if (file.type.includes("video")) {
                     socket.emit('send-message', { 
@@ -1210,8 +1240,18 @@ block content
             return null;
         }
 
+        // Event listener for the cross button
+        document.getElementById('cancelImageUpload').addEventListener('click', function() {
+            // Hide the image preview and the cross button
+            document.getElementById('outputImage').style.display = 'none';
+            this.style.display = 'none';
+            // Reset the file input field
+            document.getElementById('fileupload').value = '';
+        });
+
         async function loadFile(event) {
             const image = document.getElementById('outputImage');
+            const cancelBtn = document.getElementById('cancelImageUpload');
             const reader = new FileReader();
  
             if (fileupload.files[0]) {
@@ -1228,8 +1268,19 @@ block content
                         const result = reader.result;
                         image.src = result;  
                         image.style.display = "block";
-                    };
 
+                        image.onload = function() {
+                            cancelBtn.style.display = 'block';
+                            cancelBtn.style.position = 'absolute';
+                            cancelBtn.style.left = `${image.offsetLeft + image.offsetWidth}px`;
+                            cancelBtn.style.top = `${image.offsetTop}px`;
+                        };
+                    };
+                    
+                } else {
+                    // Hide the cancel button if no image is selected or the file is not an image
+                    image.style.display = 'none';
+                    cancelBtn.style.display = 'none';
                 }
 
                 if (fileupload.files[0].type.includes("video")) {
@@ -1272,7 +1323,8 @@ block content
                         nudge3MessageId = messageList[i]._id;
                     }
                     if(nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach3New){
-                        console.log(infoBreach3New)
+                        
+                        document.getElementById('continueModal').onclick=function(){onClickShowMeModal(messageList[i])}
                         document.getElementById('dismissNudge2NewModal').onclick=function(){onClickShowMeModal(messageList[i])}
                         document.getElementById('leaveNudge2NewModal').onclick=function(){leaveUserModal(messageList[i])}
                         document.getElementById('leaveAndBlockNudge2NewModal').onclick=function(){blockUserModal1(messageList[i])}
@@ -1341,6 +1393,7 @@ block content
         });
 
         function onClickDismissButton() {
+            console.log("fas")
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal2').modal('hide');
             $('#nudge2Modal').modal('hide');
@@ -1436,6 +1489,7 @@ block content
                 }
                 if (nudgeShown && msg.msg.body == infoBreach3New){
                     console.log(infoBreach3New)
+                    document.getElementById('continueModal').onclick=function(){onClickShowMeModal(msg)}
                     document.getElementById('dismissNudge2NewModal').onclick=function(){onClickShowMeModal(msg)}
                     document.getElementById('leaveNudge2NewModal').onclick=function(){leaveUserModal(msg)}
                     document.getElementById('leaveAndBlockNudge2NewModal').onclick=function(){blockUserModal1(msg)}
@@ -1476,6 +1530,7 @@ block content
 
         
         function onClickShowMeModal(msg) {
+            console.log("show me")
             onClickDismissButton();
             socket.emit("nudge-reaction", {
                 messageId: msg._id,

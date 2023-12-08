@@ -65,9 +65,13 @@ exports.checkBell = (req, res) => {
 
               if (notification_feed[i].time <= time_diff && notification_feed[i].time > past_diff) {
 
-                if ((notification_feed[i].notificationType == "read") && (user.transparency != "no"))
+                if ((notification_feed[i].notificationType == "reply") && (user.transparency != "no"))
                   return res.send({ result: true });
-                if (notification_feed[i].notificationType != "read")
+                if (notification_feed[i].notificationType != "reply")
+                  return res.send({ result: true });
+                if ((notification_feed[i].notificationType == "like") && (user.transparency != "no"))
+                  return res.send({ result: true });
+                if (notification_feed[i].notificationType != "like")
                   return res.send({ result: true });
               }
 
