@@ -273,47 +273,60 @@ block content
 
     script(src='/socket.io/socket.io.js')
     script.
+        console.log('script start', Date.now())
         const userId = document.getElementById('userIdTag').getAttribute('userId');
         const username = document.getElementById('usernameTag').getAttribute('username');
         const userpfp = document.getElementById('userProfilePicture').getAttribute('userpfp');
-        
+
         // hide input until user picks chat partner
         $('#messageInput').hide();
         $('#nudge3Card').hide();
-        document.getElementById('newChatButton').onclick=function(){onClickNewChat()};
-        document.getElementById('fileupload').onchange=function(){loadFile(event)};
+        document.getElementById('newChatButton').onclick = function () {
+            onClickNewChat()
+        };
+        document.getElementById('fileupload').onchange = function () {
+            loadFile(event)
+        };
 
         function onClickNewChat() {
             $('#newChatModal').modal('setting', 'closable', false).modal('show');
         }
-        
+
         //for deployment
-        const URL = "http://18.224.25.178:3000/";
-        
+        //const URL = "http://18.224.25.178:3000/";
+
         // for production
-        //const URL = "http://localhost:3000";
-        
-        const socket = io(URL, { autoConnect: false, transports: ['websocket'], upgrade: false });
-        
+        const URL = "ws://localhost:3000";
+        const sessionId = localStorage.getItem("sessionId");
+        let auth = null
+
+        if (sessionId) {
+            auth = {sessionId, username, userId, userpfp};
+            console.log('connect start 1', sessionId, auth)
+            // socket.connect();
+        } else {
+            auth = {username, userId, userpfp};
+            console.log('connect start 2', sessionId, auth)
+        }
+
+        const socket = io(URL, { auth });
+        socket.on('connect', () => {
+            console.log('connect start', Date.now())
+        })
+        socket.on('disconnect', () => {
+            console.log('disconnect start', Date.now())
+        })
         socket.onAny((event, ...args) => {
             console.log(event, args);
         });
-        
-        const sessionId = localStorage.getItem("sessionId");
-        if (sessionId) {
-            socket.auth = { sessionId, username, userId, userpfp};
-            socket.connect();
-        }
-        else {
-            socket.auth = { username, userId, userpfp};
-            socket.connect();
-        }
 
-        socket.on("session", ({ sessionId, userId }) => {
+
+        socket.on("session", ({sessionId, userId}) => {
             // attach the session ID to the next reconnection attempts
-            socket.auth = { sessionId };
+            // socket.remo
+            // socket.auth = {sessionId};
             localStorage.setItem("sessionId", sessionId);
-            socket.userId = userId;
+            // socket.userId = userId;
         });
 
         socket.on("connect_error", (err) => {
@@ -329,42 +342,46 @@ block content
 
         let usersInDiscover = [];
         let usersInRecent = [];
-        
+
         let allConversations = null;
 
         socket.on("userList", (userList) => {
             console.log("CURR userList")
             console.log(userList)
+            if (userList.length == 1) return;
             copiedUserList = JSON.parse(JSON.stringify(userList));
-            
+
 
             userList.forEach((user) => {
                 if (!usersInUserList.includes(user.userId)) {
                     usersInUserList.push(user.userId);
                     // New Chat Button
                     const u = ` <div class="item">
-                                    <div class="content">
-                                        <div class="header">${user.username}</div>
-                                    </div>
-                                    <button id="rightArrowButton" class="ui icon right floated mini button" style="margin-top:-20px"><i class="right arrow icon"></i></button>
-                                </div>`
+                                                        <div class="content">
+                                                            <div class="header">${user.username}</div>
+                                                        </div>
+                                                        <button id="rightArrowButton${user.userId}" class="ui icon right floated mini button" style="margin-top:-20px" data-chat-partner-id="${user.userId}" onclick="onClickUsername(event)"><i data-chat-partner-id="${user.userId}" class="right arrow icon"></i></button>
+                                                    </div>`
 
                     if (user.userId == userId) { // add user to top of user list
                         $('#userList').prepend(u);
-                    }
-                    else {
+                    } else {
                         $('#userList').append(u);
                     }
 
                     // add onClick function to button
-                    let element = document.getElementById("rightArrowButton");
-                    element.id = user.userId + 'rightArrowButton';
-                    document.getElementById(user.userId + 'rightArrowButton').onclick=function(){onClickUsername(user.userId)};
+                    // let element = document.getElementById("rightArrowButton");
+                    // element.id = user.userId + 'rightArrowButton';
+                    // document.getElementById(user.userId + 'rightArrowButton').onclick = function () {
+                    //     onClickUsername(user.userId)
+                    // };
 
                     if (user.userId == userId) { // do not allow user to chat itself
                         document.getElementById(user.userId + 'rightArrowButton').remove();
                     }
 
+                } else {
+                    usersInUserList = usersInUserList.filter(item => item != user.userId);
                 }
             });
 
@@ -387,75 +404,75 @@ block content
             // deal with any status changes in the copiedUserList
             // if you are in the copiedUserList, that means you are active, so change their status
             let activeIDs = [];
-            for(let i = 0; i < copiedUserList.length; i++){
-                 if(copiedUserList[i].userId != userId){
-                     console.log(copiedUserList[i].userId)
-                     console.log('active: activeIcon-'+ copiedUserList[i].userId )
-                     console.log(document.getElementById("activeIcon-" + copiedUserList[i].userId))
-                     $('#activeIcon-' + copiedUserList[i].userId).removeClass().addClass("green circle icon")
-                     activeIDs.push(copiedUserList[i].userId)
-                 }
+            for (let i = 0; i < copiedUserList.length; i++) {
+                if (copiedUserList[i].userId != userId) {
+                    console.log(copiedUserList[i].userId)
+                    console.log('active: activeIcon-' + copiedUserList[i].userId)
+                    console.log(document.getElementById("activeIcon-" + copiedUserList[i].userId))
+                    $('#activeIcon-' + copiedUserList[i].userId).removeClass().addClass("green circle icon")
+                    activeIDs.push(copiedUserList[i].userId)
+                }
             }
-            
+
             // the rest of the users are not active, so change their status
-            for(let i = 0; i < usersInHistory.length; i++){
+            for (let i = 0; i < usersInHistory.length; i++) {
                 // check if copiedUserList contains user
                 let contains = false;
-                
-                for(let j = 0; j < copiedUserList.length; j++){
-                    if(copiedUserList[j].userId == usersInHistory[i].userId){
+
+                for (let j = 0; j < copiedUserList.length; j++) {
+                    if (copiedUserList[j].userId == usersInHistory[i].userId) {
                         contains = true;
                     }
                 }
 
-                if(!contains && usersInHistory[i].userId != userId){
+                if (!contains && usersInHistory[i].userId != userId) {
                     console.log(usersInHistory[i].userId)
-                    console.log('inactive: activeIcon-'+ usersInHistory[i].userId)
+                    console.log('inactive: activeIcon-' + usersInHistory[i].userId)
                     console.log(document.getElementById("activeIcon-" + usersInHistory[i].userId))
                     $('#activeIcon-' + usersInHistory[i].userId).removeClass().addClass("orange moon icon")
                 }
             }
-            for(let i = 0; i < usersInRecentList.length; i++){
+            for (let i = 0; i < usersInRecentList.length; i++) {
                 // check if copiedUserList contains user
                 let contains = false;
-                
-                for(let j = 0; j < copiedUserList.length; j++){
-                    if(copiedUserList[j].userId == usersInRecentList[i].userId){
+
+                for (let j = 0; j < copiedUserList.length; j++) {
+                    if (copiedUserList[j].userId == usersInRecentList[i].userId) {
                         contains = true;
                     }
                 }
 
-                if(!contains && usersInRecentList[i].userId != userId){
+                if (!contains && usersInRecentList[i].userId != userId) {
                     console.log(usersInRecentList[i].userId)
-                    console.log('inactive: activeIcon-'+ usersInRecentList[i].userId)
+                    console.log('inactive: activeIcon-' + usersInRecentList[i].userId)
                     console.log(document.getElementById("activeIcon-" + usersInRecentList[i].userId))
                     $('#activeIcon-' + usersInRecentList[i].userId).removeClass().addClass("orange moon icon")
                 }
             }
-        
-        
-            // if you are not in copiedUserList and are in usersInRecentList 
+
+
+            // if you are not in copiedUserList and are in usersInRecentList
             console.log('usersInRecentList')
             console.log(usersInRecentList)
             console.log('copiedUserList')
             console.log(copiedUserList)
-             for(let i = 0; i < usersInRecentList.length; i++){
+            for (let i = 0; i < usersInRecentList.length; i++) {
                 let contains = false;
-                
-                for(let j = 0; j < copiedUserList.length; j++){
-                    if(copiedUserList[j].userId == usersInRecentList[i].userId){
+
+                for (let j = 0; j < copiedUserList.length; j++) {
+                    if (copiedUserList[j].userId == usersInRecentList[i].userId) {
                         contains = true;
                     }
                 }
 
-                if(!contains){
+                if (!contains) {
                     console.log('remove: ')
                     console.log(usersInRecentList[i])
-                    $(`#listItemChatPartener-${usersInRecentList[i].userId}`).remove();
-                    usersInRecentList.filter((userInFilter)=> userInFilter.userId != usersInRecentList[i].userId)
+                    // $(`#listItemChatPartener-${usersInRecentList[i].userId}`).remove();
+                    usersInRecentList = usersInRecentList.filter((userInFilter) => userInFilter.userId != usersInRecentList[i].userId)
                 }
             }
-        
+
 
         });
 
@@ -475,21 +492,23 @@ block content
                 userId: chatPartnerId,
                 username: chatPartnerUsername
             }
-            
             let active = ""
             let activeClass = ""
             // check if copiedUserList contains user
-            for(let i = 0; i < copiedUserList.length; i++){
-                if(copiedUserList[i].userId == chatPartnerId){
-                    console.log("found user")
-                    active="USER ACTIVE"
-                    activeClass = "green circle icon"
-                    break;
+            if (copiedUserList && copiedUserList.length) {
+                for (let i = 0; i < copiedUserList.length; i++) {
+                    if (copiedUserList[i].userId == chatPartnerId) {
+                        console.log("found user")
+                        active = "USER ACTIVE"
+                        activeClass = "green circle icon"
+                        break;
+                    }
                 }
             }
+
             console.log("active: " + active)
 
-            if(active == ""){
+            if (active == "") {
                 active = "USER INACTIVE"
                 activeClass = "orange moon icon"
             }
@@ -503,158 +522,152 @@ block content
                 return;
             }
             usersInRecent.push(chatPartnerId);
-            
+
             // if the userID is already in the usersInRecentList, than directly edit the item
             // else, add a new item
             let found = false;
-            for(let i = 0; i < usersInRecentList.length; i++){
-                if(usersInRecentList[i].userId == chatPartnerId){
+            for (let i = 0; i < usersInRecentList.length; i++) {
+                if (usersInRecentList[i].userId == chatPartnerId) {
                     console.log("found user userinRecentList")
                     found = true;
                     break;
                 }
             }
-            for(let i = 0; i < usersInHistory.length; i++){
-                if(usersInHistory[i].userId == chatPartnerId){
+            for (let i = 0; i < usersInHistory.length; i++) {
+                if (usersInHistory[i].userId == chatPartnerId) {
                     console.log("found user userInHistory")
                     found = true;
                     break;
                 }
             }
-            if(found){
+            if (found) {
                 console.log("found user")
                 $(`#listItemChatPartener-${chatPartnerId}`).remove();
                 const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
-                                    <div style="display: flex; flex-direction: row; justify-content: flex-start;">
-                                        <div style="position: relative;">
-                                            <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute; color: white !important"></span>
-                                            <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
-                                            <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="${activeClass}"></i>
-                                        </div>
-                                        <div class="content">
-                                            <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
-                                            <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
-                                        </div>
+                                                        <div style="display: flex; flex-direction: row; justify-content: flex-start;">
+                                                            <div style="position: relative;">
+                                                                <span id="redBubble-${chatPartnerId}" class="w3-badge w3-red" style="z-index:10; position: absolute; color: white !important"></span>
+                                                                <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
+                                                                <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="${activeClass}"></i>
+                                                            </div>
+                                                            <div class="content">
+                                                                <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
+                                                                <div class="description" style="max-width: 180px" id="lastMessage-${chatPartnerId}">${lastmsg}</div>
+                                                            </div>
 
-                                    </div>
-                                    <button id="rightChevronButton" style="margin-left: auto;" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
-                                </div>`;
+                                                        </div>
+                                                        <button id="rightChevronButton${chatPartnerId}" style="margin-left: auto;" class="ui icon right floated mini button" data-chat-partner-id="${chatPartnerId}" onclick="onClickUsername(event)"><i data-chat-partner-id="${chatPartnerId}" class="angle right icon"></i></button>
+                                                    </div>`;
 
                 $('#chatHistory').prepend(listItem);
-            } else{
+            } else {
                 const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
-                                        <div style="display: flex; flex-direction: row; justify-content: flex-start;">
-                                            <div style="position: relative;">
-                                                <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute; color: white !important"></span>  
-                                                <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
-                                                <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;"class="${activeClass}"></i>
-                                            </div>    
-                                            <div class="content">
-                                                <a class="header" href="user/${chatPartnerUsername}">${chatPartnerUsername}</a>
-                                                <div class="description" style="max-width: 180px" id="lastMessage">${lastmsg}</div>
-                                            </div>
-                                        </div>
-                                        <button id="rightChevronButton" style="margin-left: auto;" class="ui icon right floated mini button"><i class="angle right icon"></i></button>
-                                    </div>`;
+                                                            <div style="display: flex; flex-direction: row; justify-content: flex-start;">
+                                                                <div style="position: relative;">
+                                                                    <span id="redBubble-${chatPartnerId}" class="w3-badge w3-red" style="z-index:10; position: absolute; color: white !important"></span>
+                                                                    <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
+                                                                    <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;"class="${activeClass}"></i>
+                                                                </div>
+                                                                <div class="content">
+                                                                    <a class="header" href="user/${chatPartnerUsername}">${chatPartnerUsername}</a>
+                                                                    <div class="description" style="max-width: 180px" id="lastMessage-${chatPartnerId}">${lastmsg}</div>
+                                                                </div>
+                                                            </div>
+                                                            <button id="rightChevronButton${chatPartnerId}" style="margin-left: auto;" class="ui icon right floated mini button" data-chat-partner-id="${chatPartnerId}" onclick="onClickUsername(event)"><i data-chat-partner-id="${chatPartnerId}" class="angle right icon"></i></button>
+                                                        </div>`;
 
-                $('#chatHistory').append(listItem);  
+                $('#chatHistory').append(listItem);
             }
 
 
-           
             usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername});
 
-            await socket.emit("find-partner",{userId: chatPartnerId})
-            await socket.on("partner-pfp",({pfp , userId})=>{
+            await socket.emit("find-partner", {userId: chatPartnerId})
+            await socket.on("partner-pfp", ({pfp, userId}) => {
                 if (pfp != null && userId == chatPartnerId) {
                     let pic = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
-                }
-                else if (userId == chatPartnerId) {
+                } else if (userId == chatPartnerId) {
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
                 }
             })
-            
-            let element = document.getElementById("lastMessage");
-            element.id = chatPartnerId + 'lastMessage';
 
-            element = document.getElementById("redBubble");
-            element.id = chatPartnerId + 'redBubble';
-            $('#' + chatPartnerId + 'redBubble').hide();
-            $('#' + chatPartnerId + 'redBubble').text(0);
+            // let element = document.getElementById("lastMessage");
+            // element.id = chatPartnerId + 'lastMessage';
 
-            element = document.getElementById("rightChevronButton");
-            element.id = chatPartnerId + 'rightChevronButton';
-            document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
+            $(`#redBubble-${chatPartnerId}`).hide();
+            $(`#redBubble-${chatPartnerId}`).text(0);
 
-            $('#' + chatPartnerId + 'redBubble').text(numUnread);
+            // element = document.getElementById("rightChevronButton");
+            // element.id = 'rightChevronButton' + chatPartnerId;
+            // document.getElementById('rightChevronButton'+chatPartnerId).onclick=function(){onClickUsername(chatPartnerId)};
+
+            $(`#redBubble-${chatPartnerId}`).text(numUnread);
             if (numUnread > 0) {
-                $('#' + chatPartnerId + 'redBubble').show();
+                $(`#redBubble-${chatPartnerId}`).show();
             }
         }
 
         // make this the main function to handle adding user to the singular tab -> use messages list, copiedUserList, and usersInHistory
         // make sure to not add the user if already in the list
         // DEALS WITH THE USERS THAT ARE ACTIVE AND HAVE NOT BEEN MESSAGED
-        async function addRestOfUsers(user){
+        async function addRestOfUsers(user) {
             let chatPartnerId = user.userId
             let chatPartnerUsername = user.username
-            
+
             console.log("addRestOfUsers")
             console.log({id: chatPartnerId, name: chatPartnerUsername})
             console.log({selfID: userId, selfName: username})
-            if(chatPartnerId == userId){
+            if (chatPartnerId == userId) {
                 return;
             }
             // check if usersInRecentList has the same userId
-            for(let i = 0; i < usersInRecentList.length; i++){
-                if(usersInRecentList[i].userId == chatPartnerId){
+            for (let i = 0; i < usersInRecentList.length; i++) {
+                if (usersInRecentList[i].userId == chatPartnerId) {
                     return;
                 }
             }
             // check if usersInHistory has the same userId
-            for(let i = 0; i < usersInHistory.length; i++){
-                if(usersInHistory[i].userId == chatPartnerId){
+            for (let i = 0; i < usersInHistory.length; i++) {
+                if (usersInHistory[i].userId == chatPartnerId) {
                     return;
                 }
             }
 
             const listItem = `<div class="item" id="listItemChatPartener-${chatPartnerId}" style="display: flex; flex-direction: row; justify-content: space-between;">
-                                <div style="display: flex; flex-direction: row; justify-content: flex-start;">
-                                    <div style="position: relative;">
-                                        <span id="redBubble" class="w3-badge w3-red" style="z-index:10; position: absolute; color: white !important"></span>
-                                        <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
-                                        <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="green circle icon"></i>
-                                    </div>
+                                                    <div style="display: flex; flex-direction: row; justify-content: flex-start;">
+                                                        <div style="position: relative;">
+                                                            <span id="redBubble-${chatPartnerId}" class="w3-badge w3-red" style="z-index:10; position: absolute; color: white !important"></span>
+                                                            <img class="ui avatar image" id="chatPartnerPFP-${chatPartnerId}" src="" style="margin-left:5px; margin-top:5px">
+                                                            <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="green circle icon"></i>
+                                                        </div>
 
-                                    <div class="content">
-                                        <a class="header" href="http://localhost:3000/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
-                                        <div class="description" style="max-width: 180px" id="lastMessage">Start a Conversation!</div>
-                                    </div>
-                                </div>
-                                <button id="rightChevronButton" style="margin-left: auto;"class="ui icon right floated mini button"><i class="angle right icon"></i></button>
-                            </div>`;
+                                                        <div class="content">
+                                                            <a class="header" href="http://localhost:3000/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
+                                                            <div class="description" style="max-width: 180px" id="lastMessage-${chatPartnerId}">Start a Conversation!</div>
+                                                        </div>
+                                                    </div>
+                                                    <button id="rightChevronButton${chatPartnerId}" style="margin-left: auto;"class="ui icon right floated mini button" data-chat-partner-id="${chatPartnerId}" onclick="onClickUsername(event)"><i data-chat-partner-id="${chatPartnerId}" class="angle right icon"></i></button>
+                                                </div>`;
 
             $('#chatHistory').append(listItem);
             usersInRecentList.push({userId: chatPartnerId, username: chatPartnerUsername});
-            
 
-            await socket.emit("find-partner",{userId: chatPartnerId})
-            await socket.on("partner-pfp",({pfp , userId})=>{
+
+            await socket.emit("find-partner", {userId: chatPartnerId})
+            await socket.on("partner-pfp", ({pfp, userId}) => {
                 if (pfp != null && userId == chatPartnerId) {
                     let pic = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
-                }
-                else if (userId == chatPartnerId) {
+                } else if (userId == chatPartnerId) {
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
                 }
             })
 
-            let element = document.getElementById("rightChevronButton");
-            element.id = chatPartnerId + 'rightChevronButton';
-            document.getElementById(chatPartnerId + 'rightChevronButton').onclick=function(){onClickUsername(chatPartnerId)};
+            // let element = document.getElementById("rightChevronButton");
+            // element.id = 'rightChevronButton' + chatPartnerId;
+            // document.getElementById('rightChevronButton' + chatPartnerId).onclick=function(){onClickUsername(chatPartnerId)};
 
-        
 
         }
 
@@ -692,11 +705,11 @@ block content
                 let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
                 let lastMessage = ""
                 let msgType = chatPartner.content[chatPartner.content.length - 1].msg.type
-           
+
                 if (chatPartner.blocked == chatPartnerId) {
                     blocked.push(chatPartnerId);
                 }
-                
+
                 if (chatPartner.blocked == userId) {
                     isBlocked.push(chatPartnerId);
                 }
@@ -704,7 +717,7 @@ block content
                 if (chatPartner.reported == chatPartnerId) {
                     reported.push(chatPartnerId);
                 }
-                
+
                 if (chatPartner.reported == userId) {
                     isReported.push(chatPartnerId);
                 }
@@ -712,28 +725,29 @@ block content
                 if (chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
                     if (chatPartner.content[chatPartner.content.length - 1].from.userId == userId) { // chat sent
                         lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
-                    }
-                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage" || chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessageAndLetOthersKnow")) {
+                    } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage" || chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessageAndLetOthersKnow")) {
                         lastMessage = "Deleted message"
-                    }
-                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
+                    } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
                         lastMessage = "Unread message"
-                    }
-                    else {
+                    } else {
                         lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
                     }
                 else {
                     lastMessage = "Sent media"
                 }
-                
-                usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
+
+                usersInHistory.push({
+                    userId: chatPartnerId,
+                    username: chatPartnerUsername,
+                    userpfp: chatPartnerPFP
+                });
 
                 numUnread = chatPartner.content.filter(c => c.from.userId == chatPartnerId).filter(c => !c.msg.read).length
 
                 addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType);
             });
 
-    
+
             // First handle all of the users that are messaged.
             // Then handle all of the users that are active but not messaged. - pretty much discover tab
             // Then handle all of the users that are inactive.
@@ -744,7 +758,7 @@ block content
             console.log('copiedUserList')
             console.log(copiedUserList)
 
-
+            if (!copiedUserList || !copiedUserList.length) return;
             copiedUserList.forEach((user) => {
                 console.log('addRestOfUsers')
                 console.log('active user' + user.userId + ' ' + user.username)
@@ -752,12 +766,12 @@ block content
                 //addUserInDiscover(user);
             });
             console.log(usersInHistory)
-        }); 
+        });
 
         // used by userList socket event takes the allConvo.
-        async function allOfTheConversation(allConvo){
+        async function allOfTheConversation(allConvo) {
             console.log("CURR allOfTheConversation")
-            if(!allConvo){
+            if (!allConvo) {
                 return;
             }
             console.log(allConvo)
@@ -766,11 +780,11 @@ block content
                 let chatPartnerId = chatPartner.userIdA == userId ? chatPartner.userIdB : chatPartner.userIdA;
                 let lastMessage = ""
                 let msgType = chatPartner.content[chatPartner.content.length - 1].msg.type
-           
+
                 if (chatPartner.blocked == chatPartnerId) {
                     blocked.push(chatPartnerId);
                 }
-                
+
                 if (chatPartner.blocked == userId) {
                     isBlocked.push(chatPartnerId);
                 }
@@ -778,7 +792,7 @@ block content
                 if (chatPartner.reported == chatPartnerId) {
                     reported.push(chatPartnerId);
                 }
-                
+
                 if (chatPartner.reported == userId) {
                     isReported.push(chatPartnerId);
                 }
@@ -786,28 +800,29 @@ block content
                 if (chatPartner.content[chatPartner.content.length - 1].msg.type == "txt")
                     if (chatPartner.content[chatPartner.content.length - 1].from.userId == userId) { // chat sent
                         lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
-                    }
-                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage" || chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessageAndLetOthersKnow")) {
+                    } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage" || chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessageAndLetOthersKnow")) {
                         lastMessage = "Deleted message"
-                    }
-                    else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
+                    } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
                         lastMessage = "Unread message"
-                    }
-                    else {
+                    } else {
                         lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
                     }
                 else {
                     lastMessage = "Sent media"
                 }
-                
-                usersInHistory.push({userId: chatPartnerId, username: chatPartnerUsername, userpfp: chatPartnerPFP});
+
+                usersInHistory.push({
+                    userId: chatPartnerId,
+                    username: chatPartnerUsername,
+                    userpfp: chatPartnerPFP
+                });
 
                 numUnread = chatPartner.content.filter(c => c.from.userId == chatPartnerId).filter(c => !c.msg.read).length
 
                 addUserInHistory(chatPartnerUsername, lastMessage, chatPartnerId, numUnread, msgType);
             });
 
-    
+
             // First handle all of the users that are messaged.
             // Then handle all of the users that are active but not messaged. - pretty much discover tab
             // Then handle all of the users that are inactive.
@@ -829,7 +844,6 @@ block content
         }
 
 
-
         /*
         function addUserInDiscover(user) {
             let count = 0;
@@ -848,7 +862,7 @@ block content
                     prevRow = count;
                 }
 
-                const userpfpsrc = user.userpfp ? "https://socialsimulation.s3.amazonaws.com/" + user.userpfp : "https://socialsimulation.s3.amazonaws.com/default-pfp.png"; 
+                const userpfpsrc = user.userpfp ? "https://socialsimulation.s3.amazonaws.com/" + user.userpfp : "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
                 // Discover profile
                 const profile = ` <div class="eight wide column">
                                     <div class="ui card" style="margin-bottom:10px">
@@ -860,7 +874,7 @@ block content
                                         </div>
                                     </div>
                                 </div>`
-                
+
                 document.getElementById('row' + prevRow).insertAdjacentHTML('beforeend', profile);
 
                 let element = document.getElementById("profileButton");
@@ -905,35 +919,42 @@ block content
         let chatPartnerUserId = null;
         let chatPartnerPFP = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
 
-        function onClickUsername(userId) {
-            $('#' + userId + 'redBubble').hide();
-            $('#' + userId + 'redBubble').text(0);
-            
-            // find user in online list
-            copiedUserList.forEach((user) => {
-                if (user.userId == userId) {
-                    chatPartnerSocketId = user.socketId;
-                    chatPartnerUsername = user.username;
-                    chatPartnerUserId = user.userId;
-                }
-            });
+        function onClickUsername(event) {
+            const userId = event.target.dataset.chatPartnerId;
+            console.log(userId, 'onClickUsername', event.target)
+            $(`#redBubble-${userId}`).hide();
 
-            // find user in chat history
-            usersInHistory.forEach((user) => {
-                if (user.userId == userId) {
-                    chatPartnerUsername = user.username;
-                    chatPartnerUserId = user.userId;
-                }
-            });
+            $(`#redBubble-${userId}`).text(0);
+            if (copiedUserList && copiedUserList.length) {
+                // find user in online list
+                copiedUserList.forEach((user) => {
+                    if (user.userId == userId) {
+                        chatPartnerSocketId = user.socketId;
+                        chatPartnerUsername = user.username;
+                        chatPartnerUserId = user.userId;
+                    }
+                });
+            }
 
-            socket.emit("find-partner",{userId: chatPartnerUserId})
+            if (usersInHistory && usersInHistory.length) {
 
-            socket.on("partner-pfp",({ pfp, userId})=>{
+                // find user in chat history
+                usersInHistory.forEach((user) => {
+                    if (user.userId == userId) {
+                        chatPartnerUsername = user.username;
+                        chatPartnerUserId = user.userId;
+                    }
+                });
+            }
+
+            socket.emit("find-partner", {userId: chatPartnerUserId})
+
+            socket.on("partner-pfp", ({pfp, userId}) => {
                 if (pfp != null && userId == chatPartnerUserId) {
                     chatPartnerPFP = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
                 }
             })
-            
+
             $("#chatPartnerName").text(chatPartnerUsername);
             $('#messages').empty();
             $('#messageInput').show();
@@ -942,9 +963,9 @@ block content
             // after we get the chat partner info we want to get all messages
             socket.emit('get-messages', {
                 to: {
-                        username: chatPartnerUsername,
-                        userId: chatPartnerUserId,
-                    }
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
             })
         }
 
@@ -954,7 +975,10 @@ block content
         let nudge3MessageId = null;
         let nudge1MessageId = null;
 
-        document.getElementById('nudge1Button1').onclick=function(){onClickNudge1Button1()};
+        document.getElementById('nudge1Button1').onclick = function () {
+            onClickNudge1Button1()
+        };
+
         function onClickNudge1Button1() {
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal2').modal('hide');
@@ -969,7 +993,10 @@ block content
             });
         }
 
-        document.getElementById('nudge1Button2').onclick=function(){onClickNudge1Button2()};
+        document.getElementById('nudge1Button2').onclick = function () {
+            onClickNudge1Button2()
+        };
+
         function onClickNudge1Button2() {
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal2').modal('hide');
@@ -983,7 +1010,11 @@ block content
                 }
             });
         }
-        document.getElementById('nudge1Button3').onclick=function(){onClickNudge1Button3()};
+
+        document.getElementById('nudge1Button3').onclick = function () {
+            onClickNudge1Button3()
+        };
+
         function onClickNudge1Button3() {
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal2').modal('hide');
@@ -998,7 +1029,10 @@ block content
             });
         }
 
-        document.getElementById('nudge3Button1').onclick=function(){onClickNudge3Button1()};
+        document.getElementById('nudge3Button1').onclick = function () {
+            onClickNudge3Button1()
+        };
+
         function onClickNudge3Button1() {
             $('#nudge3Card').hide();
             sendMessage("I don't feel comfortable sharing that info");
@@ -1011,7 +1045,11 @@ block content
                 }
             });
         }
-        document.getElementById('nudge3Button2').onclick=function(){onClickNudge3Button2()};
+
+        document.getElementById('nudge3Button2').onclick = function () {
+            onClickNudge3Button2()
+        };
+
         function onClickNudge3Button2() {
             $('#nudge3Card').hide();
             sendMessage("Sorry, I don't know you");
@@ -1024,7 +1062,11 @@ block content
                 }
             });
         }
-        document.getElementById('nudge3Button3').onclick=function(){onClickNudge3Button3()};
+
+        document.getElementById('nudge3Button3').onclick = function () {
+            onClickNudge3Button3()
+        };
+
         function onClickNudge3Button3() {
             $('#nudge3Card').hide();
             sendMessage("I don't think it's appropriate to ask that");
@@ -1037,7 +1079,11 @@ block content
                 }
             });
         }
-        document.getElementById('nudge3Button4').onclick=function(){onClickNudge3Button4()};
+
+        document.getElementById('nudge3Button4').onclick = function () {
+            onClickNudge3Button4()
+        };
+
         function onClickNudge3Button4() {
             $('#nudge3Card').hide();
             socket.emit("nudge-reaction", {
@@ -1050,7 +1096,10 @@ block content
             });
         }
 
-        document.getElementById('nudge3Button5').onclick=function(){onClickNudge3Button5()};
+        document.getElementById('nudge3Button5').onclick = function () {
+            onClickNudge3Button5()
+        };
+
         function onClickNudge3Button5() {
             $('#nudge3Card').hide();
             socket.emit("nudge-reaction", {
@@ -1065,8 +1114,8 @@ block content
 
         socket.on("blocked", (msg) => { // this user blocked
             const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has blocked you</b></p>
-                        </div>`
+                                                <p><b>${chatPartnerUsername} has blocked you</b></p>
+                                            </div>`
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
             $('#messageInput').hide();
@@ -1075,8 +1124,8 @@ block content
 
         socket.on("block-success", (msg) => { // blocked chat partner
             const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has been blocked and reported</b></p>
-                        </div>`
+                                                <p><b>${chatPartnerUsername} has been blocked and reported</b></p>
+                                            </div>`
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
             $('#messageInput').hide();
@@ -1085,8 +1134,8 @@ block content
 
         socket.on("reported", (msg) => { // this user reported
             const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has reported you</b></p>
-                        </div>`
+                                                <p><b>${chatPartnerUsername} has reported you</b></p>
+                                            </div>`
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
             location.reload()
@@ -1094,15 +1143,15 @@ block content
 
         socket.on("report-success", (msg) => { // reported chat partner
             const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has been reported</b></p>
-                        </div>`
+                                                <p><b>${chatPartnerUsername} has been reported</b></p>
+                                            </div>`
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
             location.reload()
         });
 
         async function sendMessage(msg) {
-            await socket.emit('send-message', { 
+            await socket.emit('send-message', {
                 msg: {
                     type: "txt",
                     body: msg
@@ -1117,7 +1166,7 @@ block content
                     username: chatPartnerUsername,
                     userId: chatPartnerUserId,
                     socketId: chatPartnerSocketId
-                } 
+                }
             });
         }
 
@@ -1128,69 +1177,46 @@ block content
 
         const explicitContent1 = "explicitContent1.png";
 
-        $('#messageInput')[0].addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const input = $('#input')[0]; 
-            let riskyScenario = null;
-            let nudgeType = null;
-            if (input.value) {
-                if (input.value == infoBreach1) {
-                    console.log(infoBreach1)
-                    riskyScenario = "infoBreach1"
-                    nudgeType = "abstinence";
-                }
-                else if (input.value == infoBreach2) {
-                    console.log(infoBreach2)
-                    riskyScenario = "infoBreach2"
-                    nudgeType = "sensitivityFilter";
-                }
-                else if (input.value == infoBreach3) {
-                    console.log(infoBreach3)
-                    riskyScenario = "infoBreach3"
-                    nudgeType = "guidedActions";
-                }
-                else if(input.value == infoBreach3New){
-                    console.log(infoBreach3New)
-                    riskyScenario = "infoBreach3New"
-                    //nudgeType = "userActions";
-                    nudgeType = "sensitivityFilter"
-                }
-
-                $('#nudge3Card').hide();
-                console.log('send-message')
-                e.stopPropagation();
-                await socket.emit('send-message', { 
-                    msg: {
-                        type: "txt",
-                        body: input.value
-                    },
-                    nudge: {
-                        nudgeShown: nudgeShown,
-                        riskyScenario: riskyScenario,
-                        nudgeType: nudgeType,
-                        userAction: null,
-                    },
-                    to: {
-                        username: chatPartnerUsername,
-                        userId: chatPartnerUserId,
-                        socketId: chatPartnerSocketId
-                    } 
-                });
-                input.value = '';
-            }
-
-            let file = uploadImage();
-            
-            if (file) {
-                if (file.type.includes("image")) {
-                    if (file.name == explicitContent1) {
-                        riskyScenario = "explicitContent1"
+        $(() => {
+            // fix bug1
+            console.log('page load form addEventListener')
+            $('#messageInput')[0].addEventListener('submit', async function (e) {
+                e.preventDefault();
+                console.log('emit message', {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                    socketId: chatPartnerSocketId
+                })
+                const input = $('#input')[0];
+                let riskyScenario = null;
+                let nudgeType = null;
+                if (input.value) {
+                    if (input.value == infoBreach1) {
+                        console.log(infoBreach1)
+                        riskyScenario = "infoBreach1"
                         nudgeType = "abstinence";
+                    } else if (input.value == infoBreach2) {
+                        console.log(infoBreach2)
+                        riskyScenario = "infoBreach2"
+                        nudgeType = "sensitivityFilter";
+                    } else if (input.value == infoBreach3) {
+                        console.log(infoBreach3)
+                        riskyScenario = "infoBreach3"
+                        nudgeType = "guidedActions";
+                    } else if (input.value == infoBreach3New) {
+                        console.log(infoBreach3New)
+                        riskyScenario = "infoBreach3New"
+                        //nudgeType = "userActions";
+                        nudgeType = "sensitivityFilter"
                     }
-                    socket.emit('send-message', { 
+
+                    $('#nudge3Card').hide();
+                    console.log('send-message')
+                    e.stopPropagation();
+                    await socket.emit('send-message', {
                         msg: {
-                            type: "img",
-                            body: {path: file, filename: file.name}
+                            type: "txt",
+                            body: input.value
                         },
                         nudge: {
                             nudgeShown: nudgeShown,
@@ -1202,46 +1228,74 @@ block content
                             username: chatPartnerUsername,
                             userId: chatPartnerUserId,
                             socketId: chatPartnerSocketId
-                        } 
+                        }
                     });
-                    document.getElementById("sending").style.display = "block"
-                    document.getElementById('cancelImageUpload').style.display = 'none';
+                    input.value = '';
                 }
-                else if (file.type.includes("video")) {
-                    socket.emit('send-message', { 
-                        msg: {
-                            type: "vid",
-                            body: {path: file, filename: file.name}
-                        },
-                        to: {
-                            username: chatPartnerUsername,
-                            userId: chatPartnerUserId,
-                            socketId: chatPartnerSocketId
-                        } 
-                    });
-                    document.getElementById("sending").style.display = "block"
+
+                let file = uploadImage();
+
+                if (file) {
+                    if (file.type.includes("image")) {
+                        if (file.name == explicitContent1) {
+                            riskyScenario = "explicitContent1"
+                            nudgeType = "abstinence";
+                        }
+                        socket.emit('send-message', {
+                            msg: {
+                                type: "img",
+                                body: {path: file, filename: file.name}
+                            },
+                            nudge: {
+                                nudgeShown: nudgeShown,
+                                riskyScenario: riskyScenario,
+                                nudgeType: nudgeType,
+                                userAction: null,
+                            },
+                            to: {
+                                username: chatPartnerUsername,
+                                userId: chatPartnerUserId,
+                                socketId: chatPartnerSocketId
+                            }
+                        });
+                        document.getElementById("sending").style.display = "block"
+                        document.getElementById('cancelImageUpload').style.display = 'none';
+                    } else if (file.type.includes("video")) {
+                        socket.emit('send-message', {
+                            msg: {
+                                type: "vid",
+                                body: {path: file, filename: file.name}
+                            },
+                            to: {
+                                username: chatPartnerUsername,
+                                userId: chatPartnerUserId,
+                                socketId: chatPartnerSocketId
+                            }
+                        });
+                        document.getElementById("sending").style.display = "block"
+                    }
                 }
-            }
-        });
+            });
+        })
 
         // upload image
-        function uploadImage () {
+        function uploadImage() {
             let pictureFile;
-            
+
             if (fileupload.files[0]) {
 
                 if (fileupload.files[0].size >= 10000000) {
                     return null;
                 }
-                    pictureFile = fileupload.files[0]
-                    document.getElementById('fileupload').value = "";
-                    return pictureFile;
+                pictureFile = fileupload.files[0]
+                document.getElementById('fileupload').value = "";
+                return pictureFile;
             }
             return null;
         }
 
         // Event listener for the cross button
-        document.getElementById('cancelImageUpload').addEventListener('click', function() {
+        document.getElementById('cancelImageUpload').addEventListener('click', function () {
             // Hide the image preview and the cross button
             document.getElementById('outputImage').style.display = 'none';
             this.style.display = 'none';
@@ -1253,7 +1307,7 @@ block content
             const image = document.getElementById('outputImage');
             const cancelBtn = document.getElementById('cancelImageUpload');
             const reader = new FileReader();
- 
+
             if (fileupload.files[0]) {
 
                 if (fileupload.files[0].size >= 10000000) {
@@ -1264,19 +1318,19 @@ block content
 
                 if (fileupload.files[0].type.includes("image")) {
                     reader.readAsDataURL(fileupload.files[0])
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         const result = reader.result;
-                        image.src = result;  
+                        image.src = result;
                         image.style.display = "block";
 
-                        image.onload = function() {
+                        image.onload = function () {
                             cancelBtn.style.display = 'block';
                             cancelBtn.style.position = 'absolute';
                             cancelBtn.style.left = `${image.offsetLeft + image.offsetWidth}px`;
                             cancelBtn.style.top = `${image.offsetTop}px`;
                         };
                     };
-                    
+
                 } else {
                     // Hide the cancel button if no image is selected or the file is not an image
                     image.style.display = 'none';
@@ -1285,9 +1339,9 @@ block content
 
                 if (fileupload.files[0].type.includes("video")) {
                     reader.readAsDataURL(fileupload.files[0])
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         const result = reader.result;
-                        image.src = "https://cdn.iconscout.com/icon/free/png-256/video-file-85-1120664.png";  
+                        image.src = "https://cdn.iconscout.com/icon/free/png-256/video-file-85-1120664.png";
                         image.style.display = "block"
                     };
                 }
@@ -1299,20 +1353,25 @@ block content
             let messageIds = [];
             for (let i = 0; i < messageList.length; i++) {
                 if (messageList[i].from.userId == userId) {
-                    addChatSentMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id );
+                    addChatSentMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id);
                     loadReactions(messageList[i].msg.reactions, messageList[i]._id)
-                }
-                else  {
+                } else {
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach1) {
-                        document.getElementById('dismissModal1Button').onclick=function(){onClickShowMeModal(messageList[i])};
-                        document.getElementById('blockModal1Button').onclick=function(){blockUserModal1(messageList[i])}
+                        document.getElementById('dismissModal1Button').onclick = function () {
+                            onClickShowMeModal(messageList[i])
+                        };
+                        document.getElementById('blockModal1Button').onclick = function () {
+                            blockUserModal1(messageList[i])
+                        }
                         //document.getElementById('reportButton').onclick=function(){reportUserModal1(messageList[i])}
-                        document.getElementById('leaveModalButton').onclick=function(){leaveUserModal(messageList[i])}
+                        document.getElementById('leaveModalButton').onclick = function () {
+                            leaveUserModal(messageList[i])
+                        }
                         $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
                         $('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
                         //$('#nudge3Card').modal('setting', 'closable', false).modal('show');
                         nudge1MessageId = messageList[i]._id;
-                        
+
                     }
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].nudge.riskyScenario == "explicitContent1") {
                         console.log('link nudge')
@@ -1322,33 +1381,46 @@ block content
                         $('#nudge3Card').modal('setting', 'closable', false).show();
                         nudge3MessageId = messageList[i]._id;
                     }
-                    if(nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach3New){
-                        
-                        document.getElementById('continueModal').onclick=function(){onClickShowMeModal(messageList[i])}
-                        document.getElementById('dismissNudge2NewModal').onclick=function(){onClickShowMeModal(messageList[i])}
-                        document.getElementById('leaveNudge2NewModal').onclick=function(){leaveUserModal(messageList[i])}
-                        document.getElementById('leaveAndBlockNudge2NewModal').onclick=function(){blockUserModal1(messageList[i])}
+                    if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach3New) {
+
+                        document.getElementById('continueModal').onclick = function () {
+                            onClickShowMeModal(messageList[i])
+                        }
+                        document.getElementById('dismissNudge2NewModal').onclick = function () {
+                            onClickShowMeModal(messageList[i])
+                        }
+                        document.getElementById('leaveNudge2NewModal').onclick = function () {
+                            leaveUserModal(messageList[i])
+                        }
+                        document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
+                            blockUserModal1(messageList[i])
+                        }
                         //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
                         $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
-                        
+
                     }
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach2) {
                         //- document.getElementById('newNudge4ModalViewButton').onclick=function(){onClickShowMeModal(messageList[i])};
-                        document.getElementById('dismissNudge4NewModal').onclick=function(){onClickShowMeModal(messageList[i])}
-                        document.getElementById('newNudge4ModalDeleteButton').onclick=function(){onClickNewDeleteButton(messageList[i])};
-                        document.getElementById('newNudge4ModalDeleteAndUpdateButton').onclick=function(){onClickNewDeleteAndUpdateButton(messageList[i])};
+                        document.getElementById('dismissNudge4NewModal').onclick = function () {
+                            onClickShowMeModal(messageList[i])
+                        }
+                        document.getElementById('newNudge4ModalDeleteButton').onclick = function () {
+                            onClickNewDeleteButton(messageList[i])
+                        };
+                        document.getElementById('newNudge4ModalDeleteAndUpdateButton').onclick = function () {
+                            onClickNewDeleteAndUpdateButton(messageList[i])
+                        };
                         $('#newNudge4Modal').modal('setting', 'closable', false).modal('show')
                         console.log('newNudge4Modal show')
-                        
+
                         //addNudgeType2(messageList[i]);
-                    }
-                    else {
-                        
-                        if(!(nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach2)){
-                            console.log('adding message: ' +  messageList[i].msg.body )
+                    } else {
+
+                        if (!(nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach2)) {
+                            console.log('adding message: ' + messageList[i].msg.body)
                             addChatReceivedMessage(messageList[i].msg, messageList[i].msg.time, messageList[i]._id, messageList[i].from.userId, messageList[i].nudge, false);
                             loadReactions(messageList[i].msg.reactions, messageList[i]._id)
-                        } else{
+                        } else {
                             console.log('not adding link explicit')
                         }
                     }
@@ -1367,8 +1439,8 @@ block content
 
             if (blocked.includes(chatPartnerUserId)) {
                 const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has been blocked</b></p>
-                        </div>`
+                                                <p><b>${chatPartnerUsername} has been blocked</b></p>
+                                            </div>`
                 $('#messages').append(mes);
                 $('#messages').scrollTop($('#messages')[0].scrollHeight);
                 $('#messageInput').hide();
@@ -1376,8 +1448,8 @@ block content
 
             if (isBlocked.includes(chatPartnerUserId)) {
                 const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has blocked you</b></p>
-                        </div>`
+                                                <p><b>${chatPartnerUsername} has blocked you</b></p>
+                                            </div>`
                 $('#messages').append(mes);
                 $('#messages').scrollTop($('#messages')[0].scrollHeight);
                 $('#messageInput').hide();
@@ -1385,8 +1457,8 @@ block content
 
             if (reported.includes(chatPartnerUserId)) {
                 const mes = `<div class="centered row"  style="padding-top:6px; padding-bottom:6px">
-                            <p><b>${chatPartnerUsername} has been reported</b></p>
-                        </div>`
+                                                <p><b>${chatPartnerUsername} has been reported</b></p>
+                                            </div>`
                 $('#messages').append(mes);
                 $('#messages').scrollTop($('#messages')[0].scrollHeight);
             }
@@ -1402,12 +1474,17 @@ block content
             $('#letOthersKnowAbout').modal('hide');
         }
 
-        document.getElementById('dismissModal2Button').onclick=function(){onClickDismissButton()};
+        document.getElementById('dismissModal2Button').onclick = function () {
+            onClickDismissButton()
+        };
 
-        document.getElementById('closeNudge3').onclick=function(){onClickCloseNudge3Button()};
+        document.getElementById('closeNudge3').onclick = function () {
+            onClickCloseNudge3Button()
+        };
+
         function onClickCloseNudge3Button() {
             $('#nudge3Card').hide();
-        } 
+        }
 
         socket.on("receive-message", async (msg) => {
             // update latest message in recent chat history
@@ -1417,20 +1494,16 @@ block content
 
             if (msg.from.userId == userId) {
                 if (msg.msg.type == "img" || msg.msg.type == "vid") {
-                    $('#' + partnerId + 'lastMessage').text("Sent media");
+                    $(`#lastMessage-${partnerId}`).text("Sent media");
+                } else {
+                    $(`#lastMessage-${partnerId}`).text(msg.msg.body);
                 }
-                else {
-                    $('#' + partnerId + 'lastMessage').text(msg.msg.body);
-                }
-            }
-            else if (msg.msg.type == "txt" && msg.nudge.nudgeType == "sensitivityFilter" && msg.nudge.userAction == "") {
-                $('#' + partnerId + 'lastMessage').text("Unread message");
-            }
-            else if (msg.msg.type == "txt") {
-                $('#' + partnerId + 'lastMessage').text(msg.msg.body);
-            }
-            else {
-                $('#' + partnerId + 'lastMessage').text("Sent media");
+            } else if (msg.msg.type == "txt" && msg.nudge.nudgeType == "sensitivityFilter" && msg.nudge.userAction == "") {
+                $(`#lastMessage-${partnerId}`).text("Unread message");
+            } else if (msg.msg.type == "txt") {
+                $(`#lastMessage-${partnerId}`).text(msg.msg.body);
+            } else {
+                $(`#lastMessage-${partnerId}`).text("Sent media");
             }
 
             partnerUsername = msg.from.username == username ? msg.to.username : msg.from.username;
@@ -1445,11 +1518,10 @@ block content
             if (userInDiscover) {
                 if (msg.to.userId == userId) {
                     addUserInHistory(partnerUsername, msg.msg.body, partnerId, 1, msg.msg.type);
-                }
-                else {
+                } else {
                     addUserInHistory(partnerUsername, msg.msg.body, partnerId, 0, msg.msg.type);
                 }
-                
+
                 //$('#recentButton').show();
                 //onClickRecentButton();
 
@@ -1457,15 +1529,20 @@ block content
             }
             if (msg.from.userId == userId) {
                 addChatSentMessage(msg.msg, msg.msg.time, msg._id);
-            }
-            else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
+            } else if (msg.to.userId == userId && msg.from.userId == chatPartnerUserId) {
                 if (nudgeShown && msg.msg.body == infoBreach1) {
                     console.log(infoBreach1)
                     nudge1NewShown = true;
-                    document.getElementById('dismissModal1Button').onclick=function(){onClickShowMeModal(msg)};
-                    document.getElementById('blockModal1Button').onclick=function(){blockUserModal1(msg)}
+                    document.getElementById('dismissModal1Button').onclick = function () {
+                        onClickShowMeModal(msg)
+                    };
+                    document.getElementById('blockModal1Button').onclick = function () {
+                        blockUserModal1(msg)
+                    }
                     //document.getElementById('reportButton').onclick=function(){reportUserModal1(msg)}
-                    document.getElementById('leaveModalButton').onclick=function(){leaveUserModal(msg)}
+                    document.getElementById('leaveModalButton').onclick = function () {
+                        leaveUserModal(msg)
+                    }
                     $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
                     $('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
                     nudge1MessageId = msg._id;
@@ -1481,28 +1558,40 @@ block content
                     // deals with newNudge4 buttons
                     console.log('newNudge4Modal show')
                     nudge2NewShown = true;
-                    document.getElementById('newNudge4ModalViewButton').onclick=function(){onClickShowMeModal(msg)};
-                    document.getElementById('newNudge4ModalDeleteButton').onclick=function(){onClickNewDeleteButton(msg)};
-                    document.getElementById('newNudge4ModalDeleteAndUpdateButton').onclick=function(){onClickNewDeleteAndUpdateButton(msg)};
+                    document.getElementById('newNudge4ModalViewButton').onclick = function () {
+                        onClickShowMeModal(msg)
+                    };
+                    document.getElementById('newNudge4ModalDeleteButton').onclick = function () {
+                        onClickNewDeleteButton(msg)
+                    };
+                    document.getElementById('newNudge4ModalDeleteAndUpdateButton').onclick = function () {
+                        onClickNewDeleteAndUpdateButton(msg)
+                    };
                     $('#newNudge4Modal').modal('setting', 'closable', false).modal('show')
-                    
+
                 }
-                if (nudgeShown && msg.msg.body == infoBreach3New){
+                if (nudgeShown && msg.msg.body == infoBreach3New) {
                     console.log(infoBreach3New)
-                    document.getElementById('continueModal').onclick=function(){onClickShowMeModal(msg)}
-                    document.getElementById('dismissNudge2NewModal').onclick=function(){onClickShowMeModal(msg)}
-                    document.getElementById('leaveNudge2NewModal').onclick=function(){leaveUserModal(msg)}
-                    document.getElementById('leaveAndBlockNudge2NewModal').onclick=function(){blockUserModal1(msg)}
+                    document.getElementById('continueModal').onclick = function () {
+                        onClickShowMeModal(msg)
+                    }
+                    document.getElementById('dismissNudge2NewModal').onclick = function () {
+                        onClickShowMeModal(msg)
+                    }
+                    document.getElementById('leaveNudge2NewModal').onclick = function () {
+                        leaveUserModal(msg)
+                    }
+                    document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
+                        blockUserModal1(msg)
+                    }
                     //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
                     $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
-                }
-
-                else {
+                } else {
                     console.log(nudge2NewShown, nudge1NewShown)
-                    if(!nudge2NewShown && !nudge1NewShown){
-                        console.log('adding adding message: ' +  msg.msg.body)
+                    if (!nudge2NewShown && !nudge1NewShown) {
+                        console.log('adding adding message: ' + msg.msg.body)
                         addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
-                    } else{
+                    } else {
                         console.log('not adding the bad link')
                         nudge2NewShown = false;
                         nudge1NewShown = false;
@@ -1515,20 +1604,19 @@ block content
                         userId: chatPartnerUserId,
                     }
                 });
-            }
-            else if (msg.to.userId == userId) {
-                console.log("updating", Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
-                $('#' + msg.from.userId + 'redBubble').text(Number($('#' + msg.from.userId + 'redBubble').text()) + 1);
-                $('#' + msg.from.userId + 'redBubble').show();
+            } else if (msg.to.userId == userId) {
+
+                $(`#redBubble-${msg.from.userId}`).text(Number($(`#redBubble-${msg.from.userId}`).text()) + 1);
+
+                $(`#redBubble-${msg.from.userId}`).show();
             }
 
             document.getElementById("outputImage").style.display = "none"
             document.getElementById("sending").style.display = "none"
             document.getElementById("outputImage").src = "#"
         });
-        
 
-        
+
         function onClickShowMeModal(msg) {
             console.log("show me")
             onClickDismissButton();
@@ -1540,12 +1628,12 @@ block content
                     userId: chatPartnerUserId,
                 }
             });
-            $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
+            $(`#lastMessage-${chatPartnerUserId}`).text(msg.msg.body);
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
         }
 
         // blocks user based upon msg for nudge 1
-        function blockUserModal1(msg){
+        function blockUserModal1(msg) {
             onClickDismissButton()
             socket.emit("nudge-reaction", {
                 messageId: msg._id,
@@ -1558,7 +1646,7 @@ block content
 
         }
 
-        function reportUserModal1(msg){
+        function reportUserModal1(msg) {
             onClickDismissButton()
             socket.emit("nudge-reaction", {
                 messageId: msg._id,
@@ -1571,7 +1659,7 @@ block content
 
         }
 
-        function leaveUserModal(msg){
+        function leaveUserModal(msg) {
             onClickDismissButton();
             socket.emit("nudge-reaction", {
                 messageId: msg._id,
@@ -1589,10 +1677,9 @@ block content
             let currentReaction;
 
             // get current reaction of message
-            if ( person == "self") {
+            if (person == "self") {
                 currentReaction = document.getElementById(`${messageID}-reactArea2`).innerHTML;
-            }
-            else {
+            } else {
                 currentReaction = document.getElementById(`${messageID}-reactArea1`).innerHTML;
             }
 
@@ -1608,23 +1695,23 @@ block content
                 reactionType: reactionType,
                 reactions: msg.reactions,
                 to: {
-                        username: chatPartnerUsername,
-                        userId: chatPartnerUserId,
-                        socketId: chatPartnerSocketId
-                } 
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                    socketId: chatPartnerSocketId
+                }
             });
             document.getElementById(`${messageID}-react`).style.display = "none"
         }
 
-        socket.on('receive-reaction',({reactions, messageID, reactionType, person}) => {
+        socket.on('receive-reaction', ({reactions, messageID, reactionType, person}) => {
             let emoji = "none";
-            emoji = textToEmoji(reactionType) 
+            emoji = textToEmoji(reactionType)
 
             if (person == "self") {
                 let selfElement = document.getElementById(`${messageID}-reactArea2`);
                 selfElement.innerHTML = `${emoji}`;
             } else {
-                let otherElement= document.getElementById(`${messageID}-reactArea1`);
+                let otherElement = document.getElementById(`${messageID}-reactArea1`);
                 otherElement.innerHTML = `${emoji}`;
             }
         })
@@ -1639,42 +1726,34 @@ block content
             selfElement.innerHTML = `${selfEmoji}`;
 
             otherEmoji = textToEmoji(reactions.other)
-            let otherElement= document.getElementById(`${messageID}-reactArea1`);
+            let otherElement = document.getElementById(`${messageID}-reactArea1`);
             otherElement.innerHTML = `${otherEmoji}`;
         }
 
         function textToEmoji(reaction) {
             if (reaction == "thumbsUp") {
-                    return "👍" 
-            }
-            else if (reaction == "thumbsDown") {
+                return "👍"
+            } else if (reaction == "thumbsDown") {
                 return "👎"
-            }
-            else if (reaction == "like") {
-                    return "❤️"
-            }
-            else if (reaction == "laugh") {
+            } else if (reaction == "like") {
+                return "❤️"
+            } else if (reaction == "laugh") {
                 return "😂"
-            }
-            else if (reaction == "none") {
+            } else if (reaction == "none") {
                 return ""
             }
         }
 
         function emojiToText(reaction) {
             if (reaction == "👍") {
-                    return "thumbsUp" 
-            }
-            else if (reaction == "👎") {
+                return "thumbsUp"
+            } else if (reaction == "👎") {
                 return "thumbsDown"
-            }
-            else if (reaction == "❤️") {
-                    return "like"
-            }
-            else if (reaction == "😂") {
+            } else if (reaction == "❤️") {
+                return "like"
+            } else if (reaction == "😂") {
                 return "laugh"
-            }
-            else if (reaction == "") {
+            } else if (reaction == "") {
                 return "none"
             }
         }
@@ -1707,7 +1786,7 @@ block content
 
         //-     let fixedDate = `1970-01-01T${hours}:${timeParts[2]}:${timeParts[3]}Z`;
         //-     console.log("fixedDate", fixedDate);
-            
+
         //-     let date = new Date(fixedDate);
         //-     console.log("date", date);
         //-     time = date.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
@@ -1740,10 +1819,10 @@ block content
 
             let fixedDate = `1970-01-01T${hours}:${timeParts[2]}:${timeParts[3]}Z`;
             console.log("fixedDate", fixedDate);
-            
+
             let date = new Date(fixedDate);
             console.log("date", date);
-            time = date.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
+            time = date.toLocaleTimeString('en-US', {hour12: true, hour: '2-digit', minute: '2-digit'});
             console.log("time2", time);
 
             // Extracting just the HH:MM part
@@ -1758,51 +1837,57 @@ block content
 
             if (msg.type == "txt") {
                 msgType = `<p>${msg.body}</p>`
-                
-            }
-            else if (msg.type == "img") {
-                 msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
-            }
-            else if (msg.type == "vid") {
+
+            } else if (msg.type == "img") {
+                msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+            } else if (msg.type == "vid") {
                 msgType = `<video width="200" style="border-radius:6px" controls><source src="https://socialsimulation.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
             // reaction box
-            const react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:20%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
-                            top:-10px; right:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
-                            <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
-                            <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
-                            <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
-                            <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
-                        </div>`
+            const react = `<div  class="reactbox" tabindex="-1" id="${id}-react" div style="width:50%; height:20%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute;
+                                                top:-10px; right:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
+                                                <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
+                                                <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
+                                                <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
+                                                <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
+                                            </div>`
 
             const mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
-                            <div class="right floated right aligned seven wide column">
-                            ${react}
-                            <div class="ui mini blue compact message" id="${id}">
-                                ${msgType}
-                                <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; left:2px;"></div> 
-                                    <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; left:14px;"></div>
-                            </div>
-                            <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
-                            </div>
-                        </div>`
+                                                <div class="right floated right aligned seven wide column">
+                                                ${react}
+                                                <div class="ui mini blue compact message" id="${id}">
+                                                    ${msgType}
+                                                    <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; left:2px;"></div>
+                                                        <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; left:14px;"></div>
+                                                </div>
+                                                <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
+                                                </div>
+                                            </div>`
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
 
             // on click actions for showing reaction box
             $(`#${id}`).on('click', function () {
-                $(`#${id}-react`).css('display','flex').focus();
+                $(`#${id}-react`).css('display', 'flex').focus();
             });
             // when the user clicks outside of reaction box, stop displaying it
             $(`#${id}-react`).on('focusout', function () {
-                $(`#${id}-react`).css('display','none');
+                $(`#${id}-react`).css('display', 'none');
             });
 
             // onclick actions for reactions
-            document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "self", "thumbsUp", id)};
-            document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "self", "thumbsDown", id)};
-            document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "self", "like", id)};
-            document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "self", "laugh", id)};
+            document.getElementById(`${id}-thumbsup`).onclick = function () {
+                sendReaction(msg, "self", "thumbsUp", id)
+            };
+            document.getElementById(`${id}-thumbsdown`).onclick = function () {
+                sendReaction(msg, "self", "thumbsDown", id)
+            };
+            document.getElementById(`${id}-like`).onclick = function () {
+                sendReaction(msg, "self", "like", id)
+            };
+            document.getElementById(`${id}-laugh`).onclick = function () {
+                sendReaction(msg, "self", "laugh", id)
+            };
         }
 
         function addChatReceivedMessage(msg, time, id, user, nudge, messageDeleted) {
@@ -1810,69 +1895,75 @@ block content
             let msgType = "";
             if (msg.type == "txt") {
                 msgType = `<p>${msg.body}</p>`
-                if (messageDeleted || nudge.nudgeType == "sensitivityFilter" && (nudge.userAction == "deleteMessage" || nudge.userAction == "deleteMessageAndLetOthersKnow" )) {
+                if (messageDeleted || nudge.nudgeType == "sensitivityFilter" && (nudge.userAction == "deleteMessage" || nudge.userAction == "deleteMessageAndLetOthersKnow")) {
                     msgType = `<p><b>deleted message</b></p>`
                 }
-            }
-            else if (msg.type == "img") {
-                 msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
-            }
-            else if (msg.type == "vid") {
+            } else if (msg.type == "img") {
+                msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+            } else if (msg.type == "vid") {
                 msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://socialsimulation.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
 
             // reaction box
-            const react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:20%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute; 
-                        top:-10px; left:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
-                        <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
-                        <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
-                        <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
-                        <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
-                    </div>`
+            const react = `<div tabindex="-1"  class="reactbox" id="${id}-react" div style="width:50%; height:20%; border-radius:23px; background-color:white; border: 2px solid grey; position:absolute;
+                                            top:-10px; left:23px; z-index:100; display:none; justify-content: space-between; align-items:center; padding-left:12px; padding-right:12px;">
+                                            <div id="${id}-thumbsup" style="cursor:pointer; user-select:none;">👍</div>
+                                            <div id="${id}-thumbsdown" style="cursor:pointer; user-select:none;">👎</div>
+                                            <div id="${id}-like" style="cursor:pointer; user-select:none;">❤️</div>
+                                            <div id="${id}-laugh" style="cursor:pointer; user-select:none;">😂</div>
+                                        </div>`
 
             const mes = ` <div class="row"  style="padding-top:6px; padding-bottom:6px">
-                            <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image chatPartnerMessagePFP-${user}" id="" src=""/></div>
-                            <div class="seven wide column">
-                                ${react}
-                            <div class="ui mini compact message" id="${id}">
-                                ${msgType}
-                                <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; right:2px;"></div> 
-                                <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; right:14px;"></div> 
-                            </div>
+                                                <div class="right aligned one wide column" style="padding:0!important"><img class="ui avatar image chatPartnerMessagePFP-${user}" id="" src=""/></div>
+                                                <div class="seven wide column">
+                                                    ${react}
+                                                <div class="ui mini compact message" id="${id}">
+                                                    ${msgType}
+                                                    <div id="${id}-reactArea1" style="border-radius:24px; background-color:white; position:absolute; right:2px;"></div>
+                                                    <div id="${id}-reactArea2" style="border-radius:24px; background-color:white; position:absolute; right:14px;"></div>
+                                                </div>
 
-                            <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
-                            </div>
-                        </div>`
+                                                <p style="font-size:10px; margin-top:-8px">${formatTime(time)}</p>
+                                                </div>
+                                            </div>`
             $('#messages').append(mes);
             $('#messages').scrollTop($('#messages')[0].scrollHeight);
 
             const x = document.getElementsByClassName(`chatPartnerMessagePFP-${user}`);
 
-            for(i=0; i<x.length; i++){
+            for (i = 0; i < x.length; i++) {
                 x[i].src = document.getElementById(`chatPartnerPFP-${user}`).src;
             }
-            
+
             // on click actions for showing reaction box
             $(`#${id}`).on('click', function () {
-                $(`#${id}-react`).css('display','flex').focus();
+                $(`#${id}-react`).css('display', 'flex').focus();
             });
 
             // when the user clicks outside of reaction box, stop displaying it
             $(`#${id}-react`).on('focusout', function () {
-                $(this).css('display','none');
+                $(this).css('display', 'none');
             });
 
             // onclick actions for reactions
             //- document.getElementById(`${id}-thumbsup`).onclick=function(){readMessage(id, "test321", "bdskdbkjads")};
 
-            document.getElementById(`${id}-thumbsup`).onclick=function(){sendReaction(msg, "other", "thumbsUp", id)};
-            document.getElementById(`${id}-thumbsdown`).onclick=function(){sendReaction(msg, "other", "thumbsDown", id)};
-            document.getElementById(`${id}-like`).onclick=function(){sendReaction(msg, "other", "like", id)};
-            document.getElementById(`${id}-laugh`).onclick=function(){sendReaction(msg, "other", "laugh", id)};
+            document.getElementById(`${id}-thumbsup`).onclick = function () {
+                sendReaction(msg, "other", "thumbsUp", id)
+            };
+            document.getElementById(`${id}-thumbsdown`).onclick = function () {
+                sendReaction(msg, "other", "thumbsDown", id)
+            };
+            document.getElementById(`${id}-like`).onclick = function () {
+                sendReaction(msg, "other", "like", id)
+            };
+            document.getElementById(`${id}-laugh`).onclick = function () {
+                sendReaction(msg, "other", "laugh", id)
+            };
         }
 
-        
-        function onClickNewDeleteButton(msg){
+
+        function onClickNewDeleteButton(msg) {
             socket.emit("nudge-reaction", {
                 messageId: msg._id,
                 userAction: "deleteMessage",
@@ -1881,12 +1972,12 @@ block content
                     userId: chatPartnerUserId,
                 }
             });
-            $('#' + chatPartnerUserId + 'lastMessage').text("Deleted message");
+            $(`#lastMessage-${chatPartnerUserId}`).text("Deleted message");
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, true);
             onClickDismissButton()
         }
-        
-        function onClickNewDeleteAndUpdateButton(msg){
+
+        function onClickNewDeleteAndUpdateButton(msg) {
             console.log('onClickDeleteAndLetOthersKnowButton')
             socket.emit("nudge-reaction", {
                 messageId: msg._id,
@@ -1896,60 +1987,65 @@ block content
                     userId: chatPartnerUserId,
                 }
             });
-            $('#' + chatPartnerUserId + 'lastMessage').text("Deleted message");
+            $(`#lastMessage-${chatPartnerUserId}`).text("Deleted message");
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, true);
 
             onClickDismissButton()
         }
-         
 
 
         function addNudgeType2(msg) {
             const nudge = `<div class="row" id="nudgeType2" style="padding-top:6px; padding-bottom:6px">
-                            <div class="right aligned one wide column" style="padding:0!important"></div>
-                            <div class="seven wide column">
-                                <div class="ui cards">
-                                    <div class="card" style="min-width:400px">
-                                        <div class="content" style="text-align:center">
-                                            <div class="description"> The last message you received is censored due to potentially harmful content. <a style="color:blue" href="http://risk_information"> 
-                                                <u>Learn why this is harmful.</u>
-                                            </a> Are you sure you want to view this message?</div>
-                                        </div>
-                                        <div class="extra content">
-                                            <div class="ui three buttons">
-                                                <div class="ui basic black button" id="showMeButton">View</div>
-                                                <div class="ui basic black button" id="deleteMessageButton">Delete & Dismiss</div>
-                                                <div class="ui basic black button" id="deleteMessageAndLetOthersKnowButton">Delete & Let Others Know</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p style="font-size:10px; margin-top:-8px">${formatTime(msg.msg.time)}</p>
-                            </div>
-                        </div>`
+                                                <div class="right aligned one wide column" style="padding:0!important"></div>
+                                                <div class="seven wide column">
+                                                    <div class="ui cards">
+                                                        <div class="card" style="min-width:400px">
+                                                            <div class="content" style="text-align:center">
+                                                                <div class="description"> The last message you received is censored due to potentially harmful content. <a style="color:blue" href="http://risk_information">
+                                                                    <u>Learn why this is harmful.</u>
+                                                                </a> Are you sure you want to view this message?</div>
+                                                            </div>
+                                                            <div class="extra content">
+                                                                <div class="ui three buttons">
+                                                                    <div class="ui basic black button" id="showMeButton">View</div>
+                                                                    <div class="ui basic black button" id="deleteMessageButton">Delete & Dismiss</div>
+                                                                    <div class="ui basic black button" id="deleteMessageAndLetOthersKnowButton">Delete & Let Others Know</div>
 
-                    $('#messages').append(nudge);
-                    $('#messages').scrollTop($('#messages')[0].scrollHeight);
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <p style="font-size:10px; margin-top:-8px">${formatTime(msg.msg.time)}</p>
+                                                </div>
+                                            </div>`
 
-                    let element = document.getElementById("nudgeType2");
-                    element.id = msg._id + 'nudgeType2';
+            $('#messages').append(nudge);
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
 
-                    element = document.getElementById("deleteMessageButton");
-                    element.id = msg._id + 'deleteMessageButton';
+            let element = document.getElementById("nudgeType2");
+            element.id = msg._id + 'nudgeType2';
 
-                    element = document.getElementById("showMeButton");
-                    element.id = msg._id + 'showMeButton';
-                    
-                    element = document.getElementById("deleteMessageAndLetOthersKnowButton");
-                    element.id = msg._id + 'deleteMessageAndLetOthersKnowButton';
+            element = document.getElementById("deleteMessageButton");
+            element.id = msg._id + 'deleteMessageButton';
 
-                    document.getElementById(msg._id + 'deleteMessageButton').onclick=function(){onClickDeleteMessageButton(msg)};
-                    document.getElementById(msg._id + 'showMeButton').onclick=function(){onClickShowMeButton(msg)};
-                    document.getElementById(msg._id + 'deleteMessageAndLetOthersKnowButton').onclick=function(){onClickDeleteAndLetOthersKnowButton(msg)}
+            element = document.getElementById("showMeButton");
+            element.id = msg._id + 'showMeButton';
+
+            element = document.getElementById("deleteMessageAndLetOthersKnowButton");
+            element.id = msg._id + 'deleteMessageAndLetOthersKnowButton';
+
+            document.getElementById(msg._id + 'deleteMessageButton').onclick = function () {
+                onClickDeleteMessageButton(msg)
+            };
+            document.getElementById(msg._id + 'showMeButton').onclick = function () {
+                onClickShowMeButton(msg)
+            };
+            document.getElementById(msg._id + 'deleteMessageAndLetOthersKnowButton').onclick = function () {
+                onClickDeleteAndLetOthersKnowButton(msg)
+            }
         }
 
-        function onClickDeleteAndLetOthersKnowButton(msg){
+        function onClickDeleteAndLetOthersKnowButton(msg) {
             console.log('onClickDeleteAndLetOthersKnowButton')
             document.getElementById(msg._id + 'nudgeType2').remove();
             socket.emit("nudge-reaction", {
@@ -1960,7 +2056,7 @@ block content
                     userId: chatPartnerUserId,
                 }
             });
-            $('#' + chatPartnerUserId + 'lastMessage').text("Deleted message");
+            $(`#lastMessage-${chatPartnerUserId}`).text("Deleted message");
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, true);
         }
 
@@ -1974,7 +2070,7 @@ block content
                     userId: chatPartnerUserId,
                 }
             });
-            $('#' + chatPartnerUserId + 'lastMessage').text("Deleted message");
+            $(`#lastMessage-${chatPartnerUserId}`).text("Deleted message");
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, true);
         }
 
@@ -1988,12 +2084,12 @@ block content
                     userId: chatPartnerUserId,
                 }
             });
-            $('#' + chatPartnerUserId + 'lastMessage').text(msg.msg.body);
+            $(`#lastMessage-${chatPartnerUserId}`).text(msg.msg.body);
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false);
         }
 
-        
-        socket.on("letOthersKnowLinkNudge", (harmfulContentString)=>{
+
+        socket.on("letOthersKnowLinkNudge", (harmfulContentString) => {
             // TODO: CREATE MODAL TO SHOW THIS MESSAGE
             console.log(harmfulContentString + ' Learn more about why this is harmful.')
             $('#letOthersKnowAbout').modal('setting', 'closable', false).modal('show');
@@ -2001,4 +2097,6 @@ block content
             const warningStr = harmfulContentString + ' Learn more about why this is harmful.'
             $('#letOthersKnowAboutContent').text(warningStr)
         })
-        document.getElementById('dismissModalEveryoneButton').onclick=function(){onClickDismissButton()};
+        document.getElementById('dismissModalEveryoneButton').onclick = function () {
+            onClickDismissButton()
+        };

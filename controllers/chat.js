@@ -53,7 +53,7 @@ const chatSocket = (server) => {
 			console.log("HERE 2");
 			// console.log(socket.userpfp)
 
-			next();
+			return next();
 		}
 		const username = socket.handshake.auth.username;
 		const userId = socket.handshake.auth.userId;
@@ -65,7 +65,7 @@ const chatSocket = (server) => {
 		socket.username = username;
 		socket.userId = userId;
 		socket.userpfp = userpfp;
-		next();
+		return next();
 	});
 
 	io.on("connection", async (socket) => {
@@ -99,13 +99,14 @@ const chatSocket = (server) => {
 			});
 		});
 
+		// Diff tabs opened by the same user, thus we need to make diff sockets join the same room
+		socket.join(socket.userId);
+
 		// Fetch existing users
 		console.log("=============emmitting userlist===============");
 		socket.emit("userList", getCurrentUsers());
-		socket.broadcast.emit("userList", getCurrentUsers());
+		// socket.broadcast.emit("userList", getCurrentUsers());
 
-		// Diff tabs opened by the same user, thus we need to make diff sockets join the same room
-		socket.join(socket.userId);
 
 		// Finds all conversation history of a user
 		const allConvo = await getChatHistory(socket.username, socket.userId);
