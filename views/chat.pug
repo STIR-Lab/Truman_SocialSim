@@ -293,10 +293,10 @@ block content
         }
 
         //for deployment
-        const URL = "http://18.224.25.178:3000/";
+        //const URL = "http://18.224.25.178:3000/";
 
         // for production
-        //const URL = "ws://localhost:3000";
+        const URL = "ws://localhost:3000";
         const sessionId = localStorage.getItem("sessionId");
         let auth = null
 
@@ -1832,7 +1832,22 @@ block content
 
 
         function addChatSentMessage(msg, time, id) {
-
+            // Inject CSS
+            if (!$('#chat-message-styles').length) { // Check if the style tag already exists
+                $('head').append(`
+                    <style id="chat-message-styles">
+                        #messages {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: flex-start; /* Aligns messages to the top */
+                            overflow-y: auto; /* Ensures scrollability */
+                        }
+                        .row {
+                            margin-bottom: 6px;
+                        }
+                    </style>
+                `);
+            }
             let msgType = "";
 
             if (msg.type == "txt") {
@@ -1891,6 +1906,21 @@ block content
         }
 
         function addChatReceivedMessage(msg, time, id, user, nudge, messageDeleted) {
+            if (!$('#chat-message-styles').length) { // Check if the style tag already exists
+                $('head').append(`
+                    <style id="chat-message-styles">
+                        #messages {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: flex-start; /* Aligns messages to the top */
+                            overflow-y: auto; /* Ensures scrollability */
+                        }
+                        .row {
+                            margin-bottom: 6px;
+                        }
+                    </style>
+                `);
+            }
             console.log('addChatRecievedMessage', msg)
             let msgType = "";
             if (msg.type == "txt") {
