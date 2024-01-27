@@ -8,9 +8,9 @@ const accessKeyId = process.env.AWS_ACCESS_KEY
 const secretAccessKey = process.env.AWS_SECRET_KEY
 
 AWS.config.update({
-  accessKeyId: "AKIAY3ZPWG4VSUKQBANL",
-  secretAccessKey: "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",
-  region: "us-east-1",
+  accessKeyId: accessKeyId,
+  secretAccessKey: secretAccessKey,
+  region: region,
 });
 
 // Create an S3 client
