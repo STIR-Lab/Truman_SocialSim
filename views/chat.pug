@@ -309,7 +309,7 @@ block content
             console.log('connect start 2', sessionId, auth)
         }
 
-        const socket = io(URL, { auth });
+        const socket = io(window.location.host, { auth });
         socket.on('connect', () => {
             console.log('connect start', Date.now())
         })
