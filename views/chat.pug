@@ -26,7 +26,7 @@ block content
                 #chatBoxTitleDivider.ui.clearing.divider
 
                 .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
-                    #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
+                    #messages.ui.grid(style="justify-content: start; padding:10px; position: relative; overflow-y: scroll;")
 
                 #nudge3Card.ui.card(style='position: absolute; bottom: -60px; left: 50%; transform: translate(-50%, -50%); width:450px;')
                     .content
@@ -1839,22 +1839,6 @@ block content
 
 
         function addChatSentMessage(msg, time, id) {
-            // Inject CSS
-            if (!$('#chat-message-styles').length) { // Check if the style tag already exists
-                $('head').append(`
-                    <style id="chat-message-styles">
-                        #messages {
-                            display: flex;
-                            flex-direction: column;
-                            align-items: flex-start; /* Aligns messages to the top */
-                            overflow-y: auto; /* Ensures scrollability */
-                        }
-                        .row {
-                            margin-bottom: 6px;
-                        }
-                    </style>
-                `);
-            }
             let msgType = "";
 
             if (msg.type == "txt") {
@@ -1913,21 +1897,6 @@ block content
         }
 
         function addChatReceivedMessage(msg, time, id, user, nudge, messageDeleted) {
-            if (!$('#chat-message-styles').length) { // Check if the style tag already exists
-                $('head').append(`
-                    <style id="chat-message-styles">
-                        #messages {
-                            display: flex;
-                            flex-direction: column;
-                            align-items: flex-start; /* Aligns messages to the top */
-                            overflow-y: auto; /* Ensures scrollability */
-                        }
-                        .row {
-                            margin-bottom: 6px;
-                        }
-                    </style>
-                `);
-            }
             console.log('addChatRecievedMessage', msg)
             let msgType = "";
             if (msg.type == "txt") {
