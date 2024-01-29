@@ -141,7 +141,7 @@ exports.postLogin = (req, res, next) => {
  TODO - add code to take survey?? or check if you have seen experinetal post yet
  */
  exports.logout = (req, res) => {
-  req.logout();
+  req.logout(() =>{});
  		res.redirect('/login');
 };
 
