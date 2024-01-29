@@ -1,0 +1,20 @@
+server {
+    listen 80;
+    server_name sim.socialmediayouth.org;
+
+    root /home/ubuntu/Truman_SocialSim;  # Update this to your site's root directory
+    index index.html index.htm index.nginx-debian.html;
+
+    location / {
+        #try_files $uri $uri/ =404;
+	proxy_pass http://localhost:3000;
+	proxy_http_version 1.1;
+	proxy_set_header Upgrade $http_upgrade;
+	proxy_set_header Connection 'upgrade';
+	proxy_set_header Host $host;
+	proxy_cache_bypass $http_upgrade;
+    }
+
+    # Additional configuration settings can go here
+    # For example, error logs, access logs, etc.
+}
