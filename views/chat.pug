@@ -23,7 +23,7 @@ block content
                 button#newChatButton.positive.ui.button.right.floated(style="margin-bottom:10px") 
                     i.pencil.alternate.icon
                     |   New Chat
-                .ui.clearing.divider
+                #chatBoxTitleDivider.ui.clearing.divider
 
                 .messages.container(style="height: 70vh; overflow: hidden; display:flex; flex-direction: column-reverse; position: relative")
                     #messages.ui.grid(style="padding:10px; position: absolute; top: 0; bottom: 0; left: 0; right: -17px; overflow-y: scroll;")
@@ -281,6 +281,8 @@ block content
         // hide input until user picks chat partner
         $('#messageInput').hide();
         $('#nudge3Card').hide();
+        $("#chatBoxTitleDivider").hide()
+        $('#newChatButton').hide()
         document.getElementById('newChatButton').onclick = function () {
             onClickNewChat()
         };
@@ -551,7 +553,9 @@ block content
                                                                 <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;" class="${activeClass}"></i>
                                                             </div>
                                                             <div class="content">
-                                                                <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
+                                                                <!-- For now we are disabling the onclick for user name here because it crashes the entire app -->
+                                                                <!-- <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a> -->
+                                                                <a class="header">${chatPartnerUsername}</a>
                                                                 <div class="description" style="max-width: 180px" id="lastMessage-${chatPartnerId}">${lastmsg}</div>
                                                             </div>
 
@@ -569,7 +573,9 @@ block content
                                                                     <i id="activeIcon-${chatPartnerId}" style="position: absolute; bottom: 0; left: 0;"class="${activeClass}"></i>
                                                                 </div>
                                                                 <div class="content">
-                                                                    <a class="header" href="user/${chatPartnerUsername}">${chatPartnerUsername}</a>
+                                                                    <!-- For now we are disabling the onclick for user name here because it crashes the entire app -->
+                                                                    <!-- <a class="header" href="user/${chatPartnerUsername}">${chatPartnerUsername}</a> -->
+                                                                    <a class="header">${chatPartnerUsername}</a>
                                                                     <div class="description" style="max-width: 180px" id="lastMessage-${chatPartnerId}">${lastmsg}</div>
                                                                 </div>
                                                             </div>
@@ -956,6 +962,7 @@ block content
             })
 
             $("#chatPartnerName").text(chatPartnerUsername);
+            $("#chatBoxTitleDivider").show()
             $('#messages').empty();
             $('#messageInput').show();
             $('#newChatModal').modal('hide');
