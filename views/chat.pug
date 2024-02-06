@@ -160,25 +160,48 @@ block content
             .content(style='padding: 40px 20px 20px 20px; flex-grow: 1; text-align: center; font-size: 14px;')
                 .ui.center.aligned.container(style='white-space: pre-line;')
                     | This user is asking for #[strong(style='color: red;') sensitive information]
-                    | which may compromise your privacy.
+                    | which may compromise your privacy. How
+                    | would you like to proceed?
 
             .actions(style='border-top: 1px  #ddd; padding: 10px; text-align: center;')
                 .ui.attached.buttons
                     //- button.ui.basic.button#dismissModal1Button(style='border-right: 1px solid black; flex: 1; text-align: center; white-space: normal;')
                     //-     | Yes, Continue
-                    button.ui.basic.button#leaveModalButton(style='border-right: 1px ; flex: 1; text-align: center; white-space: normal;')
-                        | Exit Chat
-                    button.ui.basic.button#blockModal1Button(style='flex: 1; text-align: center; white-space: normal; color: red;')
-                        | #[strong(style='color: red;') Block User]
+                    button.ui.basic.button#showN1Modal3Button(style='border-right: 1px ; flex: 1; text-align: center; white-space: normal;')
+                        | Turn off this warning
+                    button.ui.basic.button#blockModal1Button(style='flex: 1; text-align: center; white-space: normal;')
+                        | Take Protective Action
+                    button.ui.basic.button#showN1Modal2Button(style='flex: 1; text-align: center; white-space: normal;')
+                        | OK
 
-    .ui.modal#nudge1Modal2
-        .ui.horizontal.buttons(style='text-align: center; padding-top: 10px;')
-            #nudge1Button1.button.fluid.ui.button.bubble-button.transparent-button(style='margin-right: 1px; border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
-                | Sorry, I don't want to share that
-            #nudge1Button2.button.fluid.ui.button.bubble-button.transparent-button(style='margin-right: 5px; border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
-                | I don't feel comfortable sharing that
-            #nudge1Button3.button.fluid.ui.button.bubble-button.transparent-button(style='border-radius: 5px; padding: 10px; background-color: #e0e0e0;')
-                | Lol that's private information
+    .ui.modal#nudge1Modal2(style='padding-left: 0;')
+        .title-bar(style='display: flex; align-items: center; padding: 10px 10px 10px 0; width: 100%;')
+            .title(style='font-weight: bold; margin-right: 10px; font-size: 12px;')
+                | Suggested response
+            .buttons-container(style='display: flex; gap: 5px;')
+                #nudge1Button1.button.fluid.ui.button.bubble-button.transparent-button(style='border-radius: 5px; padding: 8px; background-color: #e0e0e0; font-size: 10px;')
+                    | Sorry, I don't want to share that
+                #nudge1Button2.button.fluid.ui.button.bubble-button.transparent-button(style='border-radius: 5px; padding: 8px; background-color: #e0e0e0; font-size: 10px;')
+                    | I don't feel comfortable sharing that
+                #nudge1Button3.button.fluid.ui.button.bubble-button.transparent-button(style='border-radius: 5px; padding: 8px; background-color: #e0e0e0; font-size: 10px;')
+                    | Lol that's private information
+            i.close.icon#nudge1Button4(style='position: absolute; top: 1px; right: 240px; color: black; font-size: 14px;')
+                | Don't show again
+
+    .ui.modal#nudge1Modal3(style='width: 400px;  padding: 0; border-radius: 15px; background-color: #f9f9f9;')
+
+        //- Close Button
+        i.close.icon#nudge1Button5(style='position: absolute; top: 1px; right: 8px; color: black;')
+
+        //- Enclosing the content and actions in a div
+        div(style='background-color: #f9f9f9; border: 1px  #ddd; border-radius: 15px; margin-bottom: 10px;')
+            .content(style='padding: 40px 20px 20px 20px; flex-grow: 1; text-align: center; font-size: 14px;')
+                .ui.center.aligned.container(style='white-space: pre-line;')
+                    | Warning has been successfully
+                    | turned off.
+                    
+
+
 
 
 
@@ -982,9 +1005,27 @@ block content
         let nudge3MessageId = null;
         let nudge1MessageId = null;
 
+        document.getElementById('nudge1Button5').onclick = function () {
+            onClickNudge1Button5()
+        };
+
+        function onClickNudge1Button5() {
+            $('#nudge1Modal3').modal('hide');
+        }
+    
+        document.getElementById('nudge1Button4').onclick = function () {
+            onClickNudge1Button4()
+        };
+
+
+        function onClickNudge1Button4() {
+            $('#nudge1Modal2').modal('hide');
+        }
+
         document.getElementById('nudge1Button1').onclick = function () {
             onClickNudge1Button1()
         };
+
 
         function onClickNudge1Button1() {
             $('#nudge1Modal').modal('hide');
@@ -1371,11 +1412,19 @@ block content
                             blockUserModal1(messageList[i])
                         }
                         //document.getElementById('reportButton').onclick=function(){reportUserModal1(messageList[i])}
-                        document.getElementById('leaveModalButton').onclick = function () {
-                            leaveUserModal(messageList[i])
+                        //- document.getElementById('leaveModalButton').onclick = function () {
+                        //-     leaveUserModal(messageList[i])
+                        //- }
+                        document.getElementById('showN1Modal2Button').onclick = function () {
+                            showN1M2Modal(messageList[i])
                         }
+                        document.getElementById('showN1Modal3Button').onclick = function () {
+                            showN1M3Modal(messageList[i])
+                        }
+                        
                         $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
-                        $('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
+                        // only showing modal2 when clicking ok in modal 1
+                        //$('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
                         //$('#nudge3Card').modal('setting', 'closable', false).modal('show');
                         nudge1MessageId = messageList[i]._id;
 
@@ -1475,10 +1524,23 @@ block content
             console.log("fas")
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal2').modal('hide');
+            $('#nudge1Modal3').modal('hide');
             $('#nudge2Modal').modal('hide');
             $('#nudge2NewModal').modal('hide');
             $('#newNudge4Modal').modal('hide')
             $('#letOthersKnowAbout').modal('hide');
+        }
+
+        function onClickshowN1M1Button() {
+            console.log("onClickshowN1M1Button");
+            $('#nudge1Modal').modal('hide');
+            $('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
+        }
+
+        function onClickshowN1M3Button() {
+            console.log("onClickshowN1M3Button");
+            $('#nudge1Modal').modal('hide');
+            $('#nudge1Modal3').modal('setting', 'closable', false).modal('show');
         }
 
         document.getElementById('dismissModal2Button').onclick = function () {
@@ -1547,11 +1609,19 @@ block content
                         blockUserModal1(msg)
                     }
                     //document.getElementById('reportButton').onclick=function(){reportUserModal1(msg)}
-                    document.getElementById('leaveModalButton').onclick = function () {
-                        leaveUserModal(msg)
+                    //- document.getElementById('leaveModalButton').onclick = function () {
+                    //-     leaveUserModal(msg)
+                    //- }
+                    document.getElementById('showN1Modal2Button').onclick = function () {
+                        showN1M2Modal(msg)
                     }
+                    document.getElementById('showN1Modal3Button').onclick = function () {
+                        showN1M3Modal(msg)
+                    }
+                    
                     $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
-                    $('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
+                    // only showing modal2 when clicking ok in modal 1
+                    //$('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
                     nudge1MessageId = msg._id;
                 }
                 if (nudgeShown && msg.nudge.riskyScenario == "explicitContent1") {
@@ -1678,6 +1748,14 @@ block content
             });
             // redirect to feed page
             window.location.href = '/'
+        }
+
+        function showN1M3Modal(msg) {
+            onClickshowN1M3Button();
+        }
+
+        function showN1M2Modal(msg) {
+            onClickshowN1M1Button();
         }
 
         function sendReaction(msg, person, reactionType, messageID) {
