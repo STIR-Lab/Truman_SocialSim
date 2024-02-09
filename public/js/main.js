@@ -605,6 +605,25 @@ $('a.others').click(function(){
 		  });  
 	})
 
+	$("#unhide2CommentNudge").on("click", function () {
+		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const userAction = 'unhide'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		$.post("/commentnudge/reaction", {
+			postID,
+			commentID,
+			userAction,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(function(response) {
+			location.reload();
+		  });  
+	})
+
 	// onclick hide button
 	$("#hideCommentNudge").on("click", function () {
 		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
@@ -624,6 +643,74 @@ $('a.others').click(function(){
 			location.reload();
 		  });
 		  
+	})
+
+	$("#hide2CommentNudge").on("click", function () {
+		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const userAction = 'hide'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		$.post("/commentnudge/reaction", {
+			postID,
+			commentID,
+			userAction,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(function(response) {
+			location.reload();
+		  });
+		  
+	})
+
+	$("#hide3CommentNudge").on("click", function () {
+		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const userAction = 'hide'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		$.post("/commentnudge/reaction", {
+			postID,
+			commentID,
+			userAction,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(function(response) {
+			location.reload();
+		  });
+		  
+	})
+
+	$("#hide4CommentNudge").on("click", function () {
+		console.log('UNHIDE MODAL FOR COMMENT NUDGE')
+		// get the postID and commentID from the modal
+		const postID = $("#commentNudgeModal").attr('postnudgeID')
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID')
+		const userAction = 'hide'
+		console.log(
+		  `#########COMMENT NUDGE:  PostID: ${postID}, Comment ID: ${commentID} with ${userAction}`
+		)
+		$.post("/commentnudge/reaction", {
+			postID,
+			commentID,
+			userAction,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(function(response) {
+			location.reload();
+		  });
+		  
+	})
+
+	$("#unhideCommentNudgeModal").on("click", function () {
+		// open up the secondary modal
+		console.log("prepare to open second unhide modal");
+		$("#secondaryUnhideModal").modal('setting', 'closable', false).modal('show');
+		console.log("prepare to open second unhide modal")
+		
 	})
 
 	// onclick block button

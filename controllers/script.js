@@ -416,7 +416,7 @@ exports.newPost = async (req, res) => {
 			console.log(randomActor);
 			
 
-			if (user.numPosts < 3) {
+			if (user.numPosts < 30) {
 				// setTimeout(async () => {
 					console.log("This is the first user post, so we add a comment nudge");
 					const commentNudge = new Object();

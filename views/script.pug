@@ -201,10 +201,10 @@ block content
                                 postnudgeID=val.id, 
                                 nudgeShown=comment.nudgeShown
                                 actorID=comment.actor.username
-                                style='width: 380px; border-radius: 15px;'
+                                style='width: 500px; border-radius: 15px;'
                             )
                                 //- Close Button
-                                i.close.icon#closeModalCommentNudgeIconButton(style='position: absolute; top: 1px; right: 8px; color: black;') 
+                                i.close.icon#hideCommentNudge(style='position: absolute; top: 1px; right: 8px; color: black;') 
 
                                 //- Modal Content
                                 .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9; flex-grow: 1; text-align: center; border-radius: 15px; font-size: 15px;')
@@ -224,20 +224,48 @@ block content
                                 .actions(style='border-top: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; text-align: center; border-radius: 15px;')
                                     .ui.attached.buttons
                                       //- Unhide Button
-                                      button.ui.basic.button#unhideCommentNudge(style='border-right: 1px solid #ddd;')
-                                          | Unhide
+                                      button.ui.basic.button#unhideCommentNudgeModal(style='border-right: 1px solid #ddd;')
+                                          | Unhide Comment
                           
                                       //- Keep Hidden Button
-                                      button.ui.basic.button#hideCommentNudge(style='border-right: 1px solid #ddd;')
-                                          | Keep Hidden
+                                      button.ui.basic.button#hideComment4Nudge(style='border-right: 1px solid #ddd;')
+                                          //- | Keep Hidden
+                                          | Take Protective Actions
                                      
                                       //- Block Button
-                                      button.ui.basic.button#blockCommentNudge
-                                          | Block User
+                                      //- button.ui.basic.button#blockCommentNudge
+                                      //-     | Block User
+                                      button.ui.basic.button#hide3CommentNudge
+                                          | OK
 
 
                             //- Secondary Report Comment Modal
-                            .ui.modal#secondaryReportCommentModal(commentNudgeID=comment.commentID, 
+                            //- .ui.modal#secondaryReportCommentModal(commentNudgeID=comment.commentID, 
+                            //-     comment_id=comment._id,
+                            //-     postnudgeID=val.id
+                            //-     style='width: 350px; border-radius: 15px;'
+                            //- )
+                            //-     //- Close Button
+                            //-     i.close.icon#closeModalCommentNudgeIconButton(style='position: absolute; top: 5px; right: 10px; color: black;') 
+
+                            //-     //- Modal Content
+                            //-     .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9;text-align: center; font-size: 15px;')
+                            //-         //- Block Notice
+                            //-         | #[u #{comment.actor.username}] has been blocked. Would you 
+                            //-         | also like to report this user?
+
+                            //-     //- Modal Actions
+                            //-     .actions(style='border-top: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; border-radius: 15px;')
+                            //-         .ui.three.attached.buttons
+                            //-             //- Yes Button
+                            //-             button.ui.basic.button#reportCommentNudge(style='border-right: 1px solid #ddd;')
+                            //-                 | Yes
+                            //-             //- No Button
+                            //-             button.ui.basic.button#dontReportCommentNudge
+                            //-                 | No
+                            
+                            
+                            .ui.modal#secondaryUnhideModal(commentNudgeID=comment.commentID, 
                                 comment_id=comment._id,
                                 postnudgeID=val.id
                                 style='width: 350px; border-radius: 15px;'
@@ -248,18 +276,19 @@ block content
                                 //- Modal Content
                                 .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9;text-align: center; font-size: 15px;')
                                     //- Block Notice
-                                    | #[u #{comment.actor.username}] has been blocked. Would you 
-                                    | also like to report this user?
+                                    | Are you sure you want to unhide this comment?
 
                                 //- Modal Actions
                                 .actions(style='border-top: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; border-radius: 15px;')
                                     .ui.three.attached.buttons
                                         //- Yes Button
-                                        button.ui.basic.button#reportCommentNudge(style='border-right: 1px solid #ddd;')
-                                            | Yes
+                                        button.ui.basic.button#unhideCommentNudge(style='border-right: 1px solid #ddd;')
+                                            | Yes and Turn of Warning
+                                        button.ui.basic.button#unhide2CommentNudge(style='border-right: 1px solid #ddd;')
+                                            | Yes, Unhide Comment
                                         //- No Button
-                                        button.ui.basic.button#dontReportCommentNudge
-                                            | No
+                                        button.ui.basic.button#hide2CommentNudge
+                                            | No, Keep it Hidden
 
                             //- Log the comment object
                             -console.log(comment)
@@ -338,9 +367,10 @@ block content
                                   });
 
                                   // attach events to buttons, also make the nudges unexitable from clicking on background
-                                  $('#secondaryReportCommentModal').modal('attach events', '#commentNudgeModal.modal #blockCommentNudge.button');
+                                  $('#secondaryUnhideCommentModal').modal('attach events', '#commentNudgeModal.modal #unhideCommentNudgeModal.button');
+                                  //$('#secondaryReportCommentModal').modal('attach events', '#commentNudgeModal.modal #blockCommentNudge.button');
                                   $("#commentNudgeModal").modal('setting', 'closable', false).modal('show');
-                              }, 20000);
+                              }, 3000);
 
 
                         else 

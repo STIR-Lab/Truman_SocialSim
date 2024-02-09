@@ -234,12 +234,14 @@ block content
 
             .actions(style='border-top: 1px #ddd; padding: 10px; text-align: center;')
                 .ui.attached.buttons
-                    button.ui.basic.button#leaveNudge2NewModal(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
-                        | Exit Chat
+                    button.ui.basic.button#showN1Modal3Button(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
+                        | Turn off this warning
+                    //- button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
+                    //-     | #[strong(style='color: red;') Block User]
                     button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
-                        | #[strong(style='color: red;') Block User]
+                        | Take Protective Action
                     button.ui.basic.button#continueModal(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
-                        | Continue Chat
+                        | OK
                 
     style.
         .ui.dimmer {
@@ -1445,11 +1447,15 @@ block content
                         document.getElementById('dismissNudge2NewModal').onclick = function () {
                             onClickShowMeModal(messageList[i])
                         }
-                        document.getElementById('leaveNudge2NewModal').onclick = function () {
-                            leaveUserModal(messageList[i])
-                        }
+                        //- document.getElementById('leaveNudge2NewModal').onclick = function () {
+                        //-     leaveUserModal(messageList[i])
+                        //- }
+                        
                         document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
                             blockUserModal1(messageList[i])
+                        }
+                        document.getElementById('showN1Modal3Button').onclick = function () {
+                            showN1M3Modal(messageList[i])
                         }
                         //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
                         $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
@@ -1655,11 +1661,14 @@ block content
                     document.getElementById('dismissNudge2NewModal').onclick = function () {
                         onClickShowMeModal(msg)
                     }
-                    document.getElementById('leaveNudge2NewModal').onclick = function () {
-                        leaveUserModal(msg)
-                    }
+                    //- document.getElementById('leaveNudge2NewModal').onclick = function () {
+                    //-     leaveUserModal(msg)
+                    //- }
                     document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
                         blockUserModal1(msg)
+                    }
+                    document.getElementById('showN1Modal3Button').onclick = function () {
+                        showN1M3Modal(msg)
                     }
                     //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
                     $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
