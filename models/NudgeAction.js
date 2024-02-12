@@ -2,10 +2,11 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const NudgeActionSchema = new Schema({
-  // Use email as it is the unique key in User model
-  offender_email: String, // the email of the person sending the sensitive message or adding a sensitive comment to a post
+  offender_username: String, // the username of the person sending the sensitive message or adding a sensitive comment to a post
 
-  recipient_email: String, // the email of the recipient or the user to whom the sensitive message or comment is directed.
+  recipient_username: String, // the username of the recipient or the user to whom the sensitive message or comment is directed.
+
+  original_msg: Object,
 
   // Example:
   // First-layer nudge: ‘commentNudge’, ‘chatInfoNudge’, ‘chatCreepyNudge’
