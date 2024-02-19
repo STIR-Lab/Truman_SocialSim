@@ -713,6 +713,160 @@ $('a.others').click(function(){
 		
 	})
 
+	$("#actionNudge").on("click", function () {
+		// open up the secondary modal
+		console.log("prepare to open protective action modal");
+		$("#protectiveActionsModal").modal('setting', 'closable', false).modal('show');
+		
+	})
+
+	// When the "Confirm" button in the protective actions modal is clicked
+	$("#protectiveActionsForm").on("submit", function (e) {
+		e.preventDefault(); // Prevent the default form submission
+		const postID = $("#commentNudgeModal").attr('postnudgeID');
+		const commentID = $("#commentNudgeModal").attr('commentNudgeID');
+		
+		// Prepare an object to store which actions have been selected
+		let selectedActions = {
+			blockUser: this.blockUser.checked,
+			reportUser: this.reportUser.checked,
+			deleteComment: this.deleteComment.checked,
+			hideSimilarComments: this.hideSimilarComments.checked,
+			notifyOtherUsers: this.notifyOtherUsers.checked,
+		};
+	
+		// Hide the protective actions modal
+		$("#protectiveActionsModal").modal('hide');
+	
+		// Clear the previous selections
+		$("#selectedActionsList").empty();
+	
+		// Go through each action and if it was selected, add it to the confirmation list
+		if(selectedActions.blockUser) $("#selectedActionsList").append("<li data-action='blockUser'>The user has been blocked</li>");
+		if(selectedActions.reportUser) $("#selectedActionsList").append("<li data-action='reportUser'>The user has been reported</li>");
+		if(selectedActions.deleteComment) $("#selectedActionsList").append("<li data-action='deleteComment'>The comment has been deleted</li>");
+		if(selectedActions.hideSimilarComments) $("#selectedActionsList").append("<li data-action='hideSimilarComments'>Similar comments will be hidden automatically</li>");
+		if(selectedActions.notifyOtherUsers) $("#selectedActionsList").append("<li data-action='notifyOtherUsers'>Other users have been notified about the potential risk from this user</li>");
+	
+		// Show the confirmation modal
+		$("#confirmationActionsModal").modal('setting', 'closable', false).modal('show');
+	
+		// Now you can also send this data to the server if needed using an AJAX call
+		// ...
+	});
+  
+	$("#confirmFinalActions").on("click", function () {
+		// Get the list of actions from the confirmation modal
+		console.log("clicked final confirm")
+		const actions = $("#selectedActionsList li").map(function() {
+		  return $(this).data('action');
+		}).get();
+		console.log(actions)
+	  
+		// Close the confirmation modal
+		$("#confirmationActionsModal").modal('hide');
+	  
+		// Loop through the actions and call the corresponding functions
+		actions.forEach(action => {
+		  switch (action) {
+			case 'blockUser':
+			  const username = $("#commentNudgeModal").attr('actorID');
+			  blockUser(username);
+			  break;
+			case 'reportUser':
+			  const username_2 = $("#commentNudgeModal").attr('actorID');
+			  reportUser(username_2, $("#commentNudgeModal").attr('postnudgeID'), $("#commentNudgeModal").attr('commentNudgeID'));
+			  break;
+			case 'deleteComment':
+			  const username_3 = $("#commentNudgeModal").attr('actorID');
+			  deleteComment(username_3, $("#commentNudgeModal").attr('postnudgeID'), $("#commentNudgeModal").attr('commentNudgeID'));
+			  break;
+			case 'hideSimilarComments':
+		      const username_4 = $("#commentNudgeModal").attr('actorID');
+			  HideSimilarComment(username_4, $("#commentNudgeModal").attr('postnudgeID'), $("#commentNudgeModal").attr('commentNudgeID'));
+			  break;
+			case 'notifyOtherUsers':
+			  const username_5 = $("#commentNudgeModal").attr('actorID');
+			  notifyOtherUsers(username_5, $("#commentNudgeModal").attr('postnudgeID'), $("#commentNudgeModal").attr('commentNudgeID'));
+			  break;
+		  }
+		});
+	  
+		// Optional: refresh the page or redirect the user after actions are completed
+		//location.reload(); // Refreshes the page
+	  });
+	
+	  function blockUser(username) {
+		console.log("Attempting to block user " + username);
+		$.post("/user", { // Make sure the URL is correct
+		  blocked: username,
+		  _csrf: $('meta[name="csrf-token"]').attr("content"),
+		}).then(function(response) {
+			location.reload();
+		  });
+	  }
+	  
+	  
+	  function reportUser(username, postID, commentID) {
+		const userAction = 'Report';
+		console.log(`Reporting user for comment ID: ${commentID} and post ID: ${postID} with action: ${userAction}`);
+		$.post("/commentnudge/reaction", {
+		  postID: postID,
+		  commentID: commentID,
+		  userAction: userAction,
+		  _csrf: $('meta[name="csrf-token"]').attr("content"),
+		}).then(function(response) {
+			location.reload();
+		  });
+
+		$.post("/user", { // Make sure the URL is correct
+			reported: username,
+			_csrf: $('meta[name="csrf-token"]').attr("content"),
+		  }).then(function(response) {
+			location.reload();
+		  });
+	  }
+	  
+	  function deleteComment(username, postID, commentID) {
+		const userAction = 'DeleteComment';
+		console.log(`Deleting Comment for comment ID: ${commentID} and post ID: ${postID} with action: ${userAction}`);
+		$.post("/commentnudge/reaction", {
+		  postID: postID,
+		  commentID: commentID,
+		  userAction: userAction,
+		  _csrf: $('meta[name="csrf-token"]').attr("content"),
+		}).then(function(response) {
+			location.reload();
+		  });
+	  }
+
+	  function HideSimilarComment(username, postID, commentID) {
+		const userAction = 'HideSimilarComment';
+		console.log(`Hiding similar Comment for comment ID: ${commentID} and post ID: ${postID} with action: ${userAction}`);
+		$.post("/commentnudge/reaction", {
+		  postID: postID,
+		  commentID: commentID,
+		  userAction: userAction,
+		  _csrf: $('meta[name="csrf-token"]').attr("content"),
+		}).then(function(response) {
+			location.reload();
+		  });
+	  }
+
+	  function notifyOtherUsers(username, postID, commentID) {
+		const userAction = 'Notify';
+		console.log(`Notifying other users about Comment for comment ID: ${commentID} and post ID: ${postID} with action: ${userAction}`);
+		$.post("/commentnudge/reaction", {
+		  postID: postID,
+		  commentID: commentID,
+		  userAction: userAction,
+		  _csrf: $('meta[name="csrf-token"]').attr("content"),
+		}).then(function(response) {
+			location.reload();
+		  });
+	  }
+	  
+
 	// onclick block button
 	$("#blockCommentNudge").on("click", function () {
 		// block user model
