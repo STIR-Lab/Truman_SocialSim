@@ -1545,6 +1545,14 @@ block content
 
         function onClickshowN1M3Button() {
             console.log("onClickshowN1M3Button");
+            socket.emit("nudge-reaction", {
+                messageId: nudge1MessageId,
+                userAction: "turnOffWarning",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal3').modal('setting', 'closable', false).modal('show');
         }
