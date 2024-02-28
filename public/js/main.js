@@ -771,7 +771,7 @@ $('a.others').click(function(){
 		  switch (action) {
 			case 'blockUser':
 			  const username = $("#commentNudgeModal").attr('actorID');
-			  blockUser(username);
+			  blockUser(username, $("#commentNudgeModal").attr('postnudgeID'), $("#commentNudgeModal").attr('commentNudgeID'));
 			  break;
 			case 'reportUser':
 			  const username_2 = $("#commentNudgeModal").attr('actorID');

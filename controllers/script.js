@@ -629,6 +629,11 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 		console.log(req.body);
 		return next(err);
 	}
+
+	if (req.body.postID == null || req.body.commentID == null) {
+		console.log("postID/commentID is null")
+		return;
+	}
 	// find correct post in the user object
 	// console.log(user)
 	// console.log(user.posts)
