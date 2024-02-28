@@ -771,7 +771,7 @@ $('a.others').click(function(){
 		  switch (action) {
 			case 'blockUser':
 			  const username = $("#commentNudgeModal").attr('actorID');
-			  blockUser(username);
+			  blockUser(username, $("#commentNudgeModal").attr('postnudgeID'), $("#commentNudgeModal").attr('commentNudgeID'));
 			  break;
 			case 'reportUser':
 			  const username_2 = $("#commentNudgeModal").attr('actorID');
@@ -806,6 +806,25 @@ $('a.others').click(function(){
 		  });
 	  }
 	  
+		// To record the cause of user block as nudge action
+		function blockUser(username, postID, commentID) {
+			const userAction = 'Block';
+			console.log("Attempting to block user " + username);
+			$.post("/commentnudge/reaction", {
+				postID: postID,
+				commentID: commentID,
+				userAction: userAction,
+				_csrf: $('meta[name="csrf-token"]').attr("content"),
+			}).then(function(response) {
+				location.reload();
+				});
+			$.post("/user", {
+				blocked: username,
+				_csrf: $('meta[name="csrf-token"]').attr("content"),
+			}).then(function(response) {
+				location.reload();
+				});
+			}
 	  
 	  function reportUser(username, postID, commentID) {
 		const userAction = 'Report';

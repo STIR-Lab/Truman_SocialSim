@@ -6,6 +6,8 @@ const mongoose = require("mongoose");
 const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const User = require("../models/User");
+const NudgeAction = require("../models/NudgeAction");
+const util = require('util');
 
 const { uploadFile } = require("../s3");
 
@@ -255,7 +257,34 @@ const chatSocket = (server) => {
 				convoInfo.markModified("reported");
 			}
 
+			const nudgeAction = new NudgeAction({
+				offender_username: convoInfo.content[messageIndex].from.username,
+				recipient_username: convoInfo.content[messageIndex].to.username,
+				nudge_name: convoInfo.content[messageIndex].nudge.nudgeType,
+				nudge_action_name: convoInfo.content[messageIndex].nudge.userAction + 
+				"_" + convoInfo.content[messageIndex].nudge.nudgeType,
+				original_msg: convoInfo.content[messageIndex].msg
+			})
+
+			nudgeAction.save(err => {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('Nudge action updated successfully.');
+				}
+			});
+
+			console.log("=============NudgeAction===============");
+			console.log(nudgeAction);
+			// console.log(util.inspect(nudgeAction, { depth: null }));
+
 			await convoInfo.save();
+			console.log("=============convo info===============");
+			console.log(convoInfo);
+			console.log(util.inspect(convoInfo, { depth: null }));
+
+
+
 			console.log(userAction);
 			if (userAction === "blockUser") {
 				console.log("=============emmitting block===============");
