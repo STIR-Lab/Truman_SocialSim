@@ -20,6 +20,10 @@ block content
         .eleven.wide.column
             .ui.segment(style='height:90vh')
                 h2#chatPartnerName.ui.left.floated.header
+                .content
+                    | This user received 
+                    span#numOfWarnings 0
+                    | warnings in the past 30 days
                 button#newChatButton.positive.ui.button.right.floated(style="margin-bottom:10px") 
                     i.pencil.alternate.icon
                     |   New Chat
@@ -979,6 +983,7 @@ block content
         let chatPartnerUsername = null;
         let chatPartnerUserId = null;
         let chatPartnerPFP = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
+        
 
         function onClickUsername(event) {
             const userId = event.target.dataset.chatPartnerId;
@@ -1009,14 +1014,18 @@ block content
             }
 
             socket.emit("find-partner", {userId: chatPartnerUserId})
-
-            socket.on("partner-pfp", ({pfp, userId}) => {
+            
+            socket.on("partner-pfp", ({pfp, userId, numOfWarnings}) => {
                 if (pfp != null && userId == chatPartnerUserId) {
                     chatPartnerPFP = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
+                }
+                if (numOfWarnings != null) {
+                    $("#numOfWarnings").text(numOfWarnings + " ");
                 }
             })
 
             $("#chatPartnerName").text(chatPartnerUsername);
+            
             $("#chatBoxTitleDivider").show()
             $('#messages').empty();
             $('#messageInput').show();
@@ -1809,6 +1818,18 @@ block content
 
         }
 
+        function notifyModal(msg) {
+            onClickDismissButton()
+            socket.emit("nudge-reaction", {
+                messageId: msg._id,
+                userAction: "notify",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+        }
+
         function protectiveActionModalShow(msg) {
             onClickDismissButton();
             $('#protectiveActionsModal').modal('setting', 'closable', false).modal('show');
@@ -1844,6 +1865,8 @@ block content
                 }
                 if (selectedActions.notify) {
                     console.log("notify action");
+                    notifyModal(msg)
+                    console.log("notify action finished");
                 }
             });
         }

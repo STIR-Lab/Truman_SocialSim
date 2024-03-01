@@ -92,12 +92,12 @@ const chatSocket = (server) => {
 
 		socket.on("find-partner", async (userId) => {
 			const pfp = await getChatPartnerPFP(userId.userId);
-
-			// console.log(pfp)
+			const numOfWarnings = await getChatPartnerNumOfWarnings(userId.userId);
 
 			io.to(socket.userId).emit("partner-pfp", {
 				pfp,
 				userId: userId.userId,
+				numOfWarnings: numOfWarnings
 			});
 		});
 
@@ -133,6 +133,7 @@ const chatSocket = (server) => {
 				to.username,
 				to.userId
 			);
+
 
 			// Sending back the conversation content to user
 			io.to(socket.userId).emit(
@@ -343,6 +344,37 @@ const chatSocket = (server) => {
 				io.to(socket.userId) // to sender room
 					.emit("report-success", "Successfully reported.");
 			}
+
+			if (userAction === "notify") {
+				console.log("=============emitting notify notification===============");
+				// Assuming `other.username` is the username of the user to be notified
+				User.findOne({username: other.username}, (err, user) => {
+					if (err) {
+						console.log(err);
+						return;
+					}
+					
+					if (user) {
+						// Increment the numOfWarnings field
+						user.numOfWarnings = (user.numOfWarnings || 0) + 1;
+						user.save(err => {
+							if (err) {
+								console.log(err);
+							} else {
+								console.log('Number of warnings updated successfully.');
+							}
+						});
+					}
+				});
+				// Notify the user being warned
+				io.to(other.userId) // to recipient
+					.emit("warning-issued", "A warning has been issued to you.");
+			
+				// Optionally, notify the sender of the success
+				io.to(socket.userId) // to sender room
+					.emit("warning-success", "Warning successfully issued.");
+			}
+			
 		});
 
 		
@@ -609,6 +641,24 @@ async function getChatPartnerPFP(userId) {
 	// console.log(chatPartner[0].profile.picture)
 }
 
+async function getChatPartnerNumOfWarnings(userId) {
+	let chatPartner;
+	try {
+		chatPartner = await User.find({
+			_id: userId,
+		});
+
+		console.log(`GOT ${userId} NumOfWarnings ${chatPartner[0].numOfWarnings}`);
+		return chatPartner[0].numOfWarnings;
+	} catch (error) {
+		console.log(error);
+		return "";
+	}
+}
+
+
+
+
 /**
  * Find a specific conversation history between two users
  *
@@ -665,9 +715,18 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
  *
  */
 
-getChat = (req, res) => {
-	res.render("chat", {});
-};
+// getChat = (req, res) => {
+// 	res.render("chat", {});
+// };
+getChat = (req, res, next) => {
+	User.findById(req.user.id)
+	  // Optionally populate any necessary paths if needed
+	  .exec(function (err, user) {
+		if (err) { return next(err); }
+		// Now passing the user object to the chat template
+		res.render("chat", { user: user });
+	  });
+  };
 
 getRiskInformation = (req, res) => {
 	res.render("risk_information", {});
