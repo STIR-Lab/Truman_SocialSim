@@ -21,7 +21,9 @@ block content
             .ui.segment(style='height:90vh')
                 h2#chatPartnerName.ui.left.floated.header
                 .content
-                    | This user received #{user.numOfWarnings} warnings in the past 30 days
+                    | This user received 
+                    span#numOfWarnings 0
+                    | warnings in the past 30 days
                 button#newChatButton.positive.ui.button.right.floated(style="margin-bottom:10px") 
                     i.pencil.alternate.icon
                     |   New Chat
@@ -992,6 +994,8 @@ block content
             if (copiedUserList && copiedUserList.length) {
                 // find user in online list
                 copiedUserList.forEach((user) => {
+                    console.log("logging1");
+                    console.log(user);
                     if (user.userId == userId) {
                         chatPartnerSocketId = user.socketId;
                         chatPartnerUsername = user.username;
@@ -1004,6 +1008,7 @@ block content
 
                 // find user in chat history
                 usersInHistory.forEach((user) => {
+                                        console.log("logging2");
                     if (user.userId == userId) {
                         chatPartnerUsername = user.username;
                         chatPartnerUserId = user.userId;
@@ -1012,14 +1017,18 @@ block content
             }
 
             socket.emit("find-partner", {userId: chatPartnerUserId})
-
-            socket.on("partner-pfp", ({pfp, userId}) => {
+            
+            socket.on("partner-pfp", ({pfp, userId, numOfWarnings}) => {
                 if (pfp != null && userId == chatPartnerUserId) {
                     chatPartnerPFP = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
+                }
+                if (numOfWarnings != null) {
+                    $("#numOfWarnings").text(numOfWarnings + " ");
                 }
             })
 
             $("#chatPartnerName").text(chatPartnerUsername);
+            
             $("#chatBoxTitleDivider").show()
             $('#messages').empty();
             $('#messageInput').show();
@@ -1463,7 +1472,12 @@ block content
         }
 
         // get all messages
-        socket.on("message-list", (messageList) => {
+        socket.on("message-list", (data) => {
+            let messageList = data.messageList;
+            let chatPartner = data.chatPartner;
+            console.log("in pug chatPartner");
+            console.log(chatPartner);
+
             let messageIds = [];
             for (let i = 0; i < messageList.length; i++) {
                 if (messageList[i].from.userId == userId) {
