@@ -134,19 +134,11 @@ const chatSocket = (server) => {
 				to.userId
 			);
 
-			const chatPartner = {};
-			await User.findById(to.userId, (err, user) => {
-			if (err) { return done(err); }
-			chatPartner.numOfWarnings = user.numOfWarnings;
-		});
 
 			// Sending back the conversation content to user
 			io.to(socket.userId).emit(
 				"message-list",
-				{
-					convoInfo: convoInfo ? convoInfo.content : {},
-					chatPartner: chatPartner
-				}
+				convoInfo ? convoInfo.content : {}
 			);
 		});
 

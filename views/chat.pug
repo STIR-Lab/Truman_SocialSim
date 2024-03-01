@@ -994,8 +994,6 @@ block content
             if (copiedUserList && copiedUserList.length) {
                 // find user in online list
                 copiedUserList.forEach((user) => {
-                    console.log("logging1");
-                    console.log(user);
                     if (user.userId == userId) {
                         chatPartnerSocketId = user.socketId;
                         chatPartnerUsername = user.username;
@@ -1008,7 +1006,6 @@ block content
 
                 // find user in chat history
                 usersInHistory.forEach((user) => {
-                                        console.log("logging2");
                     if (user.userId == userId) {
                         chatPartnerUsername = user.username;
                         chatPartnerUserId = user.userId;
@@ -1472,12 +1469,7 @@ block content
         }
 
         // get all messages
-        socket.on("message-list", (data) => {
-            let messageList = data.messageList;
-            let chatPartner = data.chatPartner;
-            console.log("in pug chatPartner");
-            console.log(chatPartner);
-
+        socket.on("message-list", (messageList) => {
             let messageIds = [];
             for (let i = 0; i < messageList.length; i++) {
                 if (messageList[i].from.userId == userId) {
