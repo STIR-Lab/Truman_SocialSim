@@ -3,6 +3,7 @@ const Actor = require("../models/Actor.js");
 const Script = require("../models/Script.js");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const NudgeAction = require("../models/NudgeAction");
 
 function shuffle(array) {
 	let currentIndex = array.length;
@@ -628,6 +629,11 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 		console.log(req.body);
 		return next(err);
 	}
+
+	if (req.body.postID == null || req.body.commentID == null) {
+		console.log("postID/commentID is null")
+		return;
+	}
 	// find correct post in the user object
 	// console.log(user)
 	// console.log(user.posts)
@@ -672,6 +678,27 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 			result.posts[postIndex].comments[commentIndex].userAction
 	);
 	*/
+
+	let actor = await Actor.findById(comment.actor);
+
+	const nudgeAction = new NudgeAction({
+		offender_username: actor.username,
+		recipient_username: user.username,
+		nudge_name: 'CommentNudge',
+		nudge_action_name: req.body.userAction + 
+		"_CommentNudge",
+		original_msg: comment
+	})
+	console.log("comment nudge Action");
+	// print updated user action
+	console.log(nudgeAction);
+	nudgeAction.save(err => {
+		if (err) {
+			console.log(err);
+		} else {
+			console.log('Nudge action updated successfully.');
+		}
+	});
 	res.status(200).redirect("/");
 	/*
 	User.updateOne(

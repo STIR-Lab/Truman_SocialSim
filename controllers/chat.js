@@ -6,6 +6,8 @@ const mongoose = require("mongoose");
 const { Conversation, Message } = require("../models/Chat");
 const { format } = require("path");
 const User = require("../models/User");
+const NudgeAction = require("../models/NudgeAction");
+const util = require('util');
 
 const { uploadFile } = require("../s3");
 
@@ -90,12 +92,12 @@ const chatSocket = (server) => {
 
 		socket.on("find-partner", async (userId) => {
 			const pfp = await getChatPartnerPFP(userId.userId);
-
-			// console.log(pfp)
+			const numOfWarnings = await getChatPartnerNumOfWarnings(userId.userId);
 
 			io.to(socket.userId).emit("partner-pfp", {
 				pfp,
 				userId: userId.userId,
+				numOfWarnings: numOfWarnings
 			});
 		});
 
@@ -131,6 +133,7 @@ const chatSocket = (server) => {
 				to.username,
 				to.userId
 			);
+
 
 			// Sending back the conversation content to user
 			io.to(socket.userId).emit(
@@ -255,7 +258,34 @@ const chatSocket = (server) => {
 				convoInfo.markModified("reported");
 			}
 
+			const nudgeAction = new NudgeAction({
+				offender_username: convoInfo.content[messageIndex].from.username,
+				recipient_username: convoInfo.content[messageIndex].to.username,
+				nudge_name: convoInfo.content[messageIndex].nudge.nudgeType,
+				nudge_action_name: convoInfo.content[messageIndex].nudge.userAction + 
+				"_" + convoInfo.content[messageIndex].nudge.nudgeType,
+				original_msg: convoInfo.content[messageIndex].msg
+			})
+
+			nudgeAction.save(err => {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log('Nudge action updated successfully.');
+				}
+			});
+
+			console.log("=============NudgeAction===============");
+			console.log(nudgeAction);
+			// console.log(util.inspect(nudgeAction, { depth: null }));
+
 			await convoInfo.save();
+			console.log("=============convo info===============");
+			console.log(convoInfo);
+			console.log(util.inspect(convoInfo, { depth: null }));
+
+
+
 			console.log(userAction);
 			if (userAction === "blockUser") {
 				console.log("=============emmitting block===============");
@@ -609,6 +639,21 @@ async function getChatPartnerPFP(userId) {
 	}
 
 	// console.log(chatPartner[0].profile.picture)
+}
+
+async function getChatPartnerNumOfWarnings(userId) {
+	let chatPartner;
+	try {
+		chatPartner = await User.find({
+			_id: userId,
+		});
+
+		console.log(`GOT ${userId} NumOfWarnings ${chatPartner[0].numOfWarnings}`);
+		return chatPartner[0].numOfWarnings;
+	} catch (error) {
+		console.log(error);
+		return "";
+	}
 }
 
 

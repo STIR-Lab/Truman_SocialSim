@@ -21,7 +21,9 @@ block content
             .ui.segment(style='height:90vh')
                 h2#chatPartnerName.ui.left.floated.header
                 .content
-                    | This user received #{user.numOfWarnings} warnings in the past 30 days
+                    | This user received 
+                    span#numOfWarnings 0
+                    | warnings in the past 30 days
                 button#newChatButton.positive.ui.button.right.floated(style="margin-bottom:10px") 
                     i.pencil.alternate.icon
                     |   New Chat
@@ -1012,14 +1014,18 @@ block content
             }
 
             socket.emit("find-partner", {userId: chatPartnerUserId})
-
-            socket.on("partner-pfp", ({pfp, userId}) => {
+            
+            socket.on("partner-pfp", ({pfp, userId, numOfWarnings}) => {
                 if (pfp != null && userId == chatPartnerUserId) {
                     chatPartnerPFP = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
+                }
+                if (numOfWarnings != null) {
+                    $("#numOfWarnings").text(numOfWarnings + " ");
                 }
             })
 
             $("#chatPartnerName").text(chatPartnerUsername);
+            
             $("#chatBoxTitleDivider").show()
             $('#messages').empty();
             $('#messageInput').show();
@@ -1613,6 +1619,14 @@ block content
 
         function onClickshowN1M3Button() {
             console.log("onClickshowN1M3Button");
+            socket.emit("nudge-reaction", {
+                messageId: nudge1MessageId,
+                userAction: "turnOffWarning",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal3').modal('setting', 'closable', false).modal('show');
         }
