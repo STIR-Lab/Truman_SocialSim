@@ -13,6 +13,9 @@ const userSchema = new mongoose.Schema({
   active: {type: Boolean, default: true},
   isAdmin: {type: Boolean, default: false},
 
+  // num of warnings 
+  // used in chat module
+  numOfWarnings: { type: Number, default: 0 },
   
   completed: {type: Boolean, default: false},
 
