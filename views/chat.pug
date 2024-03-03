@@ -178,24 +178,24 @@ block content
 
     .ui.modal#protectiveActionsModal(style='width: 500px; border-radius: 15px; background-color: #f9f9f9;')
         i.close.icon(style='position: absolute; top: 1px; right: 8px; color: black;')
-        .content(style='padding: 40px 20px 20px 20px; text-align: center; font-size: 14px;')
+        .content(style='padding: 40px 20px 20px 20px; text-align: center; font-size: 15px;')
             | Here are some protective actions you can take. Please select your choice(s) from the options below:
-            form.ui.form(id='protectiveActionsForm')
+            form.ui.form(id='protectiveActionsForm', style='text-align: left; line-height: 2.5; margin-top: 10px')
                 .ui.checkbox
                     input(type='checkbox', name='blockUser')
-                    label Block User: The user will be prevented from seeing your posts, friending you, or messaging you. 
+                    label #[strong(style='color: black;') Block User:] The user will be prevented from seeing your posts, friending you, or messaging you. 
                 .ui.checkbox
                     input(type='checkbox', name='reportUser')
-                    label Report User: The user will be warned for violating the Community Guidelines. Further violations may result in a temporary ban. 
+                    label #[strong(style='color: black;') Report User:] The user will be warned for violating the Community Guidelines. Further violations may result in a temporary ban. 
                 .ui.checkbox
                     input(type='checkbox', name='deleteMessage')
-                    label Delete Message: The user's message will be deleted and no longer appear in your chat. 
+                    label #[strong(style='color: black;') Delete Message:] The user's message will be deleted and no longer appear in your chat. 
                 .ui.checkbox
                     input(type='checkbox', name='hideMessage')
-                    label Hide Similar Messages: Messages with similar violations will be automatically hidden in the future. 
+                    label #[strong(style='color: black;') Hide Similar Messages:] Messages with similar violations will be automatically hidden in the future. 
                 .ui.checkbox
                     input(type='checkbox', name='notify')
-                    label Notify Other Users: Other active users on the platform will receive a community warning about potential risk from this user.
+                    label #[strong(style='color: black;') Notify Other Users:] Other active users on the platform will receive a community warning about potential risk from this user.
         .actions
             button.ui.button#confirmProtectiveActions(type='submit', form='protectiveActionsForm') Confirm
 
@@ -2140,9 +2140,9 @@ block content
                 msgType = `<p>${msg.body}</p>`
                 console.log(msgType, messageDeleted, nudge.userAction);
                 if (messageDeleted || nudge.nudgeType == "sensitivityFilter" && (nudge.userAction == "deleteMessage" || nudge.userAction == "deleteMessageAndLetOthersKnow")) {
-                    msgType = `<p><b>deleted message!</b></p>`
+                    msgType = `<p><b>Deleted message</b></p>`
                 } else if (messageHiden || (nudge.userAction == "hideMessage")) {
-                    msgType = `<p><b>Hiden message</b></p>`
+                    msgType = `<p><b>Hidden message</b></p>`
                 }
             } else if (msg.type == "img") {
                 msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
