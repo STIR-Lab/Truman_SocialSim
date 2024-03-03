@@ -20,10 +20,7 @@ block content
         .eleven.wide.column
             .ui.segment(style='height:90vh')
                 h2#chatPartnerName.ui.left.floated.header
-                .content
-                    | This user received 
-                    span#numOfWarnings 0
-                    | warnings in the past 30 days
+                .content#warning
                 button#newChatButton.positive.ui.button.right.floated(style="margin-bottom:10px") 
                     i.pencil.alternate.icon
                     |   New Chat
@@ -1019,8 +1016,8 @@ block content
                 if (pfp != null && userId == chatPartnerUserId) {
                     chatPartnerPFP = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
                 }
-                if (numOfWarnings != null) {
-                    $("#numOfWarnings").text(numOfWarnings + " ");
+                if (numOfWarnings != null && numOfWarnings > 0) {
+                    updateWarning(numOfWarnings);
                 }
             })
 
@@ -1484,7 +1481,7 @@ block content
                         //-     blockUserModal1(messageList[i])
                         //- }
                         document.getElementById('showProtectiveButton').onclick = function () {
-                            protectiveActionModalShow(messageList[i])
+                            protectiveActionModalShow(messageList[i], messageList[i].from.userId)
                             //$('#protectiveActionsModal').modal('setting', 'closable', false).modal('show');
                         };
                         //document.getElementById('reportButton').onclick=function(){reportUserModal1(messageList[i])}
@@ -1697,7 +1694,7 @@ block content
                     //-     blockUserModal1(msg)
                     //- }
                     document.getElementById('showProtectiveButton').onclick = function () {
-                        protectiveActionModalShow(msg)
+                        protectiveActionModalShow(msg, msg.from.userId)
                         
                     };
                     //document.getElementById('reportButton').onclick=function(){reportUserModal1(msg)}
@@ -1818,7 +1815,7 @@ block content
 
         }
 
-        function notifyModal(msg) {
+        function notifyModal(msg, fromUserId) {
             onClickDismissButton()
             socket.emit("nudge-reaction", {
                 messageId: msg._id,
@@ -1828,9 +1825,22 @@ block content
                     userId: chatPartnerUserId,
                 }
             });
+            
+            // delay: wait for the system to update num of warnings
+            setTimeout(() => {
+                socket.emit("find-partner", { userId: fromUserId });
+                }, 3000);
+         }
+
+
+
+        function updateWarning(numOfWarnings) {
+            $("#warning").html("This user received <span id=\"numOfWarnings\">"
+            + numOfWarnings 
+            + "</span> warnings in the past 30 days");
         }
 
-        function protectiveActionModalShow(msg) {
+        function protectiveActionModalShow(msg, fromUserId) {
             onClickDismissButton();
             $('#protectiveActionsModal').modal('setting', 'closable', false).modal('show');
 
@@ -1865,7 +1875,7 @@ block content
                 }
                 if (selectedActions.notify) {
                     console.log("notify action");
-                    notifyModal(msg)
+                    notifyModal(msg, fromUserId)
                     console.log("notify action finished");
                 }
             });
