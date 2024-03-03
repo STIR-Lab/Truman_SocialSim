@@ -20,8 +20,8 @@ block content
         .eleven.wide.column
             .ui.segment(style='height:90vh')
                 h2#chatPartnerName.ui.left.floated.header
-                .content#warning
-                button#newChatButton.positive.ui.button.right.floated(style="margin-bottom:10px") 
+                .content#warning(style="text-align: right; margin-top: 5px")
+                button#newChatButton.positive.ui.button.right.floated(style="margin-bottom:10px;") 
                     i.pencil.alternate.icon
                     |   New Chat
                 #chatBoxTitleDivider.ui.clearing.divider
@@ -1835,9 +1835,9 @@ block content
 
 
         function updateWarning(numOfWarnings) {
-            $("#warning").html("This user received <span id=\"numOfWarnings\">"
+            $("#warning").html("This user received <strong><span id=\"numOfWarnings\">"
             + numOfWarnings 
-            + "</span> warnings in the past 30 days");
+            + "</span> warnings</strong> in the past 30 days");
         }
 
         function protectiveActionModalShow(msg, fromUserId) {
