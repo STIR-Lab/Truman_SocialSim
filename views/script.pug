@@ -170,9 +170,9 @@ block content
                             -console.log('DISPLAY THE Hide similar COMMENT NUDGE')
                             .comment(commentNudgeID=comment.commentID)
                               .content
-                                | Hiden Comment
+                                | Hidden Comment
                                 .text
-                                  | The user #{comment.actor.username}'s comment has been hiden. Comments with similar violations will be automatically hidden in the future. This comment also violates our community guidelines. Further violation may result in a ban for this user. 
+                                  | The user #{comment.actor.username}'s comment has been hidden. Comments with similar violations will be automatically hidden in the future. This comment also violates our community guidelines. Further violation may result in a ban for this user. 
                                   a(href='/risk_information') 
                                     | Learn more 
                                     i.info.circle.icon 
@@ -181,9 +181,9 @@ block content
                             -console.log('DISPLAY THE notify other users COMMENT NUDGE')
                             .comment(commentNudgeID=comment.commentID)
                               .content
-                                | Hiden Comment
+                                | Hidden Comment
                                 .text
-                                  | The user #{comment.actor.username}'s comment has been hiden. Other active users on the platform will receive a community warning about potential risk from this user. Comments with similar violations will be automatically hidden in the future. This comment also violates our community guidelines. Further violation may result in a ban for this user. 
+                                  | The user #{comment.actor.username}'s comment has been hidden. Other active users on the platform will receive a community warning about potential risk from this user. Comments with similar violations will be automatically hidden in the future. This comment also violates our community guidelines. Further violation may result in a ban for this user. 
                                   a(href='/risk_information') 
                                     | Learn more 
                                     i.info.circle.icon 
@@ -329,7 +329,7 @@ block content
                               .content(style='border: 1px solid #ddd; padding: 40px 20px 20px 20px; background-color: #f9f9f9; text-align: center; border-radius: 15px; font-size: 15px;')
                                 | Here are some protective actions you can take. Please 
                                 | select your choice(s) from the options below:
-                                form.ui.form(id='protectiveActionsForm')
+                                form.ui.form(id='protectiveActionsForm', style='text-align: left;')
                                   .field
                                     .ui.checkbox
                                       input(type='checkbox', name='All')
@@ -337,23 +337,23 @@ block content
                                   .field
                                     .ui.checkbox
                                       input(type='checkbox', name='blockUser')
-                                      label Block User: The user will be prevented from seeing your posts, friending you, or messaging you. 
+                                      label #[strong(style='color: black;') Block User:] The user will be prevented from seeing your posts, friending you, or messaging you. 
                                   .field
                                     .ui.checkbox
                                       input(type='checkbox', name='reportUser')
-                                      label Report User: The user will be warned for violating the Community Guidelines. Further violations may result in a temporary ban. 
+                                      label #[strong(style='color: black;') Report User:] The user will be warned for violating the Community Guidelines. Further violations may result in a temporary ban. 
                                   .field
                                     .ui.checkbox
                                       input(type='checkbox', name='deleteComment')
-                                      label Delete: The user comment will be deleted and no longer appear on your post. 
+                                      label #[strong(style='color: black;') Delete Comment:] The user comment will be deleted and no longer appear on your post. 
                                   .field
                                     .ui.checkbox
                                       input(type='checkbox', name='hideSimilarComments')
-                                      label Hide Similar Comments: Comments with similar violations will be automatically hidden in the future. 
+                                      label #[strong(style='color: black;') Hide Similar Comments:] Comments with similar violations will be automatically hidden in the future. 
                                   .field
                                     .ui.checkbox
                                       input(type='checkbox', name='notifyOtherUsers')
-                                      label Notify Other Users: Other active users on the platform will receive a community warning about potential risk from this user.
+                                      label #[strong(style='color: black;') Notify Other Users:] Other active users on the platform will receive a community warning about potential risk from this user.
                               .actions(style='border-top: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; border-radius: 15px;')
                                 button.ui.button#firstConfirm(type='submit', form='protectiveActionsForm') Confirm
 
