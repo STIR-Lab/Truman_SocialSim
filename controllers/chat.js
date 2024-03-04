@@ -280,9 +280,9 @@ const chatSocket = (server) => {
 			// console.log(util.inspect(nudgeAction, { depth: null }));
 
 			await convoInfo.save();
-			console.log("=============convo info===============");
-			console.log(convoInfo);
-			console.log(util.inspect(convoInfo, { depth: null }));
+			// console.log("=============convo info===============");
+			// console.log(convoInfo);
+			// console.log(util.inspect(convoInfo, { depth: null }));
 
 
 
