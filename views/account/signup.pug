@@ -13,13 +13,17 @@ block content
         label(for='username') Username
         input(type='text', name='username', id='username', placeholder='Username', autofocus, required)
 
-      .field
-        label(for='mturkID') Mechanical Turk ID
-        input(type='text', name='mturkID', id='mturkID', placeholder='Mechanical Turk ID', required)
-
+      //- .field
+      //-   label(for='mturkID') Mechanical Turk ID
+      //-   input(type='text', name='mturkID', id='mturkID', placeholder='Mechanical Turk ID', required)
+      
+      
+      //-  A local part (containing letters, digits, and certain special characters like dot, underscore, percent, plus, and hyphen)
+      //-  followed by "@" symbol, then a domain part (containing letters, digits, dots, and hyphens), 
+      //-  followed by a dot and at least two letters representing the top-level domain.
       .field
         label(for='email') Email (will not be publicly displayed)
-        input(type='email', name='email', id='email', placeholder='Email', required)
+        input(type='email', name='email', id='email', placeholder='Email', required, pattern='[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
 
       .field
         label(for='password') Password
@@ -29,10 +33,10 @@ block content
         label(for='confirmPassword') Confirm Password
         input(type='password', name='confirmPassword', id='confirmPassword', placeholder='Confirm Password', required)
           
-      .field
-        .ui.checkbox
-          input.hidden(type='checkbox', name='tos', id='tos', required)
-          label
-            | I agree to the 
-            a(href='/tos') Terms and Conditions
+      //- .field
+      //-   .ui.checkbox
+      //-     input.hidden(type='checkbox', name='tos', id='tos', required)
+      //-     label
+      //-       | I agree to the 
+      //-       a(href='/tos') Terms and Conditions
       button.ui.button(type='submit') Signup
