@@ -27,6 +27,8 @@ const userSchema = new mongoose.Schema({
     numPostLikes: { type: Number, default: 0 },
     numCommentLikes: { type: Number, default: 0 },
 
+    hasSeenCommentNudge: {type: Boolean, default: false},
+
     lastNotifyVisit: Date,
 
     mturkID: String,

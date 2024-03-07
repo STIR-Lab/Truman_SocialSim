@@ -417,7 +417,7 @@ exports.newPost = async (req, res) => {
 			console.log(randomActor);
 			
 
-			if (user.numPosts < 30) {
+			if (!user.hasSeenCommentNudge && user.numPosts < 30) {
 				// setTimeout(async () => {
 					console.log("This is the first user post, so we add a comment nudge");
 					const commentNudge = new Object();
@@ -432,6 +432,8 @@ exports.newPost = async (req, res) => {
 					commentNudge.time = post.relativeTime;
 					// add to posts
 					post.comments.push(commentNudge);
+					user.hasSeenCommentNudge = true;
+					console.log("Now user has seen comment nudge");
 				// }, 5000);  
 			}
 
