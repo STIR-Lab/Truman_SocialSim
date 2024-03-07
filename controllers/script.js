@@ -422,7 +422,7 @@ exports.newPost = async (req, res) => {
 					console.log("This is the first user post, so we add a comment nudge");
 					const commentNudge = new Object();
 			
-					commentNudge.body = "This is a comment nudge";
+					commentNudge.body = "lol wth is this post? 😂";
 					user.numActorReplies += 1;
 					commentNudge.commentID = user.numActorReplies;
 					commentNudge.actor = randomActor._id;
