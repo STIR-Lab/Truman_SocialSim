@@ -117,7 +117,7 @@ block content
                         -console.log(comment.nudgeShown)
                         -console.log('COMMENT NUDGE SHOWN 1: ' + comment.userAction)
                           
-                        if comment.nudgeShown
+                        if comment.nudgeShown == 'true'
                           if comment.userAction == 'hide'
                             -console.log('DISPLAY THE HIDE COMMENT NUDGE')
                             .comment(commentNudgeID=comment.commentID)
