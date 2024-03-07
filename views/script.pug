@@ -117,7 +117,7 @@ block content
                         -console.log(comment.nudgeShown)
                         -console.log('COMMENT NUDGE SHOWN 1: ' + comment.userAction)
                           
-                        if comment.nudgeShown
+                        if comment.nudgeShown == 'true'
                           if comment.userAction == 'hide'
                             -console.log('DISPLAY THE HIDE COMMENT NUDGE')
                             .comment(commentNudgeID=comment.commentID)
@@ -449,7 +449,7 @@ block content
                                   $('#secondaryUnhideCommentModal').modal('attach events', '#commentNudgeModal.modal #unhideCommentNudgeModal.button');
                                   //$('#secondaryReportCommentModal').modal('attach events', '#commentNudgeModal.modal #blockCommentNudge.button');
                                   $("#commentNudgeModal").modal('setting', 'closable', false).modal('show');
-                              }, 3000);
+                              }, 30000);
 
 
                         else 
