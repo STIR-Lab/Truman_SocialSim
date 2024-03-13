@@ -254,10 +254,9 @@ block content
         div(style='background-color: #f9f9f9; border: 1px #ddd; border-radius: 15px; margin-bottom: 10px;')
             .content(style='padding: 40px 20px 20px 20px; flex-grow: 1; text-align: center; font-size: 15px;')
                 .ui.center.aligned.container(style='white-space: pre-line;')
-                    | This user can no longer chat with you as they
-                    | are not in your friends list and sent you
-                    | #[strong(style='color: red;') inappropriate messages]. Would you like to exit
-                    | this conversation?
+                    | This user sent you an #[strong(style='color: red;') inappropriate message]
+                    | that violates our community guidelines. How
+                    | would you like to proceed?
 
             .actions(style='border-top: 1px #ddd; padding: 10px; text-align: center;')
                 .ui.attached.buttons
@@ -265,7 +264,9 @@ block content
                         | Turn off this warning
                     //- button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
                     //-     | #[strong(style='color: red;') Block User]
-                    button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
+                    //- button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
+                    //-     | Take Protective Action
+                    button.ui.basic.button#showProtectiveButton(style='flex: 1; text-align: center; white-space: normal;')
                         | Take Protective Action
                     button.ui.basic.button#continueModal(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
                         | OK
@@ -1042,6 +1043,8 @@ block content
 
         let nudge3MessageId = null;
         let nudge1MessageId = null;
+        let nudge3newMessageId = null;
+        let nudgeExplicitMessageId = null;
 
         document.getElementById('nudge1Button5').onclick = function () {
             onClickNudge1Button5()
@@ -1324,7 +1327,7 @@ block content
                         console.log(infoBreach3New)
                         riskyScenario = "infoBreach3New"
                         //nudgeType = "userActions";
-                        nudgeType = "sensitivityFilter"
+                        nudgeType = "sensitivityFilter";
                     }
 
                     $('#nudge3Card').hide();
@@ -1356,7 +1359,7 @@ block content
                     if (file.type.includes("image")) {
                         if (file.name == explicitContent1) {
                             riskyScenario = "explicitContent1"
-                            nudgeType = "abstinence";
+                            nudgeType = "sensitivityFilter";
                         }
                         socket.emit('send-message', {
                             msg: {
@@ -1502,10 +1505,33 @@ block content
                         nudge1MessageId = messageList[i]._id;
 
                     }
+                    //- if (nudgeShown && !messageList[i].msg.read && messageList[i].nudge.riskyScenario == "explicitContent1") {
+                    //-     console.log('link nudge')
+                    //-     $('#nudge2Modal').modal('setting', 'closable', false).modal('show');
+                    //- }
+                    
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].nudge.riskyScenario == "explicitContent1") {
-                        console.log('link nudge')
-                        $('#nudge2Modal').modal('setting', 'closable', false).modal('show');
+                        document.getElementById('continueModal').onclick = function () {
+                            onClickShowMeModal(messageList[i])
+                        }
+                        document.getElementById('dismissNudge2NewModal').onclick = function () {
+                            onClickShowMeModal(messageList[i])
+                        }
+                          document.getElementById('showProtectiveButton').onclick = function () {
+                            protectiveActionModalShow(messageList[i])
+                            //$('#protectiveActionsModal').modal('setting', 'closable', false).modal('show');
+                        };
+                    //- document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
+                    //-         blockUserModal1(messageList[i])
+                    //-     }
+                        document.getElementById('showN1Modal3Button').onclick = function () {
+                            showN1M3Modal(messageList[i])
+                        }
+                        //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
+                        $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
+                        nudge1MessageId = messageList[i]._id;
                     }
+
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach3) {
                         $('#nudge3Card').modal('setting', 'closable', false).show();
                         nudge3MessageId = messageList[i]._id;
@@ -1522,14 +1548,24 @@ block content
                         //-     leaveUserModal(messageList[i])
                         //- }
                         
-                        document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
-                            blockUserModal1(messageList[i])
-                        }
+                        //- document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
+                        //-     blockUserModal1(messageList[i])
+                        //- }
+                        document.getElementById('showProtectiveButton').onclick = function () {
+                            protectiveActionModalShow(messageList[i])
+                            //$('#protectiveActionsModal').modal('setting', 'closable', false).modal('show');
+                        };
                         document.getElementById('showN1Modal3Button').onclick = function () {
                             showN1M3Modal(messageList[i])
                         }
                         //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
                         $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
+                        nudge1MessageId = messageList[i]._id;
+
+                        // only showing modal2 when clicking ok in modal 1
+                        //$('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
+                        //$('#nudge3Card').modal('setting', 'closable', false).modal('show');
+                   
 
                     }
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach2) {
@@ -1713,9 +1749,34 @@ block content
                     //$('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
                     nudge1MessageId = msg._id;
                 }
+                //- if (nudgeShown && msg.nudge.riskyScenario == "explicitContent1") {
+                //-     $('#nudge2Modal').modal('setting', 'closable', false).modal('show');
+                //- }
                 if (nudgeShown && msg.nudge.riskyScenario == "explicitContent1") {
-                    $('#nudge2Modal').modal('setting', 'closable', false).modal('show');
+                   document.getElementById('continueModal').onclick = function () {
+                        onClickShowMeModal(msg)
+                    }
+                    document.getElementById('dismissNudge2NewModal').onclick = function () {
+                        onClickShowMeModal(msg)
+                    }
+                    //- document.getElementById('leaveNudge2NewModal').onclick = function () {
+                    //-     leaveUserModal(msg)
+                    //- }
+                    //- document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
+                    //-     blockUserModal1(msg)
+                    //- }
+                     document.getElementById('showProtectiveButton').onclick = function () {
+                        protectiveActionModalShow(msg)
+                        
+                    };
+                    document.getElementById('showN1Modal3Button').onclick = function () {
+                        showN1M3Modal(msg)
+                    }
+                    //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
+                    $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
+                    nudge1MessageId = msg._id;
                 }
+
                 if (nudgeShown && msg.msg.body == infoBreach3) {
                     $('#nudge3Card').modal('setting', 'closable', false).show();
                     nudge3MessageId = msg._id;
@@ -1747,14 +1808,19 @@ block content
                     //- document.getElementById('leaveNudge2NewModal').onclick = function () {
                     //-     leaveUserModal(msg)
                     //- }
-                    document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
-                        blockUserModal1(msg)
-                    }
+                    //- document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
+                    //-     blockUserModal1(msg)
+                    //- }
+                     document.getElementById('showProtectiveButton').onclick = function () {
+                        protectiveActionModalShow(msg)
+                        
+                    };
                     document.getElementById('showN1Modal3Button').onclick = function () {
                         showN1M3Modal(msg)
                     }
                     //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
                     $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
+                    nudge1MessageId = msg._id;
                 } else {
                     console.log(nudge2NewShown, nudge1NewShown)
                     if (!nudge2NewShown && !nudge1NewShown) {

@@ -50,7 +50,7 @@ exports.getScript = (req, res, next) => {
 	console.log("$#$#$#$#$#$#$START GET SCRIPT$#$#$$#$#$#$#$#$#$#$#$#$#");
 	console.log(`time_diff  is now ${time_diff}`);
 	console.log(`time_limit  is now ${time_limit}`);
-  
+
 
 	User.findById(req.user.id)
 		.populate({
@@ -413,27 +413,28 @@ exports.newPost = async (req, res) => {
 			const actors = await Actor.find();
 
 			// get random actor
-			const randomActor = actors[Math.floor(Math.random() * actors.length)];
+			//const randomActor = actors[Math.floor(Math.random() * actors.length)];
+			const randomActor = actors[1]
 			console.log(randomActor);
-			
+
 
 			if (!user.hasSeenCommentNudge && user.numPosts < 30) {
 				// setTimeout(async () => {
-					console.log("This is the first user post, so we add a comment nudge");
-					const commentNudge = new Object();
-			
-					commentNudge.body = "lol wth is this post? 😂";
-					user.numActorReplies += 1;
-					commentNudge.commentID = user.numActorReplies;
-					commentNudge.actor = randomActor._id;
-					commentNudge.class = "commentNudge";
-					commentNudge.nudgeShown = "true";  // Modify this if Nudge is not supposed to be shown
-					commentNudge.userAction = "null";
-					commentNudge.time = post.relativeTime;
-					// add to posts
-					post.comments.push(commentNudge);
-					user.hasSeenCommentNudge = true;
-					console.log("Now user has seen comment nudge");
+				console.log("This is the first user post, so we add a comment nudge");
+				const commentNudge = new Object();
+
+				commentNudge.body = "lol wth is this post? 😂";
+				user.numActorReplies += 1;
+				commentNudge.commentID = user.numActorReplies;
+				commentNudge.actor = randomActor._id;
+				commentNudge.class = "commentNudge";
+				commentNudge.nudgeShown = "true";  // Modify this if Nudge is not supposed to be shown
+				commentNudge.userAction = "null";
+				commentNudge.time = post.relativeTime;
+				// add to posts
+				post.comments.push(commentNudge);
+				user.hasSeenCommentNudge = true;
+				console.log("Now user has seen comment nudge");
 				// }, 5000);  
 			}
 
@@ -558,7 +559,7 @@ exports.newPost = async (req, res) => {
 // 						commentNudge.nudgeShown = "true";
 // 						commentNudge.userAction = "null";
 // 						commentNudge.time = Date.now() - user.createdAt;
-	
+
 // 						const updatedUser = await User.findById(req.user.id);
 // 						const updatedPost = updatedUser.posts.find(p => p.postID === post.postID);
 // 						if (updatedPost) {
@@ -575,7 +576,7 @@ exports.newPost = async (req, res) => {
 // 						}
 // 					}, 5000);
 // 				}
-                
+
 //             });
 
 //             Notification.find()
@@ -612,7 +613,7 @@ exports.newPost = async (req, res) => {
 //     });
 // };
 
-  
+
 
 
 /**
@@ -670,7 +671,7 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 	await user.markModified("posts");
 	const result = await User.updateOne(
 		{ _id: req.user.id },
-		{ $set: { posts: user.posts }});
+		{ $set: { posts: user.posts } });
 	console.log("UPDATED USER");
 	// print updated user action
 	console.log(result);
@@ -687,8 +688,8 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 		offender_username: actor.username,
 		recipient_username: user.username,
 		nudge_name: 'CommentNudge',
-		nudge_action_name: req.body.userAction + 
-		"_CommentNudge",
+		nudge_action_name: req.body.userAction +
+			"_CommentNudge",
 		original_msg: comment
 	})
 	console.log("comment nudge Action");
@@ -1106,37 +1107,37 @@ exports.postUpdateProFeedAction = (req, res, next) => {
  * POST /userPost_comment
  * Create a new comment on a user's post.
  */
- exports.postNewCommentOnUserPost = (req, res, next) => {
-    User.findById(req.user.id, (err, user) => {
-        if (err) {
-            return next(err);
-        }
+exports.postNewCommentOnUserPost = (req, res, next) => {
+	User.findById(req.user.id, (err, user) => {
+		if (err) {
+			return next(err);
+		}
 
-        const feedIndex = _.findIndex(user.posts, (o) => o.postID == req.body.postID);
-        if (feedIndex === -1) {
-            return res.status(404).send({ error: "Post not found." });
-        }
+		const feedIndex = _.findIndex(user.posts, (o) => o.postID == req.body.postID);
+		if (feedIndex === -1) {
+			return res.status(404).send({ error: "Post not found." });
+		}
 
-        if (req.body.new_comment) {
-            const cat = {
-                new_comment: true,
-                commentID: 900 + user.numReplies, // unique ID for the comment
-                body: req.body.comment_text,
-                isUser: true,
-                absTime: Date.now(),
-                time: Date.now() - user.createdAt
-            };
+		if (req.body.new_comment) {
+			const cat = {
+				new_comment: true,
+				commentID: 900 + user.numReplies, // unique ID for the comment
+				body: req.body.comment_text,
+				isUser: true,
+				absTime: Date.now(),
+				time: Date.now() - user.createdAt
+			};
 
-            user.numReplies += 1;
-            user.posts[feedIndex].comments.push(cat);
-            user.save((err) => {
-                if (err) { return next(err); }
-                res.send({ result: "success", comment: cat });
-            });
-        } else {
-            res.status(400).send({ error: "Invalid request." });
-        }
-    });
+			user.numReplies += 1;
+			user.posts[feedIndex].comments.push(cat);
+			user.save((err) => {
+				if (err) { return next(err); }
+				res.send({ result: "success", comment: cat });
+			});
+		} else {
+			res.status(400).send({ error: "Invalid request." });
+		}
+	});
 };
 
 /**

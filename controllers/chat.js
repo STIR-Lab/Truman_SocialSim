@@ -73,10 +73,10 @@ const chatSocket = (server) => {
 	io.on("connection", async (socket) => {
 		console.log("Websocket connection...");
 
-		
-        socket.onAny((event, ...args) => {
-            console.log(event, args);
-        });
+
+		socket.onAny((event, ...args) => {
+			console.log(event, args);
+		});
 
 		// Save session info and emit to the client
 		sessionStore.saveSession(socket.sessionId, {
@@ -143,28 +143,28 @@ const chatSocket = (server) => {
 		});
 
 		/**
-     * Message
-     *
-     * {
-     *  msg: {
-     *     type: "txt" | "img"
-     *     body: string | blob, actual content of the message
-     *     mimeType?: "png" | "jpg", etc
-     *     fileName?: string
-     *   },
-        nudge: {
-          nudgeShown: Boolean, --> Nudge was shown/not shown, keep true for all for now, future research will only show the nudge to half of the teens
-          riskyScenario: String, --> Risky Scenario type, "info_breach_1", "explicit_content_2", etc
-          nudgeType: String, --> Nudge type, Pop up vs censored
-          userAction: String, --> Action taken by the user
-        },
-        to: {
-          username: string,
-          userId: string,
-          socketId: string
-        }
-      }
-     */
+	 * Message
+	 *
+	 * {
+	 *  msg: {
+	 *     type: "txt" | "img"
+	 *     body: string | blob, actual content of the message
+	 *     mimeType?: "png" | "jpg", etc
+	 *     fileName?: string
+	 *   },
+		nudge: {
+		  nudgeShown: Boolean, --> Nudge was shown/not shown, keep true for all for now, future research will only show the nudge to half of the teens
+		  riskyScenario: String, --> Risky Scenario type, "info_breach_1", "explicit_content_2", etc
+		  nudgeType: String, --> Nudge type, Pop up vs censored
+		  userAction: String, --> Action taken by the user
+		},
+		to: {
+		  username: string,
+		  userId: string,
+		  socketId: string
+		}
+	  }
+	 */
 
 		socket.on("send-message", async ({ msg, nudge, to }) => {
 			// NOTE: io.to(socket.io) || socket.to(socket.io)?
@@ -221,6 +221,7 @@ const chatSocket = (server) => {
 		});
 
 		socket.on("nudge-reaction", async ({ messageId, userAction, other }) => {
+			//nudge = nudge == undefined ? {} : nudge;
 			const convoInfo = await searchConvo(
 				socket.username,
 				socket.userId,
@@ -262,8 +263,8 @@ const chatSocket = (server) => {
 				offender_username: convoInfo.content[messageIndex].from.username,
 				recipient_username: convoInfo.content[messageIndex].to.username,
 				nudge_name: convoInfo.content[messageIndex].nudge.nudgeType,
-				nudge_action_name: convoInfo.content[messageIndex].nudge.userAction + 
-				"_" + convoInfo.content[messageIndex].nudge.nudgeType,
+				nudge_action_name: convoInfo.content[messageIndex].nudge.userAction +
+					"_" + convoInfo.content[messageIndex].nudge.nudgeType,
 				original_msg: convoInfo.content[messageIndex].msg
 			})
 
@@ -290,23 +291,23 @@ const chatSocket = (server) => {
 			if (userAction === "blockUser") {
 				console.log("=============emmitting block===============");
 				// console.log(formattedMsg);
-				    User.findOne({username: socket.username}, (err, user) => {
-			          if (err) {
-			            console.log(err);
-			            return;
-			          }
-					  
-			          if (user) {
-			            user.blocked.push(other.username);
-			            user.save(err => {
-			              if (err) {
-			                console.log(err);
-			              } else {
-			                console.log('User blocked list updated successfully.');
-			              }
-			            });
-			          }
-			        });
+				User.findOne({ username: socket.username }, (err, user) => {
+					if (err) {
+						console.log(err);
+						return;
+					}
+
+					if (user) {
+						user.blocked.push(other.username);
+						user.save(err => {
+							if (err) {
+								console.log(err);
+							} else {
+								console.log('User blocked list updated successfully.');
+							}
+						});
+					}
+				});
 				io.to(other.userId) // to recipient
 					// .to(socket.userId) // to sender room
 					.emit("blocked", "You've been blocked.");
@@ -316,26 +317,26 @@ const chatSocket = (server) => {
 					.emit("block-success", "Successfully blocked.");
 			}
 
-		    if (userAction === "reportUser") {
+			if (userAction === "reportUser") {
 				console.log("=============emmitting report===============");
 				// console.log(formattedMsg);
-				    User.findOne({username: socket.username}, (err, user) => {
-			          if (err) {
-			            console.log(err);
-			            return;
-			          }
-					  
-			          if (user) {
-			            user.reported.push(other.username);
-			            user.save(err => {
-			              if (err) {
-			                console.log(err);
-			              } else {
-			                console.log('User reported list updated successfully.');
-			              }
-			            });
-			          }
-			        });
+				User.findOne({ username: socket.username }, (err, user) => {
+					if (err) {
+						console.log(err);
+						return;
+					}
+
+					if (user) {
+						user.reported.push(other.username);
+						user.save(err => {
+							if (err) {
+								console.log(err);
+							} else {
+								console.log('User reported list updated successfully.');
+							}
+						});
+					}
+				});
 				io.to(other.userId) // to recipient
 					// .to(socket.userId) // to sender room
 					.emit("reported", "You've been reported.");
@@ -348,12 +349,12 @@ const chatSocket = (server) => {
 			if (userAction === "notify") {
 				console.log("=============emitting notify notification===============");
 				// Assuming `other.username` is the username of the user to be notified
-				User.findOne({username: other.username}, (err, user) => {
+				User.findOne({ username: other.username }, (err, user) => {
 					if (err) {
 						console.log(err);
 						return;
 					}
-					
+
 					if (user) {
 						// Increment the numOfWarnings field
 						user.numOfWarnings = (user.numOfWarnings || 0) + 1;
@@ -369,15 +370,15 @@ const chatSocket = (server) => {
 				// Notify the user being warned
 				io.to(other.userId) // to recipient
 					.emit("warning-issued", "A warning has been issued to you.");
-			
+
 				// Optionally, notify the sender of the success
 				io.to(socket.userId) // to sender room
 					.emit("warning-success", "Warning successfully issued.");
 			}
-			
+
 		});
 
-		
+
 
 		socket.on("read-messages", async ({ messageIds, other }) => {
 			// search convo between from & socket user
@@ -406,26 +407,26 @@ const chatSocket = (server) => {
 		});
 
 		/**
-     * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
-     *
-     * {
-     *  msg: {
-     *    type: "txt" | "img"
-     *    body: string | blob, actual content of the message
-     *    mimeType?: "png" | "jpg", etc
-     *    fileName?: string
-     *    time: string
-     // eslint-disable-next-line max-len
-     *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
-     *  }
-     *  to: {
-     *     username: string
-     *     userId: string,
-     *     socketId: string
-     *   }
-     * }
-     *
-     */
+	 * Reactions: Thumbs Up, Love, Laugh, Thumbs Down
+	 *
+	 * {
+	 *  msg: {
+	 *    type: "txt" | "img"
+	 *    body: string | blob, actual content of the message
+	 *    mimeType?: "png" | "jpg", etc
+	 *    fileName?: string
+	 *    time: string
+	 // eslint-disable-next-line max-len
+	 *    reaction: [ "thumbsUp", "thumbsDown", "love", "laugh" ] // NOTE: This is an array, only add reactions to the array if it's being updated
+	 *  }
+	 *  to: {
+	 *     username: string
+	 *     userId: string,
+	 *     socketId: string
+	 *   }
+	 * }
+	 *
+	 */
 
 		socket.on(
 			"send-reaction",
@@ -470,11 +471,11 @@ const chatSocket = (server) => {
 				// Disconnect current session from sessionStore
 				sessionStore.disconnectSession(socket.sessionId);
 				/**
-          socket.broadcast.emit(
-            "disconneted",
-            formatMessage(leaveNotification(socket.username), chatBot, "ALL")
-          );
-          */
+		  socket.broadcast.emit(
+			"disconneted",
+			formatMessage(leaveNotification(socket.username), chatBot, "ALL")
+		  );
+		  */
 				// FIXME: Name of the event subject to change for FE's convenience
 				socket.rooms.forEach(async (roomId) => {
 					socket.broadcast
@@ -720,13 +721,13 @@ async function searchConvo(usernameA, userIdA, usernameB, userIdB) {
 // };
 getChat = (req, res, next) => {
 	User.findById(req.user.id)
-	  // Optionally populate any necessary paths if needed
-	  .exec(function (err, user) {
-		if (err) { return next(err); }
-		// Now passing the user object to the chat template
-		res.render("chat", { user: user });
-	  });
-  };
+		// Optionally populate any necessary paths if needed
+		.exec(function (err, user) {
+			if (err) { return next(err); }
+			// Now passing the user object to the chat template
+			res.render("chat", { user: user });
+		});
+};
 
 getRiskInformation = (req, res) => {
 	res.render("risk_information", {});

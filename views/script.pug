@@ -195,6 +195,8 @@ block content
                           else if comment.userAction == 'unhide'
                             //- If NUDGE IS JUST UNHIDE, just show a generic mean comment
                             -console.log('DISPLAY THE UNHIDE COMMENT NUDGE AFTER NUDGE')
+                            -console.log(comment.body)
+                            -console.log(comment.commentID)
                             .comment(commentID=comment.commentID)
                               a.avatar(href='/user/'+comment.actor.username)
                                 //-img(src=cdn+'/profile_pictures/'+comment.actor.profile.picture)
@@ -212,7 +214,7 @@ block content
                                       i.heart.icon
                                       span.num=comment.likes
                                       |  Likes
-                                .text='your post is so stupid!'
+                                .text='lol wth is this post?'
                                 .actions
                                   if comment.liked
                                     a.red.like.comment Like
@@ -316,7 +318,7 @@ block content
                                     .ui.three.attached.buttons
                                         //- Yes Button
                                         button.ui.basic.button#unhideCommentNudge(style='border-right: 1px solid #ddd;')
-                                            | Yes and Turn of Warning
+                                            | Yes and Turn off Warning
                                         button.ui.basic.button#unhide2CommentNudge(style='border-right: 1px solid #ddd;')
                                             | Yes, Unhide Comment
                                         //- No Button
