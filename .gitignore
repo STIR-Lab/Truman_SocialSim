@@ -11,6 +11,7 @@ pids
 logs
 results
 tmp
+mysocialyouthv1.pem
 
 #Build
 public/css/main.css
