@@ -11,12 +11,16 @@ pids
 logs
 results
 tmp
+mysocialyouthv1.pem
 
 #Build
 public/css/main.css
 
 #user_uploads
 uploads/user_post
+profile_pictures
+post_pictures
+input
 
 # API keys and secrets
 .env

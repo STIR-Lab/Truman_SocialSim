@@ -39,7 +39,7 @@ const userpost_options = multer.diskStorage({
   filename(req, file, cb) {
     const lastsix = req.user.id.substr(req.user.id.length - 6);
     const prefix = lastsix + Math.random().toString(36).slice(2, 10);
-    cb(null, prefix + file.originalname.replace(/[^A-Z0-9]+/gi, '_'));
+    cb(null, prefix + file.originalname.replace(/[^A-Z0-9]+/gi, '.'));
   },
 });
 
@@ -47,7 +47,7 @@ const useravatar_options = multer.diskStorage({
   destination: path.join(__dirname, 'uploads/user_post'),
   async filename(req, file, cb) {
     const prefix = req.user.id + Math.random().toString(36).slice(2, 10);
-    cb(null, prefix + file.originalname.replace(/[^A-Z0-9]+/gi, '_'));
+    cb(null, prefix + file.originalname.replace(/[^A-Z0-9]+/gi, '.'));
     // const result = uploadFile(file);
     // console.log(result)
   },

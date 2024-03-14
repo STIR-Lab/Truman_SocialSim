@@ -140,9 +140,9 @@ exports.postLogin = (req, res, next) => {
  * Log out.
  TODO - add code to take survey?? or check if you have seen experinetal post yet
  */
- exports.logout = (req, res) => {
-  req.logout(() =>{});
- 		res.redirect('/login');
+exports.logout = (req, res) => {
+  req.logout(() => { });
+  res.redirect('/login');
 };
 
 /**
@@ -179,9 +179,12 @@ exports.postSignup = (req, res, next) => {
   Place Experimental Varibles Here!
   ###############################*/
   var var_num = 4;
-  var result = ['var1', 'var2', 'var3', 'var4'][Math.floor(Math.random() * var_num)]
+  //var result = ['var1', 'var2', 'var3', 'var4'][Math.floor(Math.random() * var_num)]
 
-  var resultArray = result.split(':');
+  var result = 'var1';
+  //var resultArray = result.split(':');
+
+
   //[0] is script_type, [1] is post_nudge
   const user = new User({
     email: req.body.email,
