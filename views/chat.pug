@@ -199,8 +199,6 @@ block content
         .actions
             button.ui.button#confirmProtectiveActions(type='submit', form='protectiveActionsForm') Confirm
 
-
-
     .ui.modal#nudge1Modal2(style='padding-left: 0;')
         .title-bar(style='display: flex; align-items: center; padding: 10px 10px 10px 0; width: 100%;')
             .title(style='font-weight: bold; margin-right: 10px; font-size: 12px;')
@@ -260,16 +258,51 @@ block content
 
             .actions(style='border-top: 1px #ddd; padding: 10px; text-align: center;')
                 .ui.attached.buttons
-                    button.ui.basic.button#showN1Modal3Button(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
+                    button.ui.basic.button#showInfoBreach3NewTurnOffWarning(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
                         | Turn off this warning
                     //- button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
                     //-     | #[strong(style='color: red;') Block User]
                     //- button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
                     //-     | Take Protective Action
-                    button.ui.basic.button#showProtectiveButton(style='flex: 1; text-align: center; white-space: normal;')
+                    button.ui.basic.button#showProtectiveButtonInfoBreach3New(style='flex: 1; text-align: center; white-space: normal;')
                         | Take Protective Action
                     button.ui.basic.button#continueModal(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
                         | OK
+
+    .ui.modal#protectiveActionsModalInfoBreach3New(style='width: 500px; border-radius: 15px; background-color: #f9f9f9;')
+        i.close.icon(style='position: absolute; top: 1px; right: 8px; color: black;')
+        .content(style='padding: 40px 20px 20px 20px; text-align: center; font-size: 15px;')
+            | Here are some protective actions you can take. Please select your choice(s) from the options below:
+            form.ui.form(id='protectiveActionsFormInfoBreach3New', style='text-align: left; line-height: 2.5; margin-top: 10px')
+                .ui.checkbox
+                    input(type='checkbox', name='blockUser')
+                    label #[strong(style='color: black;') Block User:] The user will be prevented from seeing your posts, friending you, or messaging you. 
+                .ui.checkbox
+                    input(type='checkbox', name='reportUser')
+                    label #[strong(style='color: black;') Report User:] The user will be warned for violating the Community Guidelines. Further violations may result in a temporary ban. 
+                .ui.checkbox
+                    input(type='checkbox', name='deleteMessage')
+                    label #[strong(style='color: black;') Delete Message:] The user's message will be deleted and no longer appear in your chat. 
+                .ui.checkbox
+                    input(type='checkbox', name='hideMessage')
+                    label #[strong(style='color: black;') Hide Similar Messages:] Messages with similar violations will be automatically hidden in the future. 
+                .ui.checkbox
+                    input(type='checkbox', name='notify')
+                    label #[strong(style='color: black;') Notify Other Users:] Other active users on the platform will receive a community warning about potential risk from this user.
+        .actions
+            button.ui.button#confirmProtectiveActions(type='submit', form='protectiveActionsFormInfoBreach3New') Confirm
+
+    .ui.modal#infoBreach3NewTurnOffConfirm(style='width: 400px;  padding: 0; border-radius: 15px; background-color: #f9f9f9;')
+
+        //- Close Button
+        i.close.icon#nudge1Button5(style='position: absolute; top: 1px; right: 8px; color: black;')
+
+        //- Enclosing the content and actions in a div
+        div(style='background-color: #f9f9f9; border: 1px  #ddd; border-radius: 15px; margin-bottom: 10px;')
+            .content(style='padding: 40px 20px 20px 20px; flex-grow: 1; text-align: center; font-size: 14px;')
+                .ui.center.aligned.container(style='white-space: pre-line;')
+                    | Warning has been successfully
+                    | turned off.
                 
     style.
         .ui.dimmer {
@@ -1538,6 +1571,7 @@ block content
                     }
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach3New) {
 
+
                         document.getElementById('continueModal').onclick = function () {
                             onClickShowMeModal(messageList[i])
                         }
@@ -1551,12 +1585,13 @@ block content
                         //- document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
                         //-     blockUserModal1(messageList[i])
                         //- }
-                        document.getElementById('showProtectiveButton').onclick = function () {
-                            protectiveActionModalShow(messageList[i])
+                        document.getElementById('showProtectiveButtonInfoBreach3New').onclick = function () {
+                            console.log("INFO BREACH PROTECTIVE ACTION")
+                            protectiveActionModalShowInfoBreach3New(messageList[i])
                             //$('#protectiveActionsModal').modal('setting', 'closable', false).modal('show');
                         };
-                        document.getElementById('showN1Modal3Button').onclick = function () {
-                            showN1M3Modal(messageList[i])
+                        document.getElementById('showInfoBreach3NewTurnOffWarning').onclick = function () {
+                            onClickshowinfoBreach3TurnOffWarning(messageList[i])
                         }
                         //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
                         $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
@@ -1662,6 +1697,19 @@ block content
             });
             $('#nudge1Modal').modal('hide');
             $('#nudge1Modal3').modal('setting', 'closable', false).modal('show');
+        }
+
+        function onClickshowinfoBreach3TurnOffWarning() {
+            socket.emit("nudge-reaction", {
+                messageId: nudge1MessageId,
+                userAction: "turnOffWarning",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+            $('#nudge2NewModal').modal('hide');
+            $('#infoBreach3NewTurnOffConfirm').modal('setting', 'closable', false).modal('show');
         }
 
         document.getElementById('dismissModal2Button').onclick = function () {
@@ -1811,12 +1859,12 @@ block content
                     //- document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
                     //-     blockUserModal1(msg)
                     //- }
-                     document.getElementById('showProtectiveButton').onclick = function () {
-                        protectiveActionModalShow(msg)
+                     document.getElementById('showProtectiveButtonInfoBreach3New').onclick = function () {
+                        protectiveActionModalShowInfoBreach3New(msg)
                         
                     };
-                    document.getElementById('showN1Modal3Button').onclick = function () {
-                        showN1M3Modal(msg)
+                    document.getElementById('showInfoBreach3NewTurnOffWarning').onclick = function () {
+                        onClickshowinfoBreach3TurnOffWarning(msg)
                     }
                     //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
                     $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
@@ -1926,6 +1974,47 @@ block content
                 };
 
                 $('#protectiveActionsModal').modal('hide');
+
+                if (selectedActions.blockUser) {
+                    blockUserModal1(msg);
+                }
+                if (selectedActions.reportUser) {
+                    reportUserModal1(msg);
+                }
+                if (selectedActions.deleteMessage) {
+                    onClickDeleteMessageButton(msg);
+                }
+                if (selectedActions.hideMessage) {
+                    onClickHideMessageButton(msg);
+                }
+                if (selectedActions.notify) {
+                    console.log("notify action");
+                    notifyModal(msg, fromUserId)
+                    console.log("notify action finished");
+                }
+            });
+        }
+
+        function protectiveActionModalShowInfoBreach3New(msg, fromUserId) {
+            onClickDismissButton();
+            $('#protectiveActionsModalInfoBreach3New').modal('setting', 'closable', false).modal('show');
+
+            // Unbind existing submit event to prevent multiple bindings
+            $("#protectiveActionsFormInfoBreach3New").off("submit");
+
+            // Bind a new submit event
+            $("#protectiveActionsFormInfoBreach3New").on("submit", function (e) {
+                e.preventDefault();
+                // No need to retrieve the message here, use the msg parameter from the closure
+                const selectedActions = {
+                    blockUser: $('input[name="blockUser"]').is(':checked'),
+                    reportUser: $('input[name="reportUser"]').is(':checked'),
+                    deleteMessage: $('input[name="deleteMessage"]').is(':checked'),
+                    hideMessage: $('input[name="hideMessage"]').is(':checked'),
+                    notify: $('input[name="notify"]').is(':checked'),
+                };
+
+                $('#protectiveActionsModalInfoBreach3New').modal('hide');
 
                 if (selectedActions.blockUser) {
                     blockUserModal1(msg);
