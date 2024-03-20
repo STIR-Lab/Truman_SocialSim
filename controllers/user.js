@@ -5,7 +5,9 @@ const passport = require('passport');
 const moment = require('moment');
 const User = require('../models/User');
 const Notification = require('../models/Notification.js');
+const AccessCode = require('../models/AccessCode.js');
 const { uploadFilePfp, getFileStream } = require('../s3');
+const util = require('util');
 
 /**
  * GET /login
@@ -175,6 +177,74 @@ exports.postSignup = (req, res, next) => {
     return res.redirect('/signup');
   }
 
+
+//   const code1 = new AccessCode(
+//     {
+//       code: "exampleNormalCode"
+//     }
+//   )
+
+//   const code2 = new AccessCode(
+//     {
+//       code: "exampleMasterCode",
+//       isMaster: true,
+//     }
+//   )
+
+//   const code3 = new AccessCode(
+//     {
+//       code: "exampleNormalCode2"
+//     }
+//   )
+
+// // Save code1
+// code1.save(function(err, savedCode1) {
+//   if (err) {
+//     console.error('Error saving code1:', err);
+//   } else {
+//     console.log('Code1 saved successfully:', savedCode1);
+//   }
+// });
+
+// // Save code2
+// code2.save(function(err, savedCode2) {
+//   if (err) {
+//     console.error('Error saving code2:', err);
+//   } else {
+//     console.log('Code2 saved successfully:', savedCode2);
+//   }
+// });
+
+// // Save code3
+// code3.save(function(err, savedCode3) {
+//   if (err) {
+//     console.error('Error saving code3:', err);
+//   } else {
+//     console.log('Code3 saved successfully:', savedCode3);
+//   }
+// });
+
+
+  AccessCode.findOne({ code: req.body.accessCode }, (err, existingCode) => {
+    console.log("accessCodeInfo is" + util.inspect(existingCode, { depth: null }));
+    if (err) { return next(err); }
+    if (!existingCode) {
+      req.flash('errors', { msg: 'Access Code does not exist' });
+      return res.redirect('/signup');
+    } else if (existingCode.isMaster) {
+      console.log('Access code is a master code. User singup allowed.');
+      return; // Allow registration for master code
+    } else if (!existingCode.isMaster && (existingCode.email === null || existingCode.email === "")) {
+      console.log('Access code is an unused code. User singup allowed.');
+      return; // Allow registration for master code
+    } else if (!existingCode.isMaster && existingCode.email != null && existingCode.email != "") {
+      console.log('Access Code was used.');
+      req.flash('errors', { msg: "Access Code was used."});
+      return res.redirect('/signup');
+    }
+  }
+  );
+
   /*###############################
   Place Experimental Varibles Here!
   ###############################*/
@@ -203,6 +273,27 @@ exports.postSignup = (req, res, next) => {
       req.flash('errors', { msg: 'Account with that email address already exists.' });
       return res.redirect('/signup');
     }
+
+    // we can save user now, before that, update access code
+
+    AccessCode.findOne({ code: req.body.accessCode }, (err, existingCode) => {
+      if (err) { return next(err); }
+      if (!existingCode) {
+        req.flash('errors', { msg: 'Access Code does not exist' });
+        return res.redirect('/signup');
+      } else if (existingCode.isMaster) {
+        console.log('Access code is a master code. No need to associate user with it.');
+        return; // Allow registration for master code
+      } else if (!existingCode.isMaster && (existingCode.email === null || existingCode.email === "")) {
+        existingCode.email = req.body.email;
+        console.log("new accessCodeInfo is" + util.inspect(existingCode, { depth: null }));
+        existingCode.save((err) => {
+          if (err) { return next(err); }
+        })
+      }
+    });
+
+    // save user
     user.save((err) => {
       if (err) { return next(err); }
       req.logIn(user, (err) => {
@@ -213,6 +304,8 @@ exports.postSignup = (req, res, next) => {
       });
     });
   });
+
+
 };
 
 
