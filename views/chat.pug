@@ -303,7 +303,80 @@ block content
                 .ui.center.aligned.container(style='white-space: pre-line;')
                     | Warning has been successfully
                     | turned off.
-                
+
+
+    style.
+        .ui.dimmer {
+            background-color: transparent !important;
+            opacity: 1 !important;
+        }
+        .ui.modal#ExplicitContentNewModal {
+            top: 76%;
+            left: 60%;
+            transform: translate(-50%, -50%);
+            position: fixed;
+        }
+        
+    .ui.modal#ExplicitContentNewModal(style='width: 450px;  padding: 0; border-radius: 15px; background-color: #f9f9f9;')
+        //- Close Button
+        i.close.icon#dismissExplicitContentNewModal(style='position: absolute; top: 1px; right: 8px; color: black;')
+
+        //- Enclosing the content and actions in a div
+        div(style='background-color: #f9f9f9; border: 1px #ddd; border-radius: 15px; margin-bottom: 10px;')
+            .content(style='padding: 40px 20px 20px 20px; flex-grow: 1; text-align: center; font-size: 15px;')
+                .ui.center.aligned.container(style='white-space: pre-line;')
+                    | This user sent you an #[strong(style='color: red;') inappropriate message]
+                    | that violates our community guidelines. How
+                    | would you like to proceed?
+
+            .actions(style='border-top: 1px #ddd; padding: 10px; text-align: center;')
+                .ui.attached.buttons
+                    button.ui.basic.button#showExplicitContentNewTurnOffWarning(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
+                        | Turn off this warning
+                    //- button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
+                    //-     | #[strong(style='color: red;') Block User]
+                    //- button.ui.basic.button#leaveAndBlockNudge2NewModal(style='flex: 1; text-align: center; white-space: normal; color: red;')
+                    //-     | Take Protective Action
+                    button.ui.basic.button#showProtectiveButtonExplicitContentNew(style='flex: 1; text-align: center; white-space: normal;')
+                        | Take Protective Action
+                    button.ui.basic.button#ExplicitContentcontinueModal(style='border-right: 1px; flex: 1; text-align: center; white-space: normal;')
+                        | OK
+
+    .ui.modal#protectiveActionsModalExplicitContentNew(style='width: 500px; border-radius: 15px; background-color: #f9f9f9;')
+        i.close.icon(style='position: absolute; top: 1px; right: 8px; color: black;')
+        .content(style='padding: 40px 20px 20px 20px; text-align: center; font-size: 15px;')
+            | Here are some protective actions you can take. Please select your choice(s) from the options below:
+            form.ui.form(id='protectiveActionsFormExplicitContentNew', style='text-align: left; line-height: 2.5; margin-top: 10px')
+                .ui.checkbox
+                    input(type='checkbox', name='blockUser')
+                    label #[strong(style='color: black;') Block User:] The user will be prevented from seeing your posts, friending you, or messaging you. 
+                .ui.checkbox
+                    input(type='checkbox', name='reportUser')
+                    label #[strong(style='color: black;') Report User:] The user will be warned for violating the Community Guidelines. Further violations may result in a temporary ban. 
+                .ui.checkbox
+                    input(type='checkbox', name='deleteMessage')
+                    label #[strong(style='color: black;') Delete Message:] The user's message will be deleted and no longer appear in your chat. 
+                .ui.checkbox
+                    input(type='checkbox', name='hideMessage')
+                    label #[strong(style='color: black;') Hide Similar Messages:] Messages with similar violations will be automatically hidden in the future. 
+                .ui.checkbox
+                    input(type='checkbox', name='notify')
+                    label #[strong(style='color: black;') Notify Other Users:] Other active users on the platform will receive a community warning about potential risk from this user.
+        .actions
+            button.ui.button#confirmProtectiveActions(type='submit', form='protectiveActionsFormExplicitContentNew') Confirm
+
+    .ui.modal#showExplicitContentNewTurnOffConfirm(style='width: 400px;  padding: 0; border-radius: 15px; background-color: #f9f9f9;')
+
+        //- Close Button
+        i.close.icon#nudge1Button5(style='position: absolute; top: 1px; right: 8px; color: black;')
+
+        //- Enclosing the content and actions in a div
+        div(style='background-color: #f9f9f9; border: 1px  #ddd; border-radius: 15px; margin-bottom: 10px;')
+            .content(style='padding: 40px 20px 20px 20px; flex-grow: 1; text-align: center; font-size: 14px;')
+                .ui.center.aligned.container(style='white-space: pre-line;')
+                    | Warning has been successfully
+                    | turned off.
+
     style.
         .ui.dimmer {
             background-color: transparent !important;
@@ -640,8 +713,8 @@ block content
                                                             </div>
                                                             <div class="content">
                                                                 <!-- For now we are disabling the onclick for user name here because it crashes the entire app -->
-                                                                <!-- <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a> -->
-                                                                <a class="header">${chatPartnerUsername}</a>
+                                                                <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a> 
+                                                                <!-- <a class="header">${chatPartnerUsername}</a> -->
                                                                 <div class="description" style="max-width: 180px; text-overflow: ellipsis; overflow:hidden; white-space:nowrap" id="lastMessage-${chatPartnerId}">${lastmsg}</div>
                                                             </div>
 
@@ -660,8 +733,8 @@ block content
                                                                 </div>
                                                                 <div class="content">
                                                                     <!-- For now we are disabling the onclick for user name here because it crashes the entire app -->
-                                                                    <!-- <a class="header" href="user/${chatPartnerUsername}">${chatPartnerUsername}</a> -->
-                                                                    <a class="header">${chatPartnerUsername}</a>
+                                                                    <a class="header" href="user/${chatPartnerUsername}">${chatPartnerUsername}</a>
+                                                                    <!-- <a class="header">${chatPartnerUsername}</a> -->
                                                                     <div class="description" style="max-width: 180px; text-overflow: ellipsis; overflow:hidden; white-space:nowrap" id="lastMessage-${chatPartnerId}">${lastmsg}</div>
                                                                 </div>
                                                             </div>
@@ -820,14 +893,25 @@ block content
                     } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage" || chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessageAndLetOthersKnow")) {
                         lastMessage = "Deleted message"
                     } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "hideMessage")) {
-                        lastMessage = "Hiden message"
+                        lastMessage = "Hidden message"
                     } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
                         lastMessage = "Unread message"
                     } else {
                         lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
                     }
                 else {
-                    lastMessage = "Sent media"
+                    //lastMessage = "Sent media"
+                    if (chatPartner.content[chatPartner.content.length - 1].from.userId == userId) { // chat sent
+                        lastMessage = "Sent media"
+                    } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage" || chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessageAndLetOthersKnow")) {
+                        lastMessage = "Deleted message"
+                    } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "hideMessage")) {
+                        lastMessage = "Hidden message"
+                    } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
+                        lastMessage = "Unread message"
+                    } else {
+                        lastMessage = chatPartner.content[chatPartner.content.length - 1].msg.body;
+                    }
                 }
 
                 usersInHistory.push({
@@ -897,7 +981,7 @@ block content
                     } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessage" || chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "deleteMessageAndLetOthersKnow")) {
                         lastMessage = "Deleted message"
                     } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && (chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "hideMessage")) {
-                        lastMessage = "Hiden message"
+                        lastMessage = "Hidden message"
                     } else if (chatPartner.content[chatPartner.content.length - 1].nudge.nudgeType == "sensitivityFilter" && chatPartner.content[chatPartner.content.length - 1].nudge.userAction == "") {
                         lastMessage = "Unread message"
                     } else {
@@ -1510,6 +1594,8 @@ block content
                     loadReactions(messageList[i].msg.reactions, messageList[i]._id)
                 } else {
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].msg.body == infoBreach1) {
+                        $(`#lastMessage-${chatPartnerUserId}`).text(msg.msg.body);
+                        addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false, false);
                         document.getElementById('dismissModal1Button').onclick = function () {
                             onClickShowMeModal(messageList[i])
                         };
@@ -1530,8 +1616,9 @@ block content
                         document.getElementById('showN1Modal3Button').onclick = function () {
                             showN1M3Modal(messageList[i])
                         }
+                        setTimeout(showInfoBreach1Modal, 10000);
                         
-                        $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
+                        //$('#nudge1Modal').modal('setting', 'closable', false).modal('show');
                         // only showing modal2 when clicking ok in modal 1
                         //$('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
                         //$('#nudge3Card').modal('setting', 'closable', false).modal('show');
@@ -1544,24 +1631,24 @@ block content
                     //- }
                     
                     if (nudgeShown && !messageList[i].msg.read && messageList[i].nudge.riskyScenario == "explicitContent1") {
-                        document.getElementById('continueModal').onclick = function () {
+                        document.getElementById('ExplicitContentcontinueModal').onclick = function () {
                             onClickShowMeModal(messageList[i])
                         }
                         document.getElementById('dismissNudge2NewModal').onclick = function () {
                             onClickShowMeModal(messageList[i])
                         }
-                          document.getElementById('showProtectiveButton').onclick = function () {
-                            protectiveActionModalShow(messageList[i])
+                          document.getElementById('showProtectiveButtonExplicitContentNew').onclick = function () {
+                            protectiveActionModalShowExplicitContentNew(messageList[i])
                             //$('#protectiveActionsModal').modal('setting', 'closable', false).modal('show');
                         };
                     //- document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
                     //-         blockUserModal1(messageList[i])
                     //-     }
-                        document.getElementById('showN1Modal3Button').onclick = function () {
-                            showN1M3Modal(messageList[i])
+                        document.getElementById('showExplicitContentNewTurnOffWarning').onclick = function () {
+                            onClickshowExplicitContentNewTurnOffWarning(messageList[i])
                         }
                         //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
-                        $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
+                        $('#ExplicitContentNewModal').modal('setting', 'closable', false).modal('show')
                         nudge1MessageId = messageList[i]._id;
                     }
 
@@ -1597,8 +1684,9 @@ block content
                         $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
                         nudge1MessageId = messageList[i]._id;
 
+                        
                         // only showing modal2 when clicking ok in modal 1
-                        //$('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
+                        $('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
                         //$('#nudge3Card').modal('setting', 'closable', false).modal('show');
                    
 
@@ -1668,6 +1756,10 @@ block content
             }
         });
 
+        function showInfoBreach1Modal() {
+            $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
+        }
+
         function onClickDismissButton() {
             console.log("fas")
             $('#nudge1Modal').modal('hide');
@@ -1677,6 +1769,7 @@ block content
             $('#nudge2NewModal').modal('hide');
             $('#newNudge4Modal').modal('hide')
             $('#letOthersKnowAbout').modal('hide');
+            $('#ExplicitContentNewModal').modal('hide');
         }
 
         function onClickshowN1M1Button() {
@@ -1710,6 +1803,19 @@ block content
             });
             $('#nudge2NewModal').modal('hide');
             $('#infoBreach3NewTurnOffConfirm').modal('setting', 'closable', false).modal('show');
+        }
+
+         function onClickshowExplicitContentNewTurnOffWarning() {
+            socket.emit("nudge-reaction", {
+                messageId: nudge1MessageId,
+                userAction: "turnOffWarning",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+            $('#ExplicitContentNewModal').modal('hide');
+            $('#showExplicitContentNewTurnOffConfirm').modal('setting', 'closable', false).modal('show');
         }
 
         document.getElementById('dismissModal2Button').onclick = function () {
@@ -1771,6 +1877,8 @@ block content
                 if (nudgeShown && msg.msg.body == infoBreach1) {
                     console.log(infoBreach1)
                     nudge1NewShown = true;
+                    $(`#lastMessage-${chatPartnerUserId}`).text(msg.msg.body);
+                    addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false, false);
                     document.getElementById('dismissModal1Button').onclick = function () {
                         onClickShowMeModal(msg)
                     };
@@ -1792,7 +1900,8 @@ block content
                         showN1M3Modal(msg)
                     }
                     
-                    $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
+                    setTimeout(showInfoBreach1Modal, 5000);
+                    //$('#nudge1Modal').modal('setting', 'closable', false).modal('show');
                     // only showing modal2 when clicking ok in modal 1
                     //$('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
                     nudge1MessageId = msg._id;
@@ -1801,7 +1910,7 @@ block content
                 //-     $('#nudge2Modal').modal('setting', 'closable', false).modal('show');
                 //- }
                 if (nudgeShown && msg.nudge.riskyScenario == "explicitContent1") {
-                   document.getElementById('continueModal').onclick = function () {
+                   document.getElementById('ExplicitContentcontinueModal').onclick = function () {
                         onClickShowMeModal(msg)
                     }
                     document.getElementById('dismissNudge2NewModal').onclick = function () {
@@ -1813,15 +1922,15 @@ block content
                     //- document.getElementById('leaveAndBlockNudge2NewModal').onclick = function () {
                     //-     blockUserModal1(msg)
                     //- }
-                     document.getElementById('showProtectiveButton').onclick = function () {
-                        protectiveActionModalShow(msg)
+                     document.getElementById('showProtectiveButtonExplicitContentNew').onclick = function () {
+                        protectiveActionModalShowExplicitContentNew(msg)
                         
                     };
-                    document.getElementById('showN1Modal3Button').onclick = function () {
-                        showN1M3Modal(msg)
+                    document.getElementById('showExplicitContentNewTurnOffWarning').onclick = function () {
+                        onClickshowExplicitContentNewTurnOffWarning(msg)
                     }
                     //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
-                    $('#nudge2NewModal').modal('setting', 'closable', false).modal('show')
+                    $('#ExplicitContentNewModal').modal('setting', 'closable', false).modal('show')
                     nudge1MessageId = msg._id;
                 }
 
@@ -2015,6 +2124,47 @@ block content
                 };
 
                 $('#protectiveActionsModalInfoBreach3New').modal('hide');
+
+                if (selectedActions.blockUser) {
+                    blockUserModal1(msg);
+                }
+                if (selectedActions.reportUser) {
+                    reportUserModal1(msg);
+                }
+                if (selectedActions.deleteMessage) {
+                    onClickDeleteMessageButton(msg);
+                }
+                if (selectedActions.hideMessage) {
+                    onClickHideMessageButton(msg);
+                }
+                if (selectedActions.notify) {
+                    console.log("notify action");
+                    notifyModal(msg, fromUserId)
+                    console.log("notify action finished");
+                }
+            });
+        }
+
+        function protectiveActionModalShowExplicitContentNew(msg, fromUserId) {
+            onClickDismissButton();
+            $('#protectiveActionsModalExplicitContentNew').modal('setting', 'closable', false).modal('show');
+
+            // Unbind existing submit event to prevent multiple bindings
+            $("#protectiveActionsFormExplicitContentNew").off("submit");
+
+            // Bind a new submit event
+            $("#protectiveActionsFormExplicitContentNew").on("submit", function (e) {
+                e.preventDefault();
+                // No need to retrieve the message here, use the msg parameter from the closure
+                const selectedActions = {
+                    blockUser: $('input[name="blockUser"]').is(':checked'),
+                    reportUser: $('input[name="reportUser"]').is(':checked'),
+                    deleteMessage: $('input[name="deleteMessage"]').is(':checked'),
+                    hideMessage: $('input[name="hideMessage"]').is(':checked'),
+                    notify: $('input[name="notify"]').is(':checked'),
+                };
+
+                $('#protectiveActionsModalExplicitContentNew').modal('hide');
 
                 if (selectedActions.blockUser) {
                     blockUserModal1(msg);
@@ -2301,6 +2451,11 @@ block content
                 }
             } else if (msg.type == "img") {
                 msgType = `<img src="https://socialsimulation.s3.amazonaws.com/${msg.body}" style ="height: auto; width: 200px; border-radius:6px; "></img>`
+                if (messageDeleted || nudge.nudgeType == "sensitivityFilter" && (nudge.userAction == "deleteMessage" || nudge.userAction == "deleteMessageAndLetOthersKnow")) {
+                    msgType = `<p><b>Deleted message</b></p>`
+                } else if (messageHiden || (nudge.userAction == "hideMessage")) {
+                    msgType = `<p><b>Hidden message</b></p>`
+                }
             } else if (msg.type == "vid") {
                 msgType = `<video width="200" style="border-radius:6px"  controls><source src="https://socialsimulation.s3.amazonaws.com/${msg.body}" type="video/mp4"></video>`
             }
@@ -2487,7 +2642,7 @@ block content
                     userId: chatPartnerUserId,
                 }
             });
-            $(`#lastMessage-${chatPartnerUserId}`).text("Hiden message");
+            $(`#lastMessage-${chatPartnerUserId}`).text("Hidden message");
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, false, true);
         }
 
