@@ -414,7 +414,7 @@ exports.newPost = async (req, res) => {
 
 			// get random actor
 			//const randomActor = actors[Math.floor(Math.random() * actors.length)];
-			const randomActor = actors[1]
+			const randomActor = actors[2];
 			console.log(randomActor);
 
 
