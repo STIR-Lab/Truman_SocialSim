@@ -8,6 +8,7 @@ const Notification = require('../models/Notification.js');
 const AccessCode = require('../models/AccessCode.js');
 const { uploadFilePfp, getFileStream } = require('../s3');
 const util = require('util');
+const CSVToJSON = require("csvtojson");
 
 /**
  * GET /login
@@ -177,138 +178,81 @@ exports.postSignup = (req, res, next) => {
     return res.redirect('/signup');
   }
 
-
-//   const code1 = new AccessCode(
-//     {
-//       code: "exampleNormalCode"
-//     }
-//   )
-
-//   const code2 = new AccessCode(
-//     {
-//       code: "exampleMasterCode",
-//       isMaster: true,
-//     }
-//   )
-
-//   const code3 = new AccessCode(
-//     {
-//       code: "exampleNormalCode2"
-//     }
-//   )
-
-// // Save code1
-// code1.save(function(err, savedCode1) {
-//   if (err) {
-//     console.error('Error saving code1:', err);
-//   } else {
-//     console.log('Code1 saved successfully:', savedCode1);
-//   }
-// });
-
-// // Save code2
-// code2.save(function(err, savedCode2) {
-//   if (err) {
-//     console.error('Error saving code2:', err);
-//   } else {
-//     console.log('Code2 saved successfully:', savedCode2);
-//   }
-// });
-
-// // Save code3
-// code3.save(function(err, savedCode3) {
-//   if (err) {
-//     console.error('Error saving code3:', err);
-//   } else {
-//     console.log('Code3 saved successfully:', savedCode3);
-//   }
-// });
-
+  AccessCode.count(function (err, count) {
+    if (!err && count === 0) {
+      loadAccessCode();
+    }
+  });
 
   AccessCode.findOne({ code: req.body.accessCode }, (err, existingCode) => {
     console.log("accessCodeInfo is" + util.inspect(existingCode, { depth: null }));
     if (err) { return next(err); }
     if (!existingCode) {
-      req.flash('errors', { msg: 'Access Code does not exist' });
+      req.flash('errors', { msg: 'Unable to create a new account. Please contact the research team.' });
       return res.redirect('/signup');
-    } else if (existingCode.isMaster) {
-      console.log('Access code is a master code. User singup allowed.');
-      return; // Allow registration for master code
-    } else if (!existingCode.isMaster && (existingCode.email === null || existingCode.email === "")) {
-      console.log('Access code is an unused code. User singup allowed.');
-      return; // Allow registration for master code
     } else if (!existingCode.isMaster && existingCode.email != null && existingCode.email != "") {
       console.log('Access Code was used.');
-      req.flash('errors', { msg: "Access Code was used."});
+      req.flash('errors', { msg: "Unable to create a new account. Please contact the research team."});
       return res.redirect('/signup');
-    }
-  }
-  );
-
-  /*###############################
-  Place Experimental Varibles Here!
-  ###############################*/
-  var var_num = 4;
-  //var result = ['var1', 'var2', 'var3', 'var4'][Math.floor(Math.random() * var_num)]
-
-  var result = 'var1';
-  //var resultArray = result.split(':');
-
-
-  //[0] is script_type, [1] is post_nudge
-  const user = new User({
-    email: req.body.email,
-    password: req.body.password,
-    mturkID: req.body.mturkID,
-    username: req.body.username,
-    group: result,
-    active: true,
-    lastNotifyVisit: (Date.now()),
-    createdAt: (Date.now())
-  });
-
-  User.findOne({ email: req.body.email }, (err, existingUser) => {
-    if (err) { return next(err); }
-    if (existingUser) {
-      req.flash('errors', { msg: 'Account with that email address already exists.' });
-      return res.redirect('/signup');
-    }
-
-    // we can save user now, before that, update access code
-
-    AccessCode.findOne({ code: req.body.accessCode }, (err, existingCode) => {
-      if (err) { return next(err); }
-      if (!existingCode) {
-        req.flash('errors', { msg: 'Access Code does not exist' });
-        return res.redirect('/signup');
-      } else if (existingCode.isMaster) {
-        console.log('Access code is a master code. No need to associate user with it.');
-        return; // Allow registration for master code
-      } else if (!existingCode.isMaster && (existingCode.email === null || existingCode.email === "")) {
-        existingCode.email = req.body.email;
-        console.log("new accessCodeInfo is" + util.inspect(existingCode, { depth: null }));
-        existingCode.save((err) => {
-          if (err) { return next(err); }
-        })
-      }
-    });
-
-    // save user
-    user.save((err) => {
-      if (err) { return next(err); }
-      req.logIn(user, (err) => {
-        if (err) {
-          return next(err);
-        }
-        res.redirect('/account/signup_info');
+    } else if (existingCode.isMaster || (!existingCode.isMaster && (existingCode.email === null || existingCode.email === ""))) {
+      console.log('Access code is a master code/unused code. User singup allowed.');
+      /*###############################
+      Place Experimental Varibles Here!
+      ###############################*/
+      var var_num = 4;
+      //var result = ['var1', 'var2', 'var3', 'var4'][Math.floor(Math.random() * var_num)]
+      var result = 'var1';
+      //var resultArray = result.split(':');
+    
+      //[0] is script_type, [1] is post_nudge
+      const user = new User({
+        email: req.body.email,
+        password: req.body.password,
+        mturkID: req.body.mturkID,
+        username: req.body.username,
+        group: result,
+        active: true,
+        lastNotifyVisit: (Date.now()),
+        createdAt: (Date.now())
       });
-    });
-  });
-
-
+    
+      User.findOne({ email: req.body.email }, (err, existingUser) => {
+        if (err) { return next(err); }
+        if (existingUser) {
+          req.flash('errors', { msg: 'Account with that email address already exists.' });
+          return res.redirect('/signup');
+        } else {
+          AccessCode.findOne({ code: req.body.accessCode }, (err, existingCode) => {
+            if (err) { return next(err); }
+            console.log("deciding");
+            console.log(existingCode != null);
+            console.log(!existingCode.isMaster);
+            console.log((existingCode.email === null || existingCode.email === ""));
+            if (existingCode != null && 
+              !existingCode.isMaster && 
+              (existingCode.email === null || existingCode.email === "")) {
+              existingCode.email = req.body.email;
+              console.log("new accessCodeInfo is" + util.inspect(existingCode, { depth: null }));
+              existingCode.save((err) => {
+                if (err) { return next(err); }
+              })
+            }
+          });
+      
+          // save user
+          user.save((err) => {
+            if (err) { return next(err); }
+            req.logIn(user, (err) => {
+              if (err) {
+                return next(err);
+              }
+              res.redirect('/account/signup_info');
+            });
+          });
+        }
+      });
+    }});
 };
-
-
 
 /**
  * POST /account/profile
@@ -904,3 +848,81 @@ exports.postForgot = (req, res, next) => {
     .then(() => res.redirect('/forgot'))
     .catch(next);
 };
+
+function loadAccessCode() {
+    AccessCode.findOne({code: "bh1Mve"}, (err, existingCode) => {
+      if (err) {
+        console.error('Error checking existing code:', err);
+        return;
+      }
+      if (existingCode) {
+        console.log('Code already exists:', existingCode);
+        // Handle the case where the code already exists, you might want to update it or do something else
+      } else {
+        // Save the code object as it doesn't exist yet
+        const codeObject = new AccessCode({
+          code: "bh1Mve",
+          isMaster: true
+        });
+        codeObject.save(function(err) {
+          if (err) {
+            console.error('Error saving code:', codeObject.code, err);
+          } else {
+            console.log('Saved code:', codeObject.code);
+          }
+        });
+      }
+    })
+  
+  // const expCode = new AccessCode(
+  //   {
+  //     code: "hh"
+  //   }
+  // )
+  
+  // expCode.save(function(err, savedCode) {
+  // if (err) {
+  //   console.error('Error saving code:' + expCode, err);
+  // } else {
+  //   console.log('Master Code saved successfully:', savedCode);
+  // }
+  // });
+  
+  // Convert CSV to JSON
+  CSVToJSON()
+    .fromFile('./input/access_codes.csv')
+    .then(data => {
+      // Iterate over rows and create AccessCode objects
+      data.forEach(row => {
+        // Check if the row has 5 columns
+          const code = row[Object.keys(row)[0]]; // Get the text from the first column
+  
+          AccessCode.findOne({code: code}, (err, existingCode) => {
+            if (err) {
+              console.error('Error checking existing code:', err);
+              return;
+            }
+            if (existingCode) {
+              console.log('Code already exists:', existingCode.code);
+              // Handle the case where the code already exists, you might want to update it or do something else
+            } else {
+              // Save the code object as it doesn't exist yet
+              const codeObject = new AccessCode({
+                code: code,
+                isMaster: false
+              });
+              codeObject.save(function(err) {
+                if (err) {
+                  console.error('Error saving code:', code, err);
+                } else {
+                  console.log('Saved code:', code);
+                }
+              });
+            }
+          })
+      });
+    })
+    .catch(error => {
+      console.error('Error reading CSV file:', error);
+    });  
+}
