@@ -808,7 +808,7 @@ block content
                                                         </div>
 
                                                         <div class="content">
-                                                            <a class="header" href="http://localhost:3000/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
+                                                            <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
                                                             <div class="description" style="max-width: 180px" id="lastMessage-${chatPartnerId}">Start a Conversation!</div>
                                                         </div>
                                                     </div>
@@ -1648,7 +1648,8 @@ block content
                             onClickshowExplicitContentNewTurnOffWarning(messageList[i])
                         }
                         //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(messageList[i])}
-                        $('#ExplicitContentNewModal').modal('setting', 'closable', false).modal('show')
+                        //$('#ExplicitContentNewModal').modal('setting', 'closable', false).modal('show')
+                        setTimeout(showExplicitContent1Modal, 10000);
                         nudge1MessageId = messageList[i]._id;
                     }
 
@@ -1758,6 +1759,10 @@ block content
 
         function showInfoBreach1Modal() {
             $('#nudge1Modal').modal('setting', 'closable', false).modal('show');
+        }
+
+        function showExplicitContent1Modal() {
+            $('#ExplicitContentNewModal').modal('setting', 'closable', false).modal('show');
         }
 
         function onClickDismissButton() {
@@ -1900,7 +1905,7 @@ block content
                         showN1M3Modal(msg)
                     }
                     
-                    setTimeout(showInfoBreach1Modal, 5000);
+                    setTimeout(showInfoBreach1Modal, 10000);
                     //$('#nudge1Modal').modal('setting', 'closable', false).modal('show');
                     // only showing modal2 when clicking ok in modal 1
                     //$('#nudge1Modal2').modal('setting', 'closable', false).modal('show');
@@ -1930,7 +1935,8 @@ block content
                         onClickshowExplicitContentNewTurnOffWarning(msg)
                     }
                     //document.getElementById('reportNudge2NewModal').onclick=function(){reportUserModal1(msg)}
-                    $('#ExplicitContentNewModal').modal('setting', 'closable', false).modal('show')
+                    setTimeout(showExplicitContent1Modal, 10000);
+                    //$('#ExplicitContentNewModal').modal('setting', 'closable', false).modal('show')
                     nudge1MessageId = msg._id;
                 }
 
