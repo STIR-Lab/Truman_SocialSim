@@ -2551,7 +2551,19 @@ block content
             });
             $(`#lastMessage-${chatPartnerUserId}`).text("Deleted message");
             addChatReceivedMessage(msg.msg, msg.msg.time, msg._id, chatPartnerUserId, msg.nudge, true, false);
-
+            socket.emit("nudge-reaction", {
+                messageId: msg._id,
+                userAction: "notify",
+                other: {
+                    username: chatPartnerUsername,
+                    userId: chatPartnerUserId,
+                }
+            });
+            
+            // delay: wait for the system to update num of warnings
+            setTimeout(() => {
+                socket.emit("find-partner", { userId: fromUserId });
+                }, 3000);
             onClickDismissButton()
         }
 
