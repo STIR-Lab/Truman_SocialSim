@@ -212,6 +212,7 @@ exports.postSignup = (req, res, next) => {
         username: req.body.username,
         group: result,
         active: true,
+        isResearcher: existingCode.isMaster ? true : false,
         lastNotifyVisit: (Date.now()),
         createdAt: (Date.now())
       });
@@ -686,6 +687,10 @@ exports.stillActive = () => {
                 if (err) { return next(err); }
                 console.log("Switch over to new day");
               });
+            }
+
+            else if (users[i].isResearcher) {
+              console.log("Researchers account don't expire.");
             }
 
             //normal user, turn off
