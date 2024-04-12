@@ -190,6 +190,7 @@ exports.getActor = async (req, res, next) => {
           res.render("actor", {
             script: script_feed,
             actor: act,
+            actorPfp: req.params.userPfp,
             blocked: isBlocked,
           });
         });

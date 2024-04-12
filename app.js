@@ -425,6 +425,13 @@ app.get(
   passportConfig.isAuthenticated,
   actorsController.getActor
 );
+
+app.get(
+  '/user/:userId/:userPfp',
+  passportConfig.isAuthenticated,
+  actorsController.getActor
+);
+
 app.post(
   '/user',
   passportConfig.isAuthenticated,
