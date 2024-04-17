@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
   username: String,
   active: {type: Boolean, default: true},
   isAdmin: {type: Boolean, default: false},
-
+  isResearcher: {type: Boolean, default: false},
   // num of warnings 
   // used in chat module
   numOfWarnings: { type: Number, default: 0 },
