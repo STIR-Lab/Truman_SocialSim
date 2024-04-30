@@ -713,7 +713,7 @@ block content
                                                             </div>
                                                             <div class="content">
                                                                 <!-- For now we are disabling the onclick for user name here because it crashes the entire app -->
-                                                                <a class="header" id="chatPartnerProfile" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a> 
+                                                                <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a> 
                                                                 <!-- <a class="header">${chatPartnerUsername}</a> -->
                                                                 <div class="description" style="max-width: 180px; text-overflow: ellipsis; overflow:hidden; white-space:nowrap" id="lastMessage-${chatPartnerId}">${lastmsg}</div>
                                                             </div>
@@ -733,7 +733,7 @@ block content
                                                                 </div>
                                                                 <div class="content">
                                                                     <!-- For now we are disabling the onclick for user name here because it crashes the entire app -->
-                                                                    <a class="header" id="chatPartnerProfile" href="user/${chatPartnerUsername}">${chatPartnerUsername}</a>
+                                                                    <a class="header" href="user/${chatPartnerUsername}">${chatPartnerUsername}</a>
                                                                     <!-- <a class="header">${chatPartnerUsername}</a> -->
                                                                     <div class="description" style="max-width: 180px; text-overflow: ellipsis; overflow:hidden; white-space:nowrap" id="lastMessage-${chatPartnerId}">${lastmsg}</div>
                                                                 </div>
@@ -750,12 +750,8 @@ block content
             await socket.emit("find-partner", {userId: chatPartnerId})
             await socket.on("partner-pfp", ({pfp, userId}) => {
                 if (pfp != null && userId == chatPartnerId) {
-                    console.log("succ!!!")
                     let pic = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
-                    document.getElementById(`chatPartnerProfile`).setAttribute(
-                        "href", document.getElementById(`chatPartnerProfile`).getAttribute("href") + "/" + pfp);
-                                        
                 } else if (userId == chatPartnerId) {
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
                 }
@@ -812,7 +808,7 @@ block content
                                                         </div>
 
                                                         <div class="content">
-                                                            <a class="header" id="chatPartnerProfile" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
+                                                            <a class="header" href="/user/${chatPartnerUsername}">${chatPartnerUsername}</a>
                                                             <div class="description" style="max-width: 180px" id="lastMessage-${chatPartnerId}">Start a Conversation!</div>
                                                         </div>
                                                     </div>
@@ -826,11 +822,8 @@ block content
             await socket.emit("find-partner", {userId: chatPartnerId})
             await socket.on("partner-pfp", ({pfp, userId}) => {
                 if (pfp != null && userId == chatPartnerId) {
-                    console.log("succ!!!")
                     let pic = `https://socialsimulation.s3.amazonaws.com/${pfp}`;
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = pic;
-                    document.getElementById(`chatPartnerProfile`).setAttribute(
-                        "href", document.getElementById(`chatPartnerProfile`).getAttribute("href") + "/" + pfp);
                     
                 } else if (userId == chatPartnerId) {
                     document.getElementById(`chatPartnerPFP-${chatPartnerId}`).src = "https://socialsimulation.s3.amazonaws.com/default-pfp.png";
