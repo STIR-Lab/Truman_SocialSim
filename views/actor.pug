@@ -5,7 +5,7 @@ block content
   .computer.only.tablet.only.four.wide.column 
     .ui.card
       .image
-        img(src='https://socialsimulation.s3.amazonaws.com/'+ (actorPfp !== undefined && actorPfp != '' ? actorPfp : actor.profile.picture))
+        img(src='https://socialsimulation.s3.amazonaws.com/'+ actor.profile.picture)
       .content
         a.header= actor.profile.name
         .meta="@"+actor.username
