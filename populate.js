@@ -89,7 +89,7 @@ async function doPopulate() {
   }).then(function (result) { //Convert the posts csv file to json, store in posts_list
     return new Promise((resolve, reject) => {
       console.log("Reading posts list...");
-      CSVToJSON().fromFile('./input/posts-2.csv').then(function (json_array) {
+      CSVToJSON().fromFile('./input/posts-3.csv').then(function (json_array) {
         posts_list = json_array;
         console.log("Finished getting the posts list");
         resolve("done");
@@ -98,7 +98,7 @@ async function doPopulate() {
   }).then(function (result) { //Convert the comments csv file to json, store in comment_list
     return new Promise((resolve, reject) => {
       console.log("Reading comment list...");
-      CSVToJSON().fromFile('./input/replies-2.csv').then(function (json_array) {
+      CSVToJSON().fromFile('./input/replies-3.csv').then(function (json_array) {
         comment_list = json_array;
         console.log("Finished getting the comment list");
         resolve("done");
