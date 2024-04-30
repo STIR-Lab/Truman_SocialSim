@@ -683,7 +683,7 @@ exports.postCommentNudgeReaction = async (req, res, next) => {
 	);
 	*/
 
-	let actor = await Actor.findById(comment.actor);
+	let actor = await Actor.findById(commentNudge.actor);
 
 	const nudgeAction = new NudgeAction({
 		offender_username: actor.username,
