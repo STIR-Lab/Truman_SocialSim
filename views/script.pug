@@ -413,8 +413,10 @@ block content
                             //-       #dontReportCommentNudge.button.ui.basic.black.button
                             //-           | No      
                             //- -console.log(comment)
-                            .comment(commentNudgeID=comment.commentID, 
-                                    postnudgeID=val.id
+                            //-  style='display: none; added to make it default hidden.
+                            .comment#hiddenComment(commentNudgeID=comment.commentID, 
+                                    postnudgeID=val.id,
+                                    style='display: none;'
                                 )
                               a.avatar(href='/user/'+comment.actor.username)
                                 //-img(src=cdn+'/profile_pictures/'+comment.actor.profile.picture)
@@ -438,7 +440,6 @@ block content
 
                               //- // attach events to buttons, also make the nudges unexitable from clicking on background
                               //- $('#secondaryReportCommentModal').modal('attach events', '#commentNudgeModal.modal #blockCommentNudge.button');
-
                               // Add a 5 seconds timeout before showing the modal
                               setTimeout(function() {
                                   // Logic for double modal
@@ -451,9 +452,9 @@ block content
                                   $('#secondaryUnhideCommentModal').modal('attach events', '#commentNudgeModal.modal #unhideCommentNudgeModal.button');
                                   //$('#secondaryReportCommentModal').modal('attach events', '#commentNudgeModal.modal #blockCommentNudge.button');
                                   $("#commentNudgeModal").modal('setting', 'closable', false).modal('show');
+                                  // set the display property of the selected element to "block", making it visible.
+                                  $("#hiddenComment").css("display", "block");
                               }, 60000);
-
-
                         else 
                           //- If nudgeShown is false, then show a generic nice comment
                           -console.log('DISPLAY THE VIEW COMMENT NO NUDGE')
