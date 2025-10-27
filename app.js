@@ -1,6 +1,18 @@
 /**
  * Module dependencies.
  */
+//  1. Load environment variables early
+require('dotenv').config();
+
+//  2. Map your custom AWS names → what AWS SDK expects
+process.env.AWS_REGION ||= process.env.AWS_BUCKET_REGION;
+process.env.S3_BUCKET  ||= process.env.AWS_BUCKET_NAME;
+
+if (!process.env.AWS_REGION) {
+  console.error('❌ Missing AWS region (set AWS_BUCKET_REGION in .env)');
+  process.exit(1);
+}
+
 const express = require('express');
 const http = require('http');
 const _ = require('lodash');
