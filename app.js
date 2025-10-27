@@ -302,17 +302,25 @@ app.use(
 app.use(
   express.static(path.join(__dirname, 'uploads'), { maxAge: 31557600000 })
 );
-app.use(
-  '/post_pictures',
-  express.static(path.join(__dirname, 'post_pictures'), { maxAge: 31557600000 })
-);
-app.use(
-  '/profile_pictures',
-  express.static(path.join(__dirname, 'profile_pictures'), {
-    maxAge: 31557600000,
-  })
-);
+// app.use(
+//   '/post_pictures',
+//   express.static(path.join(__dirname, 'post_pictures'), { maxAge: 31557600000 })
+// );
+// app.use(
+//   '/profile_pictures',
+//   express.static(path.join(__dirname, 'profile_pictures'), {
+//     maxAge: 31557600000,
+//   })
+// );
+// 🔹 Redirect legacy image paths to S3
+const ASSET_BASE = process.env.ASSET_BASE_URL; // e.g. https://truman-socialsim-uploads.s3-us-west-1.amazonaws.com
 
+app.get(['/post_pictures/*', '/profile_pictures/*'], (req, res) => {
+  if (!ASSET_BASE) return res.status(500).send('ASSET_BASE_URL not set');
+  const key = req.path.replace(/^\/+/, ''); // "post_pictures/filename.png"
+  const url = `${ASSET_BASE}/${encodeURIComponent(key)}`;
+  return res.redirect(301, url);
+});
 /**
  * Primary app routes.
  */
