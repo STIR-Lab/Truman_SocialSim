@@ -290,6 +290,18 @@ function check(req, res, next) {
   console.log(req.body);
   next();
 }
+// 🔹 Redirect legacy image paths to S3
+const ASSET_BASE = process.env.ASSET_BASE_URL; // e.g. https://truman-socialsim-uploads.s3-us-west-1.amazonaws.com
+
+app.use(['/post_pictures/*', '/profile_pictures/*'], (req, res) => {
+  if (!ASSET_BASE) return res.status(500).send('ASSET_BASE_URL not set');
+  const key = req.path.replace(/^\/+/, ''); // "post_pictures/filename.png"
+  // IMPORTANT: use encodeURI (not encodeURIComponent) so slashes aren't encoded
+  const url = `${ASSET_BASE}/${encodeURI(key)}`;
+  res.set('Cache-Control', 'no-store'); // don't cache while testing
+  console.log('S3 redirect:', req.path, '→', url);
+  return res.redirect(302, url); // use 302 while testing; switch to 301 later
+});
 
 app.use(
   '/public',
@@ -312,18 +324,7 @@ app.use(
 //     maxAge: 31557600000,
 //   })
 // );
-// 🔹 Redirect legacy image paths to S3
-const ASSET_BASE = process.env.ASSET_BASE_URL; // e.g. https://truman-socialsim-uploads.s3-us-west-1.amazonaws.com
 
-app.get(['/post_pictures/*', '/profile_pictures/*'], (req, res) => {
-  if (!ASSET_BASE) return res.status(500).send('ASSET_BASE_URL not set');
-  const key = req.path.replace(/^\/+/, ''); // "post_pictures/filename.png"
-  // IMPORTANT: use encodeURI (not encodeURIComponent) so slashes aren't encoded
-  const url = `${ASSET_BASE}/${encodeURI(key)}`;
-  res.set('Cache-Control', 'no-store'); // don't cache while testing
-  console.log('S3 redirect:', req.path, '→', url);
-  return res.redirect(302, url); // use 302 while testing; switch to 301 later
-});
 
  * Primary app routes.
  */
