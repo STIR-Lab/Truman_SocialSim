@@ -22,7 +22,7 @@ const s3 = new S3({ region, accessKeyId, secretAccessKey });
 async function putFile(localPath, key) {
   const Body = fs.createReadStream(localPath);
   const params = { Bucket: bucket, Key: key, Body };
-  if (makePublic) params.ACL = 'public-read';
+  //if (makePublic) params.ACL = 'public-read';
   await s3.upload(params).promise();
   // URL style (virtual-hosted)
   const url = `https://${bucket}.s3.${region}.amazonaws.com/${encodeURI(key)}`;
