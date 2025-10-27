@@ -201,7 +201,7 @@ const j3 = schedule.scheduleJob(rule3, () => {
 /**
  * Express configuration.
  */
-const PORT = 3000 || process.env.PORT;
+const PORT = process.env.PORT || 3000;
 // app.set("port", process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -318,10 +318,13 @@ const ASSET_BASE = process.env.ASSET_BASE_URL; // e.g. https://truman-socialsim-
 app.get(['/post_pictures/*', '/profile_pictures/*'], (req, res) => {
   if (!ASSET_BASE) return res.status(500).send('ASSET_BASE_URL not set');
   const key = req.path.replace(/^\/+/, ''); // "post_pictures/filename.png"
-  const url = `${ASSET_BASE}/${encodeURIComponent(key)}`;
-  return res.redirect(301, url);
+  // IMPORTANT: use encodeURI (not encodeURIComponent) so slashes aren't encoded
+  const url = `${ASSET_BASE}/${encodeURI(key)}`;
+  res.set('Cache-Control', 'no-store'); // don't cache while testing
+  console.log('S3 redirect:', req.path, '→', url);
+  return res.redirect(302, url); // use 302 while testing; switch to 301 later
 });
-/**
+
  * Primary app routes.
  */
 app.get('/', passportConfig.isAuthenticated, scriptController.getScript);
