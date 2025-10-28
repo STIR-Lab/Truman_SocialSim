@@ -311,9 +311,11 @@ app.use(
   '/semantic',
   express.static(path.join(__dirname, 'semantic'), { maxAge: 31557600000 })
 );
-app.use(
-  express.static(path.join(__dirname, 'uploads'), { maxAge: 31557600000 })
-);
+// app.use(
+//   express.static(path.join(__dirname, 'uploads'), { maxAge: 31557600000 })
+// );
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: 31557600000 }));
+
 // app.use(
 //   '/post_pictures',
 //   express.static(path.join(__dirname, 'post_pictures'), { maxAge: 31557600000 })
