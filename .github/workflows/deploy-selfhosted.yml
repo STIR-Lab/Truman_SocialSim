@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: [ self-hosted, ec2-prod ]   # must match your runner label
+    runs-on: self-hosted
 
     steps:
       - uses: actions/checkout@v4
