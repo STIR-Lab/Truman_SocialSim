@@ -17,7 +17,7 @@ AWS.config.update({
 const s3 = new AWS.S3();
 
 var params = {
-  Bucket: "socialsimulation", 
+  Bucket: "truman-socialsim-uploads", 
   Key: 'test file.txt'
 };
 
