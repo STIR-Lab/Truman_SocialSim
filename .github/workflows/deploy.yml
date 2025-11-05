@@ -1,0 +1,71 @@
+name: Deploy to EC2 on master
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (for metadata only)
+        uses: actions/checkout@v4
+
+      - name: Add EC2 to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+
+      - name: Write SSH key
+        run: |
+          echo "${EC2_SSH_KEY}" > id_ed25519
+          chmod 600 id_ed25519
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy over SSH with PM2 reload
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_PATH: ${{ secrets.EC2_PATH }}
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+        run: |
+          ssh -i id_ed25519 -o StrictHostKeyChecking=yes ${EC2_USER}@${EC2_HOST} << 'EOF'
+            set -euo pipefail
+
+            cd ${EC2_PATH}
+
+            # If the repo isn't present (first run), clone it
+            if [ ! -d .git ]; then
+              # >>>> REPLACE WITH YOUR REPO URL (HTTPS is simplest)
+              git clone --depth 1 https://github.com/STIR-Lab/Truman_SocialSim.git .
+            fi
+
+            # Sync to the latest master
+            git fetch origin
+            git reset --hard origin/master
+
+            # Install deps
+            if [ -f package-lock.json ]; then
+              npm ci || npm install
+            else
+              npm install
+            fi
+
+            # Build if your package.json has a build script
+            if grep -q '"build"' package.json 2>/dev/null; then
+              npm run build
+            fi
+
+            # Zero-downtime reload via PM2
+            if [ -f ecosystem.config.js ]; then
+              pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+              pm2 save
+            else
+              pm2 reload app || pm2 start app.js --name app
+              pm2 save
+            fi
+          EOF
