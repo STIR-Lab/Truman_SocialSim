@@ -12,12 +12,13 @@ jobs:
       - name: Checkout (for metadata only)
         uses: actions/checkout@v4
 
-      - name: Add EC2 to known_hosts
+      - name: Add EC2 host key (from secret)
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          echo "${EC2_HOST_KEY}" >> ~/.ssh/known_hosts
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_HOST_KEY: ${{ secrets.EC2_HOST_KEY }}
+
 
       - name: Write SSH key
         run: |
