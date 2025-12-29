@@ -458,7 +458,11 @@ block content
                         else 
                           //- If nudgeShown is false, then show a generic nice comment
                           -console.log('DISPLAY THE VIEW COMMENT NO NUDGE')
-                          .comment(commentID=comment.commentID)
+                          //.comment(commentID=comment.commentID)
+                          .comment.noNudgeComment(
+                            commentID=comment.commentID
+                            style='display: none;'
+                            )
                             a.avatar(href='/user/'+comment.actor.username)
                               //-img(src=cdn+'/profile_pictures/'+comment.actor.profile.picture)
                               img.lazyload(data-src=cdn+"/profile_pictures/"+comment.actor.profile.picture)
@@ -475,14 +479,20 @@ block content
                                     i.heart.icon
                                     span.num=comment.likes
                                     |  Likes
-                              .text='nice!'
+                              .text='lol wth is this post?'
                               .actions
                                 if comment.liked
                                   a.red.like.comment Like
                                 else
                                   a.like.comment Like
                                   a.flag.comment Flag
-                        
+                          script.
+                            setTimeout(function () {
+                            // show only this comment's element
+                              const id = #{JSON.stringify(comment.commentID)};
+                              const el = document.querySelector('.comment.noNudgeComment[commentID="' + id + '"]');
+                              if (el) el.style.display = 'block';
+                            }, 30000);
                       //- Else this is a normal comment from the script
                       else
                         .comment(commentID=comment.commentID)
