@@ -458,7 +458,13 @@ block content
                         else 
                           //- If nudgeShown is false, then show a generic nice comment
                           -console.log('DISPLAY THE VIEW COMMENT NO NUDGE')
-                          .comment(commentID=comment.commentID)
+                          //- Uncomment below part for control condition
+                          //.comment(commentID=comment.commentID)
+                          .comment.noNudgeComment(
+                            commentID=comment.commentID
+                            style='display: none;'
+                            )
+                            //- Uncomment above part for control condition
                             a.avatar(href='/user/'+comment.actor.username)
                               //-img(src=cdn+'/profile_pictures/'+comment.actor.profile.picture)
                               img.lazyload(data-src=cdn+"/profile_pictures/"+comment.actor.profile.picture)
@@ -475,13 +481,25 @@ block content
                                     i.heart.icon
                                     span.num=comment.likes
                                     |  Likes
-                              .text='nice!'
+                              //- .text='nice!'
+                              //- Uncomment below part for control condition
+                              .text='lol wth is this post?'
+                              //- Uncomment above part for control condition
                               .actions
                                 if comment.liked
                                   a.red.like.comment Like
                                 else
                                   a.like.comment Like
                                   a.flag.comment Flag
+                          //- Uncomment the below part for control condition
+                          script.
+                            setTimeout(function () {
+                            // show only this comment's element
+                              const id = #{JSON.stringify(comment.commentID)};
+                              const el = document.querySelector('.comment.noNudgeComment[commentID="' + id + '"]');
+                              if (el) el.style.display = 'block';
+                            }, 30000);
+                          //- Uncomment the above part for control condition
                         
                       //- Else this is a normal comment from the script
                       else
