@@ -429,7 +429,7 @@ exports.newPost = async (req, res) => {
 				commentNudge.commentID = user.numActorReplies;
 				commentNudge.actor = randomActor._id;
 				commentNudge.class = "commentNudge";
-				commentNudge.nudgeShown = "false";  // Modify this if Nudge is not supposed to be shown
+				commentNudge.nudgeShown = "true";  // Modify this if Nudge is not supposed to be shown
 				commentNudge.userAction = "null";
 				commentNudge.time = post.relativeTime;
 				// add to posts
